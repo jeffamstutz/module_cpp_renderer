@@ -19,6 +19,8 @@ option(OSPRAY_MODULE_CPP "Build 'C++' module (renderers in all C++ code)" ON)
 if (OSPRAY_MODULE_CPP)
 
   ospray_create_library(module_cpp
+    CPPCamera.h
+    CPPPerspectiveCamera.cpp
     CPPRaycastRenderer.cpp
     LINK
     ospray

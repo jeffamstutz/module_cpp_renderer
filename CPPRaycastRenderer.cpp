@@ -24,6 +24,11 @@ namespace ospray {
       return "ospray::cpp_renderer::CPPRaycastRenderer";
     }
 
+    void CPPRaycastRenderer::commit()
+    {
+      currentCamera = dynamic_cast<Camera*>(getParamObject("camera"));
+    }
+
     void *CPPRaycastRenderer::beginFrame(FrameBuffer *fb)
     {
       currentFB = fb;
@@ -36,12 +41,15 @@ namespace ospray {
     {
       //TODO: implement
 
-      for (int i = 0; i < TILE_SIZE*TILE_SIZE; ++i) {
-        tile.r[i] = 1.f;
-        tile.g[i] = 0.f;
-        tile.b[i] = 0.f;
-        tile.a[i] = 1.f;
-        tile.z[i] = 1.f;
+      for (int y = 0; y < TILE_SIZE; ++y) {
+        for (int x = 0; x < TILE_SIZE; ++x) {
+          int i = y * TILE_SIZE + x;
+          tile.r[i] = 1.f;
+          tile.g[i] = 0.f;
+          tile.b[i] = 0.f;
+          tile.a[i] = 1.f;
+          tile.z[i] = 1.f;
+        }
       }
     }
 
