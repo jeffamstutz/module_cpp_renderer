@@ -39,8 +39,8 @@ namespace ospray {
     }
 
     void RaycastRenderer::renderTile(void */*perFrameData*/,
-                                        Tile &tile,
-                                        size_t /*jobID*/) const
+                                     Tile &tile,
+                                     size_t /*jobID*/) const
     {
       float pixel_du = .5f;
       float pixel_dv = .5f;
@@ -86,7 +86,7 @@ namespace ospray {
     }
 
     void RaycastRenderer::endFrame(void */*perFrameData*/,
-                                      const int32 /*fbChannelFlags*/)
+                                   const int32 /*fbChannelFlags*/)
     {
       // NOTE(jda) - override to *not* run default behavior
     }

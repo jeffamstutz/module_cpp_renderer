@@ -75,7 +75,7 @@ namespace ospray {
     }
 
     void PerspectiveCamera::getRay(const CameraSample &sample,
-                                      Ray &ray) const
+                                   Ray &ray) const
     {
       vec3f org = pos;
       vec3f dir = dir_00
