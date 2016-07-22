@@ -16,7 +16,7 @@
 
 // ospray
 #include "Renderer.h"
-#include "util.h"
+#include "../util.h"
 
 namespace ospray {
   namespace cpp_renderer {

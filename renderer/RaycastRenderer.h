@@ -14,41 +14,24 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// ospray
-#include "RaycastRenderer.h"
-#include "util.h"
+#pragma once
+
+// embree
+#include "embree2/rtcore.h"
+
+#include "../camera/Camera.h"
+#include "Renderer.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
-    std::string RaycastRenderer::toString() const
+    struct RaycastRenderer : public ospray::cpp_renderer::Renderer
     {
-      return "ospray::cpp_renderer::RaycastRenderer";
-    }
+      std::string toString() const override;
 
-    void RaycastRenderer::renderSample(void */*perFrameData*/,
-                                       ScreenSample &screenSample) const
-    {
-      auto &ray = screenSample.ray;
-
-      traceRay(ray);
-
-      if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
-        const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
-        screenSample.rgb.x = c;
-        screenSample.rgb.y = c;
-        screenSample.rgb.z = c;
-        screenSample.z     = ray.t;
-        screenSample.alpha = 1.f;
-      }
-    }
-
-    OSP_REGISTER_RENDERER(RaycastRenderer, cpp_raycast)
-
-    extern "C" void ospray_init_module_cpp()
-    {
-      printf("Loaded plugin 'cpp' ...\n");
-    }
+      void renderSample(void *perFrameData,
+                        ScreenSample &screenSample) const override;
+    };
 
   }// namespace cpp_renderer
 }// namespace ospray

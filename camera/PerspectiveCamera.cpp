@@ -99,10 +99,6 @@ namespace ospray {
       ray.dir = normalize(dir);
       ray.t0  = nearClip;
       ray.t   = inf;
-
-      ray.geomID = RTC_INVALID_GEOMETRY_ID;
-      ray.primID = RTC_INVALID_GEOMETRY_ID;
-      ray.instID = RTC_INVALID_GEOMETRY_ID;
     }
 
     OSP_REGISTER_CAMERA(PerspectiveCamera, cpp_perspective)

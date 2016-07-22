@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2016 Intel Corporation                                    //
+// Copyright 2009-2015 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -14,34 +14,45 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#pragma once
-
 // ospray
-#include "ospray/common/OSPCommon.h"
-// embree
-#include "embree2/rtcore.h"
+#include "RaycastRenderer.h"
+#include "../util.h"
 
 namespace ospray {
   namespace cpp_renderer {
-    /*! \brief ospray *scalar* ray class w/ correct alignment for embree  */
-    struct RTCORE_ALIGN(16) Ray {
-      /* ray input data */
-      vec3fa org;
-      vec3fa dir;
-      float t0;
-      float t;
-      float time;
-      int32 mask;
 
-      /* hit data */
-      vec3fa Ng;
+    std::string RaycastRenderer::toString() const
+    {
+      return "ospray::cpp_renderer::RaycastRenderer";
+    }
 
-      float u;
-      float v;
+    void RaycastRenderer::renderSample(void */*perFrameData*/,
+                                       ScreenSample &screenSample) const
+    {
+      auto &ray = screenSample.ray;
 
-      int geomID;
-      int primID;
-      int instID;
-    };
-  }// ::ospray::cpp_renderer
-} // ::ospray
+      traceRay(ray);
+
+      if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
+        const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
+#if 1
+        screenSample.rgb.x = c;
+        screenSample.rgb.y = c;
+        screenSample.rgb.z = c;
+#else
+        screenSample.rgb = c * make_random_color(ray.primID);
+#endif
+        screenSample.z     = ray.t;
+        screenSample.alpha = 1.f;
+      }
+    }
+
+    OSP_REGISTER_RENDERER(RaycastRenderer, cpp_raycast)
+
+    extern "C" void ospray_init_module_cpp()
+    {
+      printf("Loaded plugin 'cpp' ...\n");
+    }
+
+  }// namespace cpp_renderer
+}// namespace ospray

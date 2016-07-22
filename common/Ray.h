@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2015 Intel Corporation                                    //
+// Copyright 2009-2016 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,22 +16,32 @@
 
 #pragma once
 
+// ospray
+#include "ospray/common/OSPCommon.h"
 // embree
 #include "embree2/rtcore.h"
 
-#include "Camera.h"
-#include "Renderer.h"
-
 namespace ospray {
   namespace cpp_renderer {
+    /*! \brief ospray *scalar* ray class w/ correct alignment for embree  */
+    struct RTCORE_ALIGN(16) Ray {
+      /* ray input data */
+      vec3fa org;
+      vec3fa dir;
+      float t0;
+      float t;
+      float time;
+      int32 mask;
 
-    struct RaycastRenderer : public ospray::cpp_renderer::Renderer
-    {
-      std::string toString() const override;
+      /* hit data */
+      vec3fa Ng;
 
-      void renderSample(void *perFrameData,
-                        ScreenSample &screenSample) const override;
+      float u;
+      float v;
+
+      int geomID{RTC_INVALID_GEOMETRY_ID};
+      int primID{RTC_INVALID_GEOMETRY_ID};
+      int instID{RTC_INVALID_GEOMETRY_ID};
     };
-
-  }// namespace cpp_renderer
-}// namespace ospray
+  }// ::ospray::cpp_renderer
+} // ::ospray
