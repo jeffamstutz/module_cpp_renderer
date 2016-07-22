@@ -24,12 +24,12 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    std::string CPPPerspectiveCamera::toString() const
+    std::string PerspectiveCamera::toString() const
     {
-      return "ospray::CPPPerspectiveCamera";
+      return "ospray::PerspectiveCamera";
     }
 
-    void CPPPerspectiveCamera::commit()
+    void PerspectiveCamera::commit()
     {
       Camera::commit();
 
@@ -74,7 +74,7 @@ namespace ospray {
       }
     }
 
-    void CPPPerspectiveCamera::getRay(const CameraSample &sample,
+    void PerspectiveCamera::getRay(const CameraSample &sample,
                                       Ray &ray) const
     {
       vec3f org = pos;
@@ -105,7 +105,7 @@ namespace ospray {
       ray.instID = RTC_INVALID_GEOMETRY_ID;
     }
 
-    OSP_REGISTER_CAMERA(CPPPerspectiveCamera, cpp_perspective)
+    OSP_REGISTER_CAMERA(PerspectiveCamera, cpp_perspective)
 
   }// namespace cpp_renderer
 }// namespace ospray

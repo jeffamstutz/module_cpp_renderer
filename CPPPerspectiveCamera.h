@@ -21,7 +21,7 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    struct CPPPerspectiveCamera : public CPPCamera {
+    struct PerspectiveCamera : public ospray::cpp_renderer::Camera {
       std::string toString() const override;
       void commit() override;
 
@@ -39,11 +39,11 @@ namespace ospray {
       // ------------------------------------------------------------------
       // the parameters we used to put in the ispc-side structure
       // ------------------------------------------------------------------
-      ospcommon::vec3f dir_00;
-      ospcommon::vec3f dir_du;
-      ospcommon::vec3f dir_dv;
-      ospcommon::vec2f imageStart;
-      ospcommon::vec2f imageEnd;
+      vec3f dir_00;
+      vec3f dir_du;
+      vec3f dir_dv;
+      vec2f imageStart;
+      vec2f imageEnd;
       float scaledAperture;
     };
 

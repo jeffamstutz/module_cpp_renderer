@@ -20,25 +20,25 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    std::string CPPRaycastRenderer::toString() const
+    std::string RaycastRenderer::toString() const
     {
-      return "ospray::cpp_renderer::CPPRaycastRenderer";
+      return "ospray::cpp_renderer::RaycastRenderer";
     }
 
-    void CPPRaycastRenderer::commit()
+    void RaycastRenderer::commit()
     {
       Renderer::commit();
-      currentCamera = dynamic_cast<CPPCamera*>(getParamObject("camera"));
+      currentCamera = dynamic_cast<Camera*>(getParamObject("camera"));
       assert(currentCamera);
     }
 
-    void *CPPRaycastRenderer::beginFrame(FrameBuffer *fb)
+    void *RaycastRenderer::beginFrame(FrameBuffer *fb)
     {
       currentFB = fb;
       return nullptr;
     }
 
-    void CPPRaycastRenderer::renderTile(void */*perFrameData*/,
+    void RaycastRenderer::renderTile(void */*perFrameData*/,
                                         Tile &tile,
                                         size_t /*jobID*/) const
     {
@@ -85,13 +85,13 @@ namespace ospray {
       }
     }
 
-    void CPPRaycastRenderer::endFrame(void */*perFrameData*/,
+    void RaycastRenderer::endFrame(void */*perFrameData*/,
                                       const int32 /*fbChannelFlags*/)
     {
       // NOTE(jda) - override to *not* run default behavior
     }
 
-    OSP_REGISTER_RENDERER(CPPRaycastRenderer, cpp_raycast)
+    OSP_REGISTER_RENDERER(RaycastRenderer, cpp_raycast)
 
     extern "C" void ospray_init_module_cpp()
     {

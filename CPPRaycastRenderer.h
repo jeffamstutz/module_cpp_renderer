@@ -37,7 +37,7 @@ namespace ospray {
       float z{inf};
     };
 
-    struct CPPRaycastRenderer : public Renderer
+    struct RaycastRenderer : public ospray::Renderer
     {
       std::string toString() const override;
       void commit() override;
@@ -54,12 +54,12 @@ namespace ospray {
 
       void traceRay(Ray &ray) const;
 
-      CPPCamera *currentCamera {nullptr};
+      ospray::cpp_renderer::Camera *currentCamera {nullptr};
     };
 
     // Inlined member functions ///////////////////////////////////////////////
 
-    inline void CPPRaycastRenderer::traceRay(Ray &ray) const
+    inline void RaycastRenderer::traceRay(Ray &ray) const
     {
       rtcIntersect(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
     }

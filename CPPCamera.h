@@ -37,7 +37,7 @@ namespace ospray {
     //             change OSPRay itself. Once the design of CPP* classes are
     //             satisfactory, these interfaces can be collapsed into their
     //             ospray::* equivalent.
-    struct CPPCamera : public Camera
+    struct Camera : public ospray::Camera
     {
       virtual void getRay(const CameraSample &cameraSample, Ray &ray) const = 0;
     };
