@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "CPPCamera.h"
+#include "Camera.h"
 
 namespace ospray {
   namespace cpp_renderer {

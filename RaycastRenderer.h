@@ -21,7 +21,7 @@
 // embree
 #include "embree2/rtcore.h"
 
-#include "CPPCamera.h"
+#include "Camera.h"
 
 namespace ospray {
   namespace cpp_renderer {

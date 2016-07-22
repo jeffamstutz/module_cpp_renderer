@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // ospray
-#include "CPPRaycastRenderer.h"
+#include "RaycastRenderer.h"
 
 namespace ospray {
   namespace cpp_renderer {
