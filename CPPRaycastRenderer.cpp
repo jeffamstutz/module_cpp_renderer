@@ -16,8 +16,6 @@
 
 // ospray
 #include "CPPRaycastRenderer.h"
-// embree
-#include "embree2/rtcore.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -40,9 +38,9 @@ namespace ospray {
       return nullptr;
     }
 
-    void CPPRaycastRenderer::renderTile(void *perFrameData,
+    void CPPRaycastRenderer::renderTile(void */*perFrameData*/,
                                         Tile &tile,
-                                        size_t jobID) const
+                                        size_t /*jobID*/) const
     {
       float pixel_du = .5f;
       float pixel_dv = .5f;
@@ -64,20 +62,25 @@ namespace ospray {
           currentCamera->getRay(cameraSample, ray);
           traceRay(ray);
 
+          auto &rgb   = screenSample.rgb;
+          auto &z     = screenSample.z;
+          auto &alpha = screenSample.alpha;
+
           if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
             const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
-            screenSample.rgb.x = c;
-            screenSample.rgb.y = c;
-            screenSample.rgb.z = c;
-            screenSample.z = ray.t;
+            rgb.x = c;
+            rgb.y = c;
+            rgb.z = c;
+            z     = ray.t;
+            alpha = 1.f;
           }
 
           int i = y * TILE_SIZE + x;
-          tile.r[i] = screenSample.rgb.x;
-          tile.g[i] = screenSample.rgb.y;
-          tile.b[i] = screenSample.rgb.z;
-          tile.a[i] = screenSample.alpha;
-          tile.z[i] = screenSample.z;
+          tile.r[i] = rgb.x;
+          tile.g[i] = rgb.y;
+          tile.b[i] = rgb.z;
+          tile.a[i] = alpha;
+          tile.z[i] = z;
         }
       }
     }
@@ -86,11 +89,6 @@ namespace ospray {
                                       const int32 /*fbChannelFlags*/)
     {
       // NOTE(jda) - override to *not* run default behavior
-    }
-
-    void CPPRaycastRenderer::traceRay(Ray &ray) const
-    {
-      rtcIntersect(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
     }
 
     OSP_REGISTER_RENDERER(CPPRaycastRenderer, cpp_raycast)
