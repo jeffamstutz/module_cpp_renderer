@@ -30,19 +30,16 @@ namespace ospray {
                                        ScreenSample &screenSample) const
     {
       auto &ray = screenSample.ray;
-      auto &rgb   = screenSample.rgb;
-      auto &z     = screenSample.z;
-      auto &alpha = screenSample.alpha;
 
       traceRay(ray);
 
       if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
         const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
-        rgb.x = c;
-        rgb.y = c;
-        rgb.z = c;
-        z     = ray.t;
-        alpha = 1.f;
+        screenSample.rgb.x = c;
+        screenSample.rgb.y = c;
+        screenSample.rgb.z = c;
+        screenSample.z     = ray.t;
+        screenSample.alpha = 1.f;
       }
     }
 
