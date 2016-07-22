@@ -37,6 +37,7 @@ namespace ospray {
     void *Renderer::beginFrame(FrameBuffer *fb)
     {
       currentFB = fb;
+      fb->beginFrame();
       return nullptr;
     }
 
@@ -113,26 +114,6 @@ namespace ospray {
           tile.a[pixel] = alpha;
           tile.z[pixel] = z;
         }
-      }
-    }
-
-    void Renderer::renderSample(void */*perFrameData*/,
-                                ScreenSample &screenSample) const
-    {
-      auto &ray = screenSample.ray;
-      auto &rgb   = screenSample.rgb;
-      auto &z     = screenSample.z;
-      auto &alpha = screenSample.alpha;
-
-      traceRay(ray);
-
-      if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
-        const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
-        rgb.x = c;
-        rgb.y = c;
-        rgb.z = c;
-        z     = ray.t;
-        alpha = 1.f;
       }
     }
 
