@@ -38,7 +38,7 @@ namespace ospray {
   //             ospray::* equivalent.
   struct CPPCamera : public Camera
   {
-    virtual Ray getRay(const CameraSample &cameraSample) const = 0;
+    virtual void getRay(const CameraSample &cameraSample, Ray &ray) const = 0;
   };
 
 }// namespace ospray

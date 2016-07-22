@@ -24,7 +24,7 @@ namespace ospray {
     std::string toString() const override;
     void commit() override;
 
-    Ray getRay(const CameraSample &cameraSample) const override;
+    void getRay(const CameraSample &sample, Ray &ray) const override;
 
   public:
     // ------------------------------------------------------------------
@@ -34,6 +34,16 @@ namespace ospray {
     float aspect;
     float apertureRadius;
     float focusDistance;
+
+    // ------------------------------------------------------------------
+    // the parameters we used to put in the ispc-side structure
+    // ------------------------------------------------------------------
+    ospcommon::vec3f dir_00; //!< direction of ray with screenSample=(0,0); scaled to focusDistance
+    ospcommon::vec3f dir_du; //!< delta of ray direction between two pixels in X; scaled to focusDistance
+    ospcommon::vec3f dir_dv; //!< delta of ray direction between two pixels in Y; scaled to focusDistance
+    ospcommon::vec2f imageStart; //!< where the viewable tile begins [0..1]
+    ospcommon::vec2f imageEnd; //!< where the viewable tile ends [0..1]
+    float scaledAperture; //!< radius of aperture, divided by horizontal image plane size
   };
 
 

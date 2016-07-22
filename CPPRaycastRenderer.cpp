@@ -14,7 +14,10 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+// ospray
 #include "CPPRaycastRenderer.h"
+// embree
+#include "embree2/rtcore.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -26,7 +29,9 @@ namespace ospray {
 
     void CPPRaycastRenderer::commit()
     {
-      currentCamera = dynamic_cast<Camera*>(getParamObject("camera"));
+      Renderer::commit();
+      currentCamera = dynamic_cast<CPPCamera*>(getParamObject("camera"));
+      assert(currentCamera);
     }
 
     void *CPPRaycastRenderer::beginFrame(FrameBuffer *fb)
@@ -39,24 +44,53 @@ namespace ospray {
                                         Tile &tile,
                                         size_t jobID) const
     {
-      //TODO: implement
+      float pixel_du = .5f;
+      float pixel_dv = .5f;
 
       for (int y = 0; y < TILE_SIZE; ++y) {
         for (int x = 0; x < TILE_SIZE; ++x) {
+          ScreenSample screenSample;
+          screenSample.sampleID.x = tile.region.lower.x + x;
+          screenSample.sampleID.y = tile.region.lower.y + y;
+          screenSample.sampleID.z = 0;
+
+          CameraSample cameraSample;
+          cameraSample.screen.x = (screenSample.sampleID.x + pixel_du) *
+                                  rcp(float(currentFB->size.x));
+          cameraSample.screen.y = (screenSample.sampleID.y + pixel_dv) *
+                                  rcp(float(currentFB->size.y));
+
+          auto &ray = screenSample.ray;
+          currentCamera->getRay(cameraSample, ray);
+          traceRay(ray);
+
+          if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
+            const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
+            screenSample.rgb.x = c;
+            screenSample.rgb.y = c;
+            screenSample.rgb.z = c;
+            screenSample.z = ray.t;
+          }
+
           int i = y * TILE_SIZE + x;
-          tile.r[i] = 1.f;
-          tile.g[i] = 0.f;
-          tile.b[i] = 0.f;
-          tile.a[i] = 1.f;
-          tile.z[i] = 1.f;
+          tile.r[i] = screenSample.rgb.x;
+          tile.g[i] = screenSample.rgb.y;
+          tile.b[i] = screenSample.rgb.z;
+          tile.a[i] = screenSample.alpha;
+          tile.z[i] = screenSample.z;
         }
       }
     }
 
-    void CPPRaycastRenderer::endFrame(void *perFrameData,
-                                      const int32 fbChannelFlags)
+    void CPPRaycastRenderer::endFrame(void */*perFrameData*/,
+                                      const int32 /*fbChannelFlags*/)
     {
-      //TODO: implement
+      // NOTE(jda) - override to *not* run default behavior
+    }
+
+    void CPPRaycastRenderer::traceRay(Ray &ray) const
+    {
+      rtcIntersect(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
     }
 
     OSP_REGISTER_RENDERER(CPPRaycastRenderer, cpp_raycast)

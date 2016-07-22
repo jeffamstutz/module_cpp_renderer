@@ -14,7 +14,12 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+// ospray
 #include "CPPPerspectiveCamera.h"
+// embree
+#include "embree2/rtcore.h"
+#include "embree2/rtcore_ray.h"
+#include "embree2/rtcore_geometry.h"
 
 namespace ospray {
 
@@ -35,8 +40,8 @@ namespace ospray {
     apertureRadius = getParamf("apertureRadius", 0.f);
     focusDistance = getParamf("focusDistance", 1.f);
 
-    vec2f imageStart = getParam2f("imageStart", vec2f(0.f));
-    vec2f imageEnd   = getParam2f("imageEnd", vec2f(1.f));
+    imageStart = getParam2f("imageStart", vec2f(0.f));
+    imageEnd   = getParam2f("imageEnd", vec2f(1.f));
 
     assert(imageStart.x >= 0.f && imageStart.x <= 1.f);
     assert(imageStart.y >= 0.f && imageStart.y <= 1.f);
@@ -46,9 +51,9 @@ namespace ospray {
     // ------------------------------------------------------------------
     // now, update the local precomputed values
     // ------------------------------------------------------------------
-    dir = normalize(dir);
-    vec3f dir_du = normalize(cross(dir, up));
-    vec3f dir_dv = cross(dir_du, dir);
+    dir    = normalize(dir);
+    dir_du = normalize(cross(dir, up));
+    dir_dv = cross(dir_du, dir);
 
     float imgPlane_size_y = 2.f*tanf(fovy/2.f*M_PI/180.);
     float imgPlane_size_x = imgPlane_size_y * aspect;
@@ -56,7 +61,7 @@ namespace ospray {
     dir_du *= imgPlane_size_x;
     dir_dv *= imgPlane_size_y;
 
-    vec3f dir_00 = dir - .5f * dir_du - .5f * dir_dv;
+    dir_00 = dir - .5f * dir_du - .5f * dir_dv;
 
     float scaledAperture = 0.f;
     // prescale to focal plane
@@ -68,9 +73,34 @@ namespace ospray {
     }
   }
 
-  Ray CPPPerspectiveCamera::getRay(const CameraSample &cameraSample) const
+  void CPPPerspectiveCamera::getRay(const CameraSample &sample, Ray &ray) const
   {
-    return Ray();
+    vec3f org = pos;
+    vec3f dir = dir_00
+      + ((imageStart.x * dir_du)
+         + (sample.screen.x * (dir_du * (imageEnd.x - imageStart.x))))
+      + ((imageStart.y * dir_dv)
+         + (sample.screen.y * (dir_dv * (imageEnd.y - imageStart.y))));
+
+#if 0
+    if (self->super.doesDOF) {
+      const vec3f llp = uniformSampleDisk(self->scaledAperture, sample.lens);
+      // transform local lens point to focal plane (dir_XX are prescaled in this case)
+      const vec3f lp = (llp.x * self->dir_du)
+           + ((llp.y * self->aspect) * self->dir_dv);
+      org = org + lp;
+      dir = dir - lp;
+    }
+#endif
+
+    ray.org = org;
+    ray.dir = normalize(dir);
+    ray.t0  = nearClip;
+    ray.t   = inf;
+
+    ray.geomID = RTC_INVALID_GEOMETRY_ID;
+    ray.primID = RTC_INVALID_GEOMETRY_ID;
+    ray.instID = RTC_INVALID_GEOMETRY_ID;
   }
 
   OSP_REGISTER_CAMERA(CPPPerspectiveCamera, cpp_perspective)
