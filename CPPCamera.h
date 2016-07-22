@@ -17,28 +17,30 @@
 #pragma once
 
 #include "camera/Camera.h"
-#include "common/Ray.h"
+#include "Ray.h"
 
 namespace ospray {
+  namespace cpp_renderer {
 
-  /*! \brief Specifies the input parameters (time, screen, and lens
-      samples) required for 'initRay' to generate a primary ray */
-  struct CameraSample
-  {
-    ospcommon::vec2f screen; /*!< normalized screen sample, from [0..1] */
-#if 0// currently unused from ispc version of CameraSample
-    ospcommon::vec2f lens;
-    float time;
-#endif
-  };
+    /*! \brief Specifies the input parameters (time, screen, and lens
+        samples) required for 'initRay' to generate a primary ray */
+    struct CameraSample
+    {
+      ospcommon::vec2f screen; /*!< normalized screen sample, from [0..1] */
+  #if 0// currently unused from ispc version of CameraSample
+      ospcommon::vec2f lens;
+      float time;
+  #endif
+    };
 
-  // NOTE(jda) - This injects C++ interface function(s) without needing to
-  //             change OSPRay itself. Once the design of CPP* classes are
-  //             satisfactory, these interfaces can be collapsed into their
-  //             ospray::* equivalent.
-  struct CPPCamera : public Camera
-  {
-    virtual void getRay(const CameraSample &cameraSample, Ray &ray) const = 0;
-  };
+    // NOTE(jda) - This injects C++ interface function(s) without needing to
+    //             change OSPRay itself. Once the design of CPP* classes are
+    //             satisfactory, these interfaces can be collapsed into their
+    //             ospray::* equivalent.
+    struct CPPCamera : public Camera
+    {
+      virtual void getRay(const CameraSample &cameraSample, Ray &ray) const = 0;
+    };
 
+  }// namespace cpp_renderer
 }// namespace ospray

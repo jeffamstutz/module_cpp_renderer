@@ -22,6 +22,7 @@ if (OSPRAY_MODULE_CPP)
     CPPCamera.h
     CPPPerspectiveCamera.cpp
     CPPRaycastRenderer.cpp
+    Ray.h
     LINK
     ospray
   )

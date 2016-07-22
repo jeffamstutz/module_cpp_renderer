@@ -16,36 +16,32 @@
 
 #pragma once
 
-#include "CPPCamera.h"
+// ospray
+#include "ospray/common/OSPCommon.h"
+// embree
+#include "embree2/rtcore.h"
 
 namespace ospray {
   namespace cpp_renderer {
+    /*! \brief ospray *scalar* ray class w/ correct alignment for embree  */
+    struct RTCORE_ALIGN(16) Ray {
+      /* ray input data */
+      vec3fa org;
+      vec3fa dir;
+      float t0;
+      float t;
+      float time;
+      int32 mask;
 
-    struct CPPPerspectiveCamera : public CPPCamera {
-      std::string toString() const override;
-      void commit() override;
+      /* hit data */
+      vec3fa Ng;
 
-      void getRay(const CameraSample &sample, Ray &ray) const override;
+      float u;
+      float v;
 
-    public:
-      // ------------------------------------------------------------------
-      // the parameters we 'parsed' from our parameters
-      // ------------------------------------------------------------------
-      float fovy;
-      float aspect;
-      float apertureRadius;
-      float focusDistance;
-
-      // ------------------------------------------------------------------
-      // the parameters we used to put in the ispc-side structure
-      // ------------------------------------------------------------------
-      ospcommon::vec3f dir_00;
-      ospcommon::vec3f dir_du;
-      ospcommon::vec3f dir_dv;
-      ospcommon::vec2f imageStart;
-      ospcommon::vec2f imageEnd;
-      float scaledAperture;
+      int geomID;
+      int primID;
+      int instID;
     };
-
-  }// namespace cpp_renderer
-}// namespace ospray
+  }// ::ospray::cpp_renderer
+} // ::ospray
