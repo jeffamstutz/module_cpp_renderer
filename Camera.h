@@ -27,8 +27,8 @@ namespace ospray {
     struct CameraSample
     {
       ospcommon::vec2f screen; /*!< normalized screen sample, from [0..1] */
-  #if 0// currently unused from ispc version of CameraSample
       ospcommon::vec2f lens;
+  #if 0// currently unused from ispc version of CameraSample
       float time;
   #endif
     };

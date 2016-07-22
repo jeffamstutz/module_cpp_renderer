@@ -16,6 +16,7 @@
 
 // ospray
 #include "RaycastRenderer.h"
+#include "util.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -28,6 +29,7 @@ namespace ospray {
     void RaycastRenderer::commit()
     {
       Renderer::commit();
+      precomputeZOrder();
       currentCamera = dynamic_cast<Camera*>(getParamObject("camera"));
       assert(currentCamera);
     }
@@ -40,17 +42,47 @@ namespace ospray {
 
     void RaycastRenderer::renderTile(void */*perFrameData*/,
                                      Tile &tile,
-                                     size_t /*jobID*/) const
+                                     size_t jobID) const
     {
       float pixel_du = .5f;
       float pixel_dv = .5f;
 
-      for (int y = 0; y < TILE_SIZE; ++y) {
-        for (int x = 0; x < TILE_SIZE; ++x) {
-          ScreenSample screenSample;
-          screenSample.sampleID.x = tile.region.lower.x + x;
-          screenSample.sampleID.y = tile.region.lower.y + y;
-          screenSample.sampleID.z = 0;
+      const float spp_inv = 1.f / spp;
+
+      const auto begin = jobID * RENDERTILE_PIXELS_PER_JOB;
+      const auto end   = begin + RENDERTILE_PIXELS_PER_JOB;
+      const auto startSampleID = max(tile.accumID, 0)*spp;
+
+      for (auto i = begin; i < end; ++i) {
+        ScreenSample screenSample;
+        screenSample.sampleID.x = tile.region.lower.x + z_order.xs[i];
+        screenSample.sampleID.y = tile.region.lower.y + z_order.ys[i];
+        screenSample.sampleID.z = startSampleID;
+
+        auto &sampleID = screenSample.sampleID;
+
+        if ((sampleID.x >= currentFB->size.x) ||
+            (sampleID.y >= currentFB->size.y))
+          continue;
+
+        float tMax = inf;
+#if 0
+        // set ray t value for early ray termination if we have a maximum depth
+        // texture
+        if (self->maxDepthTexture) {
+          // always sample center of pixel
+          vec2f depthTexCoord;
+          depthTexCoord.x = (screenSample.sampleID.x + 0.5f) * fb->rcpSize.x;
+          depthTexCoord.y = (screenSample.sampleID.y + 0.5f) * fb->rcpSize.y;
+
+          tMax = min(get1f(self->maxDepthTexture, depthTexCoord), infinity);
+        }
+#endif
+
+        for (uint32 s = 0; s < spp; s++) {
+          pixel_du = precomputedHalton2(startSampleID+s);
+          pixel_dv = precomputedHalton3(startSampleID+s);
+          screenSample.sampleID.z = startSampleID+s;
 
           CameraSample cameraSample;
           cameraSample.screen.x = (screenSample.sampleID.x + pixel_du) *
@@ -58,8 +90,13 @@ namespace ospray {
           cameraSample.screen.y = (screenSample.sampleID.y + pixel_dv) *
                                   rcp(float(currentFB->size.y));
 
+          // TODO: fix correlations / better RNG
+          cameraSample.lens.x = precomputedHalton3(startSampleID+s);
+          cameraSample.lens.y = precomputedHalton5(startSampleID+s);
+
           auto &ray = screenSample.ray;
           currentCamera->getRay(cameraSample, ray);
+          ray.t = tMax;
           traceRay(ray);
 
           auto &rgb   = screenSample.rgb;
@@ -75,12 +112,14 @@ namespace ospray {
             alpha = 1.f;
           }
 
-          int i = y * TILE_SIZE + x;
-          tile.r[i] = rgb.x;
-          tile.g[i] = rgb.y;
-          tile.b[i] = rgb.z;
-          tile.a[i] = alpha;
-          tile.z[i] = z;
+          rgb *= spp_inv;
+
+          const auto pixel = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
+          tile.r[pixel] = rgb.x;
+          tile.g[pixel] = rgb.y;
+          tile.b[pixel] = rgb.z;
+          tile.a[pixel] = alpha;
+          tile.z[pixel] = z;
         }
       }
     }
