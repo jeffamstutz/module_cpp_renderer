@@ -23,6 +23,7 @@ if (OSPRAY_MODULE_CPP)
     PerspectiveCamera.cpp
     RaycastRenderer.cpp
     Ray.h
+    Renderer.cpp
     util.cpp
     LINK
     ospray
