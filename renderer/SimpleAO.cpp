@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // ospray
-#include "SimpleAORenderer.h"
+#include "SimpleAO.h"
 #include "../util.h"
 
 namespace ospray {

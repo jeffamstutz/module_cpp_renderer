@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // ospray
-#include "RaycastRenderer.h"
+#include "Raycast.h"
 #include "../util.h"
 
 namespace ospray {

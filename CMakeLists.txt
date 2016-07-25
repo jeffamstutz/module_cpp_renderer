@@ -20,13 +20,13 @@ if (OSPRAY_MODULE_CPP)
 
   ospray_create_library(module_cpp
     camera/Camera.h
-    camera/PerspectiveCamera.cpp
+    camera/Perspective.cpp
 
     common/Ray.h
 
-    renderer/RaycastRenderer.cpp
+    renderer/Raycast.cpp
     renderer/Renderer.cpp
-    renderer/SimpleAORenderer.cpp
+    renderer/SimpleAO.cpp
 
     util.cpp
     LINK

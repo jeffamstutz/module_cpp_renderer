@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // ospray
-#include "PerspectiveCamera.h"
+#include "Perspective.h"
 // embree
 #include "embree2/rtcore.h"
 #include "embree2/rtcore_ray.h"
