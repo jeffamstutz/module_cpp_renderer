@@ -28,6 +28,7 @@ namespace ospray {
     struct SimpleAORenderer : public ospray::cpp_renderer::Renderer
     {
       std::string toString() const override;
+      void commit() override;
 
       void renderSample(void *perFrameData,
                         ScreenSample &sample) const override;

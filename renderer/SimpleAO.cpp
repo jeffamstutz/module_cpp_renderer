@@ -48,6 +48,13 @@ namespace ospray {
       return "ospray::cpp_renderer::SimpleAORenderer";
     }
 
+    void SimpleAORenderer::commit()
+    {
+      ospray::cpp_renderer::Renderer::commit();
+      samplesPerFrame = getParam1i("aoSamples", 1);
+      aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
+    }
+
     inline vec3f getShadingNormal(const Ray &ray)
     {
       vec3f N = ray.Ng;
