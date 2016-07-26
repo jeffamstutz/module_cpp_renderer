@@ -166,7 +166,7 @@ namespace ospray {
 
       int hits = 0;
       vec3f biNormU, biNormV;
-      const vec3f N = normalize(getShadingNormal(ray));//dg.Ns
+      const vec3f &N = dg.Ns;
       getBinormals(biNormU, biNormV, N);
 
       for (int i = 0; i < samplesPerFrame; i++) {

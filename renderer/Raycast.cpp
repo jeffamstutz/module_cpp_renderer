@@ -36,9 +36,7 @@ namespace ospray {
       if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
         const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
 #if 1
-        screenSample.rgb.x = c;
-        screenSample.rgb.y = c;
-        screenSample.rgb.z = c;
+        screenSample.rgb = vec3f{c};
 #else
         screenSample.rgb = c * make_random_color(ray.primID);
 #endif
