@@ -22,7 +22,12 @@ if (OSPRAY_MODULE_CPP)
     camera/Camera.h
     camera/Perspective.cpp
 
+    common/DifferentialGeometry.h
     common/Ray.h
+    common/ScreenSample.h
+
+    geometry/Geometry.h
+    geometry/TriangleMesh.cpp
 
     renderer/Raycast.cpp
     renderer/Renderer.cpp
