@@ -44,8 +44,6 @@ namespace ospray {
 
       virtual void *beginFrame(FrameBuffer *fb) override;
 
-      virtual float renderFrame(FrameBuffer *fb, const uint32 fbChannelFlags);
-
       virtual void renderTile(void *perFrameData,
                               Tile &tile,
                               size_t jobID) const override;
