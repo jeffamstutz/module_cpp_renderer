@@ -91,12 +91,11 @@ namespace ospray {
       // here:
       if (ray.instID < 0) {
         // a regular geometry
-#if 1
-        auto *geom = model->geometry[ray.geomID].ptr;
+        auto *geom =
+            dynamic_cast<cpp_renderer::Geometry*>(model->geometry[ray.geomID].ptr);
         dg.geometry = geom;
         dg.material = geom->material.ptr;
-        //geom->postIntersect(geom,model,dg,ray,flags);
-#endif
+        geom->postIntersect(dg, ray, flags);
       } else {
         // instanced geometry: create copy of ray, iterate over
         // ray.instIDs, and remove that instancing info from the ray (so

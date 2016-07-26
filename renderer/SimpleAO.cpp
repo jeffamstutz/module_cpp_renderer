@@ -108,24 +108,21 @@ namespace ospray {
                                            const float rot_y) const
     {
 #if 0
-      DifferentialGeometry dg;
-      postIntersect(self->super.model,dg,ray,
-                    DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD
-                    |DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+      auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
+                                   DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
-      uniform SimpleAOMaterial *mat = ((uniform SimpleAOMaterial*)dg.material);
-      vec3f superColor = make_vec3f(1.f);
+      SimpleAOMaterial *mat = (SimpleAOMaterial*)dg.material;
+      vec3f superColor{1.f};
       if (mat) {
-        foreach_unique(m in mat) {
-          superColor = m->Kd;
-          if (m->map_Kd) {
-            vec4f Kd_from_map = get4f(m->map_Kd,dg.st);
-            superColor = superColor * make_vec3f(Kd_from_map);
-          }
+        superColor = m->Kd;
+        if (m->map_Kd) {
+          vec4f Kd_from_map = get4f(m->map_Kd, dg.st);
+          superColor = superColor *
+              vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
         }
       }
       // should be done in material:
-      superColor = superColor * make_vec3f(dg.color);
+      superColor = superColor * dg.color;
 #else
       vec3f superColor{1.0f};
 #endif

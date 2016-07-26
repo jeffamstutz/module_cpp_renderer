@@ -17,7 +17,6 @@
 // ospray
 #include "Renderer.h"
 #include "../util.h"
-#include "common/tasking/parallel_for.h"
 
 namespace ospray {
   namespace cpp_renderer {

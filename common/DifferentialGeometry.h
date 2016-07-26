@@ -16,10 +16,8 @@
 
 #pragma once
 
-#include "common/OSPCommon.h"
-
 #include "common/Material.h"
-#include "../geometry/Geometry.h"
+#include "geometry/Geometry.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -60,8 +58,8 @@ namespace ospray {
                                  "prim.materialID" array (-1 if that value isn't
                                   specified) */
 
-      ospray::Geometry *geometry; /*! pointer to hit-point's geometry */
-      ospray::Material *material; /*! pointer to hit-point's material */
+      ospray::Geometry *geometry{nullptr}; /*! pointer to hit-point's geometry */
+      ospray::Material *material{nullptr}; /*! pointer to hit-point's material */
     };
 
   }// namespace cpp_renderer

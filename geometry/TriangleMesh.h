@@ -16,17 +16,45 @@
 
 #pragma once
 
-#include "../../ospray/geometry/TriangleMesh.h"
 #include "../geometry/Geometry.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
-    struct TriangleMesh :
-        public ospray::TriangleMesh,
-        public ospray::cpp_renderer::Geometry
+    struct TriangleMesh : public ospray::cpp_renderer::Geometry
     {
-      void postIntersect() const override;
+      // ospray::Geometry interface ///////////////////////////////////////////
+
+      std::string toString() const override;
+      void finalize(Model *model) override;
+
+      // ospray::cpp_renderer::Geometry interface /////////////////////////////
+
+      void postIntersect(DifferentialGeometry &dg,
+                         const Ray &ray,
+                         int flags) const override;
+
+      // Data members /////////////////////////////////////////////////////////
+
+      const int    *index;  //!< mesh's triangle index array
+      const float  *vertex; //!< mesh's vertex array
+      const float  *normal; //!< mesh's vertex normal array
+      const vec4f  *color;  //!< mesh's vertex color array
+      const vec2f  *texcoord; //!< mesh's vertex texcoord array
+      const uint32 *prim_materialID; //!< per-primitive material ID
+      Material **materialList; //!< per-primitive material list
+      int geom_materialID;
+
+      Ref<Data> indexData;  /*!< triangle indices (A,B,C,materialID) */
+      Ref<Data> vertexData; /*!< vertex position (vec3fa) */
+      Ref<Data> normalData; /*!< vertex normal array (vec3fa) */
+      Ref<Data> colorData;  /*!< vertex color array (vec3fa) */
+      Ref<Data> texcoordData; /*!< vertex texcoord array (vec2f) */
+      Ref<Data> prim_materialIDData;  /*!< data array for per-prim material ID (uint32) */
+      Ref<Data> materialListData; /*!< data array for per-prim materials */
+      uint32    eMesh;   /*!< embree triangle mesh handle */
+
+      void** ispcMaterialPtrs; /*!< pointers to ISPC equivalent materials */
     };
 
   }// namespace cpp_renderer

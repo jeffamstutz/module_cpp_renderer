@@ -16,14 +16,18 @@
 
 #pragma once
 
-#include "geometry/TriangleMesh.h"
+#include "../common/DifferentialGeometry.h"
+#include "../common/Ray.h"
+#include "geometry/Geometry.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
     struct Geometry : public ospray::Geometry
     {
-      virtual void postIntersect() const = 0;
+      virtual void postIntersect(DifferentialGeometry &dg,
+                                 const Ray &ray,
+                                 int flags) const = 0;
     };
 
   }// namespace cpp_renderer
