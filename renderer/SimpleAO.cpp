@@ -21,6 +21,37 @@
 namespace ospray {
   namespace cpp_renderer {
 
+    // Material definition ////////////////////////////////////////////////////
+
+    //! \brief Material used by the SimpleAO renderer
+    /*! \detailed Since the SimpleAO Renderer only cares about a
+        diffuse material component this material only stores diffuse
+        and diffuse texture */
+    struct SimpleAOMaterial : public ospray::Material {
+      /*! \brief commit the object's outstanding changes
+       *         (such as changed parameters etc) */
+      void commit() override;
+
+      // -------------------------------------------------------
+      // member variables
+      // -------------------------------------------------------
+
+      //! \brief diffuse material component, that's all we care for
+      vec3f Kd;
+
+      //! \brief diffuse texture, if available
+      Ref<Texture2D> map_Kd;
+    };
+
+    void SimpleAOMaterial::commit()
+    {
+      Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
+      map_Kd = (Texture2D*)getParamObject("map_Kd",
+                                          getParamObject("map_kd", NULL));
+    }
+
+    // SimpleAO definitions ///////////////////////////////////////////////////
+
     struct RandomTEA
     {
       RandomTEA(unsigned int idx, unsigned int seed) :
@@ -107,28 +138,26 @@ namespace ospray {
                                            const float rot_x,
                                            const float rot_y) const
     {
-#if 0
-      DifferentialGeometry dg;
-      postIntersect(self->super.model,dg,ray,
-                    DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD
-                    |DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+      vec3f superColor{1.f};
 
-      uniform SimpleAOMaterial *mat = ((uniform SimpleAOMaterial*)dg.material);
-      vec3f superColor = make_vec3f(1.f);
+      auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
+                                   DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+
+      SimpleAOMaterial *mat = dynamic_cast<SimpleAOMaterial*>(dg.material);
+
       if (mat) {
-        foreach_unique(m in mat) {
-          superColor = m->Kd;
-          if (m->map_Kd) {
-            vec4f Kd_from_map = get4f(m->map_Kd,dg.st);
-            superColor = superColor * make_vec3f(Kd_from_map);
-          }
+        superColor = mat->Kd;
+#if 0// NOTE(jda) - texture fetches not yet implemented
+        if (mat->map_Kd) {
+          vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
+          superColor = superColor *
+              vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
         }
-      }
-      // should be done in material:
-      superColor = superColor * make_vec3f(dg.color);
-#else
-      vec3f superColor{1.0f};
 #endif
+      }
+
+      // should be done in material:
+      superColor *= vec3f{dg.color.x, dg.color.y, dg.color.z};
 
       // init TEA RNG //
       RandomTEA rng{(currentFB->size.x * pixel_y) + pixel_x, accumID};
@@ -177,6 +206,11 @@ namespace ospray {
       } else {
         sample.rgb = vec3f{1.f};
       }
+    }
+
+    Material *SimpleAORenderer::createMaterial(const char */*type*/)
+    {
+      return new SimpleAOMaterial;
     }
 
     OSP_REGISTER_RENDERER(SimpleAORenderer, cpp_ao)

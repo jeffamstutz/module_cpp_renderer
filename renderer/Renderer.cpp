@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2015 Intel Corporation                                    //
+// Copyright 2009-2016 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -17,7 +17,6 @@
 // ospray
 #include "Renderer.h"
 #include "../util.h"
-#include "common/tasking/parallel_for.h"
 
 namespace ospray {
   namespace cpp_renderer {

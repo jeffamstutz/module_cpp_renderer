@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2015 Intel Corporation                                    //
+// Copyright 2009-2016 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,38 +16,18 @@
 
 #pragma once
 
-// embree
-#include "embree2/rtcore.h"
-
-#include "../camera/Camera.h"
-#include "Renderer.h"
+#include "../common/DifferentialGeometry.h"
+#include "../common/Ray.h"
+#include "geometry/Geometry.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
-    struct SimpleAORenderer : public ospray::cpp_renderer::Renderer
+    struct Geometry : public ospray::Geometry
     {
-      std::string toString() const override;
-      void commit() override;
-
-      void renderSample(void *perFrameData,
-                        ScreenSample &sample) const override;
-
-      ospray::Material *createMaterial(const char *type) override;
-
-    private:
-
-      void shade_ao(vec3f &color,
-                    float &alpha,
-                    const int accumID,
-                    const Ray &ray,
-                    const int32 pixel_x,
-                    const int32 pixel_y,
-                    const float rot_x,
-                    const float rot_y) const;
-
-      int   samplesPerFrame{1};
-      float aoRayLength{1e20f};
+      virtual void postIntersect(DifferentialGeometry &dg,
+                                 const Ray &ray,
+                                 int flags) const = 0;
     };
 
   }// namespace cpp_renderer
