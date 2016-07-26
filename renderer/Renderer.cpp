@@ -29,15 +29,21 @@ namespace ospray {
     void Renderer::commit()
     {
       ospray::Renderer::commit();
-      precomputeZOrder();
       currentCamera = dynamic_cast<Camera*>(getParamObject("camera"));
-      assert(currentCamera);
+      bgColor       = getParam3f("bgColor", vec3f(1.f));
+      precomputeZOrder();
     }
 
     void *Renderer::beginFrame(FrameBuffer *fb)
     {
       currentFB = fb;
       fb->beginFrame();
+
+      if (currentCamera == nullptr) {
+        throw std::runtime_error("You are using a C++ only renderer without"
+                                 " using a C++ only camera!");
+      }
+
       return nullptr;
     }
 

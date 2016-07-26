@@ -53,6 +53,8 @@ namespace ospray {
 
       DifferentialGeometry postIntersect(const Ray &ray, int flags) const;
 
+      vec3f bgColor;
+
     private:
 
       ospray::cpp_renderer::Camera *currentCamera {nullptr};

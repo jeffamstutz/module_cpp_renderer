@@ -44,6 +44,8 @@ namespace ospray {
 #endif
         screenSample.z     = ray.t;
         screenSample.alpha = 1.f;
+      } else {
+        screenSample.rgb = bgColor;
       }
     }
 

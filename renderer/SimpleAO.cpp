@@ -50,7 +50,7 @@ namespace ospray {
                                           getParamObject("map_kd", NULL));
     }
 
-    // SimpleAO definitions ///////////////////////////////////////////////////
+    // Helper functions ///////////////////////////////////////////////////////
 
     struct RandomTEA
     {
@@ -73,18 +73,6 @@ namespace ospray {
 
       unsigned int v0, v1;
     };
-
-    std::string SimpleAORenderer::toString() const
-    {
-      return "ospray::cpp_renderer::SimpleAORenderer";
-    }
-
-    void SimpleAORenderer::commit()
-    {
-      ospray::cpp_renderer::Renderer::commit();
-      samplesPerFrame = getParam1i("aoSamples", 1);
-      aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
-    }
 
     inline vec3f getShadingNormal(const Ray &ray)
     {
@@ -127,6 +115,20 @@ namespace ospray {
       const float y = sin(float((2.f*M_PI)*r0))*w;
       const float z = sqrt(r1) + epsilon;
       return x*biNorm0 + y*biNorm1 + z*gNormal;
+    }
+
+    // SimpleAO definitions ///////////////////////////////////////////////////
+
+    std::string SimpleAORenderer::toString() const
+    {
+      return "ospray::cpp_renderer::SimpleAORenderer";
+    }
+
+    void SimpleAORenderer::commit()
+    {
+      ospray::cpp_renderer::Renderer::commit();
+      samplesPerFrame = getParam1i("aoSamples", 1);
+      aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
     }
 
     inline void SimpleAORenderer::shade_ao(vec3f &color,
@@ -204,7 +206,7 @@ namespace ospray {
                  sample.sampleID.y,
                  rot_x,rot_y);
       } else {
-        sample.rgb = vec3f{1.f};
+        sample.rgb = bgColor;
       }
     }
 
