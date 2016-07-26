@@ -46,6 +46,13 @@ namespace ospray {
                     const float rot_x,
                     const float rot_y) const;
 
+      vec3f getRandomDir(const vec3f biNorm0,
+                         const vec3f biNorm1,
+                         const vec3f gNormal,
+                         const float rot_x,
+                         const float rot_y,
+                         const float epsilon) const;
+
       int   samplesPerFrame{1};
       float aoRayLength{1e20f};
     };

@@ -18,6 +18,12 @@
 #include "SimpleAO.h"
 #include "../util.h"
 
+#include <random>
+
+// NOTE(jda) - Should this have "thread_local" storage qualifier? Images look OK
+//             without it...
+static thread_local std::default_random_engine generator;
+
 namespace ospray {
   namespace cpp_renderer {
 
@@ -52,28 +58,6 @@ namespace ospray {
 
     // Helper functions ///////////////////////////////////////////////////////
 
-    struct RandomTEA
-    {
-      RandomTEA(unsigned int idx, unsigned int seed) :
-        v0(idx), v1(seed){}
-
-      vec2f getFloats()
-      {
-        unsigned int sum = 0;
-
-        for (int i = 0; i < 8; i++) { // just 8 instead of 32 rounds
-          sum += 0x9e3779b9;
-          v0 += ((v1 << 4) + 0xa341316c) ^ (v1 + sum) ^ ((v1 >> 5) + 0xc8013ea4);
-          v1 += ((v0 << 4) + 0xad90777d) ^ (v0 + sum) ^ ((v0 >> 5) + 0x7e95761e);
-        }
-
-        const float tofloat = 2.3283064365386962890625e-10f; // 1/2^32
-        return vec2f{v0 * tofloat, v1 * tofloat};
-      }
-
-      unsigned int v0, v1;
-    };
-
     inline vec3f getShadingNormal(const Ray &ray)
     {
       vec3f N = ray.Ng;
@@ -98,15 +82,17 @@ namespace ospray {
       return x;
     }
 
-    inline vec3f getRandomDir(RandomTEA &rng,
-                              const vec3f biNorm0,
-                              const vec3f biNorm1,
-                              const vec3f gNormal,
-                              const float rot_x,
-                              const float rot_y,
-                              const float epsilon)
+    // SimpleAO definitions ///////////////////////////////////////////////////
+
+    inline vec3f SimpleAORenderer::getRandomDir(const vec3f biNorm0,
+                                                const vec3f biNorm1,
+                                                const vec3f gNormal,
+                                                const float rot_x,
+                                                const float rot_y,
+                                                const float epsilon) const
     {
-      const vec2f rn = rng.getFloats();
+      std::uniform_real_distribution<float> distribution {0.f, 1.f};
+      const vec2f rn = vec2f{distribution(generator), distribution(generator)};
       const float r0 = rotate(rn.x, rot_x);
       const float r1 = rotate(rn.y, rot_y);
 
@@ -116,8 +102,6 @@ namespace ospray {
       const float z = sqrt(r1) + epsilon;
       return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
-
-    // SimpleAO definitions ///////////////////////////////////////////////////
 
     std::string SimpleAORenderer::toString() const
     {
@@ -161,9 +145,6 @@ namespace ospray {
       // should be done in material:
       superColor *= vec3f{dg.color.x, dg.color.y, dg.color.z};
 
-      // init TEA RNG //
-      RandomTEA rng{(currentFB->size.x * pixel_y) + pixel_x, accumID};
-
       int hits = 0;
       vec3f biNormU, biNormV;
       const vec3f &N = dg.Ns;
@@ -172,8 +153,7 @@ namespace ospray {
       for (int i = 0; i < samplesPerFrame; i++) {
         Ray ao_ray;
         ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * N);
-        ao_ray.dir =  getRandomDir(rng, biNormU, biNormV, N,
-                                   rot_x, rot_y, epsilon);
+        ao_ray.dir = getRandomDir(biNormU, biNormV, N, rot_x, rot_y, epsilon);
         ao_ray.t0 = epsilon;
         ao_ray.t  = aoRayLength - epsilon;
 
