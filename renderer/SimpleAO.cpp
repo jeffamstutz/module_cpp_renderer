@@ -20,8 +20,6 @@
 
 #include <random>
 
-// NOTE(jda) - Should this have "thread_local" storage qualifier? Images look OK
-//             without it...
 static thread_local std::default_random_engine generator;
 
 namespace ospray {
