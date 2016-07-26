@@ -33,6 +33,8 @@ namespace ospray {
       void renderSample(void *perFrameData,
                         ScreenSample &sample) const override;
 
+      ospray::Material *createMaterial(const char *type) override;
+
     private:
 
       void shade_ao(vec3f &color,

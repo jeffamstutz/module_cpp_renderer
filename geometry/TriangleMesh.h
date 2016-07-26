@@ -36,6 +36,11 @@ namespace ospray {
 
       // Data members /////////////////////////////////////////////////////////
 
+      size_t numTris{-1};
+      size_t idxSize{0};
+      size_t vtxSize{0};
+      size_t norSize{0};
+
       const int    *index;  //!< mesh's triangle index array
       const float  *vertex; //!< mesh's vertex array
       const float  *normal; //!< mesh's vertex normal array

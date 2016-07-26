@@ -92,7 +92,7 @@ namespace ospray {
       if (ray.instID < 0) {
         // a regular geometry
         auto *geom =
-            dynamic_cast<cpp_renderer::Geometry*>(model->geometry[ray.geomID].ptr);
+            dynamic_cast<Geometry*>(model->geometry[ray.geomID].ptr);
         dg.geometry = geom;
         dg.material = geom->material.ptr;
         geom->postIntersect(dg, ray, flags);
