@@ -80,16 +80,14 @@ namespace ospray {
       return x;
     }
 
-    // SimpleAO definitions ///////////////////////////////////////////////////
-
-    inline vec3f SimpleAORenderer::getRandomDir(const vec3f biNorm0,
-                                                const vec3f biNorm1,
-                                                const vec3f gNormal,
-                                                const float rot_x,
-                                                const float rot_y,
-                                                const float epsilon) const
+    inline vec3f getRandomDir(const vec3f &biNorm0,
+                              const vec3f &biNorm1,
+                              const vec3f &gNormal,
+                              float rot_x,
+                              float rot_y,
+                              float epsilon)
     {
-      std::uniform_real_distribution<float> distribution {0.f, 1.f};
+      static std::uniform_real_distribution<float> distribution {0.f, 1.f};
       const vec2f rn = vec2f{distribution(generator), distribution(generator)};
       const float r0 = rotate(rn.x, rot_x);
       const float r1 = rotate(rn.y, rot_y);
@@ -100,6 +98,8 @@ namespace ospray {
       const float z = sqrt(r1) + epsilon;
       return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
+
+    // SimpleAO definitions ///////////////////////////////////////////////////
 
     std::string SimpleAORenderer::toString() const
     {
@@ -115,10 +115,7 @@ namespace ospray {
 
     inline void SimpleAORenderer::shade_ao(vec3f &color,
                                            float &alpha,
-                                           const int accumID,
                                            const Ray &ray,
-                                           const int32 pixel_x,
-                                           const int32 pixel_y,
                                            const float rot_x,
                                            const float rot_y) const
     {
@@ -172,17 +169,10 @@ namespace ospray {
       traceRay(ray);
 
       if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
-        const int accumID = sample.sampleID.z * samplesPerFrame;
-        const float rot_x = 1.f - precomputedHalton3(accumID);
-        const float rot_y = 1.f - precomputedHalton5(accumID);
-
-        shade_ao(sample.rgb,
-                 sample.alpha,
-                 accumID,
-                 sample.ray,
-                 sample.sampleID.x,
-                 sample.sampleID.y,
-                 rot_x,rot_y);
+        std::uniform_real_distribution<float> distribution {0.f, 1.f};
+        const float rot_x = 1.f - distribution(generator);
+        const float rot_y = 1.f - distribution(generator);
+        shade_ao(sample.rgb, sample.alpha, sample.ray, rot_x,rot_y);
       } else {
         sample.rgb = bgColor;
       }

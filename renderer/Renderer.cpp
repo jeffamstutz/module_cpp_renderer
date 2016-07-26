@@ -18,6 +18,8 @@
 #include "Renderer.h"
 #include "../util.h"
 
+static thread_local std::default_random_engine generator;
+
 namespace ospray {
   namespace cpp_renderer {
 
@@ -60,6 +62,8 @@ namespace ospray {
       const auto end   = begin + RENDERTILE_PIXELS_PER_JOB;
       const auto startSampleID = max(tile.accumID, 0)*spp;
 
+      static std::uniform_real_distribution<float> distribution {0.f, 1.f};
+
       for (auto i = begin; i < end; ++i) {
         ScreenSample screenSample;
         screenSample.sampleID.x = tile.region.lower.x + z_order.xs[i];
@@ -87,8 +91,8 @@ namespace ospray {
 #endif
 
         for (uint32 s = 0; s < spp; s++) {
-          pixel_du = precomputedHalton2(startSampleID+s);
-          pixel_dv = precomputedHalton3(startSampleID+s);
+          pixel_du = distribution(generator);
+          pixel_dv = distribution(generator);
           screenSample.sampleID.z = startSampleID+s;
 
           CameraSample cameraSample;
@@ -98,8 +102,8 @@ namespace ospray {
                                   rcp(float(currentFB->size.y));
 
           // TODO: fix correlations / better RNG
-          cameraSample.lens.x = precomputedHalton3(startSampleID+s);
-          cameraSample.lens.y = precomputedHalton5(startSampleID+s);
+          cameraSample.lens.x = distribution(generator);
+          cameraSample.lens.y = distribution(generator);
 
           auto &ray = screenSample.ray;
           currentCamera->getRay(cameraSample, ray);

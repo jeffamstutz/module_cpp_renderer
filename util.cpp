@@ -19,48 +19,6 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    inline float radicalInverse(uint32 idx, const uint32 base)
-    {
-      float f = 0.f, g = 1.0f, inv = 1.0f/base;
-
-      while (idx > 0) {
-        g *= inv;
-        f += (idx % base) * g;
-        idx /= base;
-      }
-
-      return f;
-    }
-
-    inline float radicalInverse2(uint32 idx)
-    {
-      float f = 0.f, g = 1.0f;
-
-      while (idx > 0) {
-        g *= 0.5f;
-        f += idx & 1 ? g : 0.f;
-        idx >>= 1;
-      }
-
-      return f;
-    }
-
-    float precomputedHalton[3][NUM_PRECOMPUTED_HALTON_VALUES];
-    bool  precomputedHalton_initialized = false;
-
-    void precomputedHalton_create()
-    {
-      if (precomputedHalton_initialized)
-        return;
-      precomputedHalton_initialized = true;
-
-      for (int i = 0; i < NUM_PRECOMPUTED_HALTON_VALUES; ++i) {
-        precomputedHalton[0][i] = radicalInverse2(i);
-        precomputedHalton[1][i] = radicalInverse(i,3);
-        precomputedHalton[2][i] = radicalInverse(i,5);
-      }
-    }
-
     z_order_t z_order;
     bool z_order_initialized = false;
 

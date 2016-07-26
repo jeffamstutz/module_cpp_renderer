@@ -23,33 +23,6 @@ namespace ospray {
 
     /*! \file ospray/render/util.ih \brief Utility-functions for shaders */
 
-    /*! number of precomputed halton values, must be a power of 2 */
-    #define NUM_PRECOMPUTED_HALTON_VALUES 256
-
-    /*! precomputed base-2, base-3, and base-5 halton sequence values, for
-        NUM_PRECOMPUTED_HALTON_VALUES values */
-    extern float precomputedHalton[3][NUM_PRECOMPUTED_HALTON_VALUES];
-    extern bool precomputedHalton_initialized;
-    extern void precomputedHalton_create();
-
-    inline float precomputedHalton2(uint32 sampleID)
-    {
-      if (!precomputedHalton_initialized) precomputedHalton_create();
-      return precomputedHalton[0][sampleID & (NUM_PRECOMPUTED_HALTON_VALUES-1)];
-    }
-
-    inline float precomputedHalton3(uint32 sampleID)
-    {
-      if (!precomputedHalton_initialized) precomputedHalton_create();
-      return precomputedHalton[1][sampleID & (NUM_PRECOMPUTED_HALTON_VALUES-1)];
-    }
-
-    inline float precomputedHalton5(uint32 sampleID)
-    {
-      if (!precomputedHalton_initialized) precomputedHalton_create();
-      return precomputedHalton[2][sampleID & (NUM_PRECOMPUTED_HALTON_VALUES-1)];
-    }
-
     inline vec3f make_random_color(const int i)
     {
       const int mx = 13*17*43;

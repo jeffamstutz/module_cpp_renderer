@@ -37,21 +37,8 @@ namespace ospray {
 
     private:
 
-      void shade_ao(vec3f &color,
-                    float &alpha,
-                    const int accumID,
-                    const Ray &ray,
-                    const int32 pixel_x,
-                    const int32 pixel_y,
-                    const float rot_x,
-                    const float rot_y) const;
-
-      vec3f getRandomDir(const vec3f biNorm0,
-                         const vec3f biNorm1,
-                         const vec3f gNormal,
-                         const float rot_x,
-                         const float rot_y,
-                         const float epsilon) const;
+      void shade_ao(vec3f &color, float &alpha, const Ray &ray,
+                    float rot_x, float rot_y) const;
 
       int   samplesPerFrame{1};
       float aoRayLength{1e20f};
