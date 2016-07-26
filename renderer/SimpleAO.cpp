@@ -51,7 +51,7 @@ namespace ospray {
     {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_Kd = (Texture2D*)getParamObject("map_Kd",
-                                          getParamObject("map_kd", NULL));
+                                          getParamObject("map_kd", nullptr));
     }
 
     // Helper functions ///////////////////////////////////////////////////////

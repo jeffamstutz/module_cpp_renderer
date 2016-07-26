@@ -54,27 +54,31 @@ namespace ospray {
       materialListData = getParamData("materialList");
       geom_materialID = getParam1i("geom.materialID",-1);
 
-      Assert2(vertexData != NULL,
+      Assert2(vertexData != nullptr,
               "triangle mesh geometry does not have either 'position'"
               " or 'vertex' array");
-      Assert2(indexData != NULL,
+      Assert2(indexData != nullptr,
               "triangle mesh geometry does not have either 'index'"
               " or 'triangle' array");
 
       this->index = (int*)indexData->data;
       this->vertex = (float*)vertexData->data;
-      this->normal = normalData ? (float*)normalData->data : NULL;
-      this->color  = colorData ? (vec4f*)colorData->data : NULL;
-      this->texcoord = texcoordData ? (vec2f*)texcoordData->data : NULL;
-      this->prim_materialID  = prim_materialIDData ? (uint32*)prim_materialIDData->data : NULL;
-      this->materialList  = materialListData ? (ospray::Material**)materialListData->data : NULL;
+      this->normal = normalData ? (float*)normalData->data : nullptr;
+      this->color  = colorData ? (vec4f*)colorData->data : nullptr;
+      this->texcoord = texcoordData ? (vec2f*)texcoordData->data : nullptr;
+      this->prim_materialID  =
+          prim_materialIDData ? (uint32*)prim_materialIDData->data : nullptr;
+      this->materialList =
+          materialListData ? (ospray::Material**)materialListData->data :
+                             nullptr;
 
 #if 0
       if (materialList && !ispcMaterialPtrs) {
         const int num_materials = materialListData->numItems;
         ispcMaterialPtrs = new void*[num_materials];
         for (int i = 0; i < num_materials; i++) {
-          assert(this->materialList[i] != NULL && "Materials in list should never be NULL");
+          assert(this->materialList[i] != nullptr &&
+                 "Materials in list should never be NULL");
           this->ispcMaterialPtrs[i] = this->materialList[i]->getIE();
         }
       }
@@ -105,7 +109,8 @@ namespace ospray {
       case OSP_FLOAT:
       case OSP_FLOAT3A: norSize = 4; break;
       default:
-        throw std::runtime_error("unsupported trianglemesh.vertex.normal data type");
+        throw std::runtime_error("unsupported trianglemesh.vertex.normal"
+                                 " data type");
       }
 
 
