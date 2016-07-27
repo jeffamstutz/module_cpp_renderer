@@ -21,6 +21,37 @@
 namespace ospray {
   namespace cpp_renderer {
 
+    // Material definition ////////////////////////////////////////////////////
+
+    //! \brief Material used by the SimpleAO renderer
+    /*! \detailed Since the SimpleAO Renderer only cares about a
+        diffuse material component this material only stores diffuse
+        and diffuse texture */
+    struct RaycastMaterial : public ospray::Material {
+      /*! \brief commit the object's outstanding changes
+       *         (such as changed parameters etc) */
+      void commit() override;
+
+      // -------------------------------------------------------
+      // member variables
+      // -------------------------------------------------------
+
+      //! \brief diffuse material component, that's all we care for
+      vec3f Kd;
+
+      //! \brief diffuse texture, if available
+      Ref<Texture2D> map_Kd;
+    };
+
+    void RaycastMaterial::commit()
+    {
+      Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
+      map_Kd = (Texture2D*)getParamObject("map_Kd",
+                                          getParamObject("map_kd", nullptr));
+    }
+
+    // RaycastRenderer definitions ////////////////////////////////////////////
+
     std::string RaycastRenderer::toString() const
     {
       return "ospray::cpp_renderer::RaycastRenderer";
@@ -34,9 +65,15 @@ namespace ospray {
       traceRay(ray);
 
       if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
-        const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
 #if 1
-        screenSample.rgb = vec3f{c};
+        const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
+        auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+
+        auto *mat = dynamic_cast<RaycastMaterial*>(dg.material);
+        if (mat)
+          screenSample.rgb = c * mat->Kd;
+        else
+          screenSample.rgb = vec3f{c};
 #else
         screenSample.rgb = c * make_random_color(ray.primID);
 #endif
@@ -45,6 +82,11 @@ namespace ospray {
       } else {
         screenSample.rgb = bgColor;
       }
+    }
+
+    Material *RaycastRenderer::createMaterial(const char */*type*/)
+    {
+      return new RaycastMaterial;
     }
 
     OSP_REGISTER_RENDERER(RaycastRenderer, cpp_raycast)

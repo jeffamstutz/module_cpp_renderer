@@ -31,6 +31,8 @@ namespace ospray {
 
       void renderSample(void *perFrameData,
                         ScreenSample &screenSample) const override;
+
+      ospray::Material *createMaterial(const char *type) override;
     };
 
   }// namespace cpp_renderer
