@@ -18,7 +18,7 @@
 #include "Renderer.h"
 #include "../util.h"
 
-static thread_local std::default_random_engine generator;
+static thread_local std::minstd_rand generator;
 
 namespace ospray {
   namespace cpp_renderer {
