@@ -18,6 +18,8 @@
 
 #include "../common/Ray.h"
 
+#include <array>
+
 namespace ospray {
   namespace cpp_renderer {
 
