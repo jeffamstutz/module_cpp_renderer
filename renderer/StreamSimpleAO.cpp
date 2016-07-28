@@ -15,7 +15,7 @@
 // ======================================================================== //
 
 // ospray
-#include "SimpleAO.h"
+#include "StreamSimpleAO.h"
 #include "../util.h"
 
 #include <random>
@@ -27,11 +27,11 @@ namespace ospray {
 
     // Material definition ////////////////////////////////////////////////////
 
-    //! \brief Material used by the SimpleAO renderer
-    /*! \detailed Since the SimpleAO Renderer only cares about a
+    //! \brief Material used by the StreamSimpleAO renderer
+    /*! \detailed Since the StreamSimpleAO Renderer only cares about a
         diffuse material component this material only stores diffuse
         and diffuse texture */
-    struct SimpleAOMaterial : public ospray::Material {
+    struct StreamSimpleAOMaterial : public ospray::Material {
       /*! \brief commit the object's outstanding changes
        *         (such as changed parameters etc) */
       void commit() override;
@@ -47,7 +47,7 @@ namespace ospray {
       Ref<Texture2D> map_Kd;
     };
 
-    void SimpleAOMaterial::commit()
+    void StreamSimpleAOMaterial::commit()
     {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_Kd = (Texture2D*)getParamObject("map_Kd",
@@ -101,32 +101,33 @@ namespace ospray {
       return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
 
-    // SimpleAO definitions ///////////////////////////////////////////////////
+    // StreamSimpleAO definitions ///////////////////////////////////////////////////
 
-    std::string SimpleAORenderer::toString() const
+    std::string StreamSimpleAORenderer::toString() const
     {
-      return "ospray::cpp_renderer::SimpleAORenderer";
+      return "ospray::cpp_renderer::StreamSimpleAORenderer";
     }
 
-    void SimpleAORenderer::commit()
+    void StreamSimpleAORenderer::commit()
     {
       ospray::cpp_renderer::Renderer::commit();
       samplesPerFrame = getParam1i("aoSamples", 1);
       aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
     }
 
-    inline void SimpleAORenderer::shade_ao(vec3f &color,
-                                           float &alpha,
-                                           const Ray &ray,
-                                           const float rot_x,
-                                           const float rot_y) const
+    inline void StreamSimpleAORenderer::shade_ao(vec3f &color,
+                                                 float &alpha,
+                                                 const Ray &ray,
+                                                 const float rot_x,
+                                                 const float rot_y) const
     {
       vec3f superColor{1.f};
 
       auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                    DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
-      SimpleAOMaterial *mat = dynamic_cast<SimpleAOMaterial*>(dg.material);
+      StreamSimpleAOMaterial *mat =
+          dynamic_cast<StreamSimpleAOMaterial*>(dg.material);
 
       if (mat) {
         superColor = mat->Kd;
@@ -163,29 +164,34 @@ namespace ospray {
       alpha = 1.f;
     }
 
-    void SimpleAORenderer::renderSample(void */*perFrameData*/,
-                                        ScreenSample &sample) const
+    void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
+                                              ScreenSampleStream &stream) const
     {
-      auto &ray = sample.ray;
+      traceRays(stream.ray, RTC_INTERSECT_COHERENT);
 
-      traceRay(ray);
+      // TODO: stream all secondary rays, maybe partition rays which missed?
+      for (int i = 0; i < ScreenSampleStream::size; ++i) {
+        const auto &ray = stream.ray[i];
+        auto &rgb       = stream.rgb[i];
 
-      if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
-        std::uniform_real_distribution<float> distribution {0.f, 1.f};
-        const float rot_x = 1.f - distribution(generator);
-        const float rot_y = 1.f - distribution(generator);
-        shade_ao(sample.rgb, sample.alpha, sample.ray, rot_x,rot_y);
-      } else {
-        sample.rgb = bgColor;
+        if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
+          std::uniform_real_distribution<float> distribution {0.f, 1.f};
+          const float rot_x = 1.f - distribution(generator);
+          const float rot_y = 1.f - distribution(generator);
+          auto &alpha = stream.alpha[i];
+          shade_ao(rgb, alpha, ray, rot_x,rot_y);
+        } else {
+          rgb = bgColor;
+        }
       }
     }
 
-    Material *SimpleAORenderer::createMaterial(const char */*type*/)
+    Material *StreamSimpleAORenderer::createMaterial(const char */*type*/)
     {
-      return new SimpleAOMaterial;
+      return new StreamSimpleAOMaterial;
     }
 
-    OSP_REGISTER_RENDERER(SimpleAORenderer, cpp_ao)
+    OSP_REGISTER_RENDERER(StreamSimpleAORenderer, cpp_ao_stream)
 
   }// namespace cpp_renderer
 }// namespace ospray

@@ -16,10 +16,6 @@
 
 #pragma once
 
-// embree
-#include "embree2/rtcore.h"
-
-#include "../camera/Camera.h"
 #include "StreamRenderer.h"
 
 namespace ospray {
@@ -29,10 +25,8 @@ namespace ospray {
     {
       std::string toString() const override;
 
-      void renderSample(void *perFrameData,
-                        ScreenSample &screenSample) const override;
-
-      void renderStream(void *perFrameData, ScreenSampleStream &stream) const;
+      void renderStream(void *perFrameData,
+                        ScreenSampleStream &stream) const override;
 
       ospray::Material *createMaterial(const char *type) override;
     };

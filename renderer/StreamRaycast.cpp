@@ -57,13 +57,6 @@ namespace ospray {
       return "ospray::cpp_renderer::StreamRaycastRenderer";
     }
 
-    void StreamRaycastRenderer::renderSample(void */*perFrameData*/,
-                                             ScreenSample &/*sample*/) const
-    {
-      throw std::runtime_error("Type Mismatch: calling renderSample() in a"
-                               " stream renderer...");
-    }
-
     void StreamRaycastRenderer::renderStream(void */*perFrameData*/,
                                              ScreenSampleStream &stream) const
     {

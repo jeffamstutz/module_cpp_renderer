@@ -16,47 +16,29 @@
 
 #pragma once
 
-// embree
-#include "embree2/rtcore.h"
-
-#include "../camera/Camera.h"
-#include "../common/DifferentialGeometry.h"
-#include "../common/ScreenSample.h"
-#include "../geometry/Geometry.h"
-#include "Renderer.h"
+#include "StreamRenderer.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
-    struct StreamRenderer : public ospray::cpp_renderer::Renderer
+    struct StreamSimpleAORenderer : public ospray::cpp_renderer::StreamRenderer
     {
-      virtual std::string toString() const override;
+      std::string toString() const override;
+      void commit() override;
 
-      virtual void renderTile(void *perFrameData,
-                              Tile &tile,
-                              size_t jobID) const override;
+      void renderStream(void *perFrameData,
+                        ScreenSampleStream &stream) const override;
 
-      void renderSample(void *perFrameData,
-                        ScreenSample &screenSample) const override;
+      ospray::Material *createMaterial(const char *type) override;
 
-      virtual void renderStream(void *perFrameData,
-                                ScreenSampleStream &stream) const = 0;
+    private:
 
-    protected:
+      void shade_ao(vec3f &color, float &alpha, const Ray &ray,
+                    float rot_x, float rot_y) const;
 
-      void traceRays(RayStream &rays, RTCIntersectFlags flags) const;
-
+      int   samplesPerFrame{1};
+      float aoRayLength{1e20f};
     };
-
-    // Inlined member functions ///////////////////////////////////////////////
-
-    inline void StreamRenderer::traceRays(RayStream &rays,
-                                          RTCIntersectFlags flags) const
-    {
-      RTCIntersectContext ctx{flags, nullptr};
-      rtcIntersect1M(model->embreeSceneHandle, &ctx,
-                     (RTCRay*)&rays, rays.size(), sizeof(Ray));
-    }
 
   }// namespace cpp_renderer
 }// namespace ospray

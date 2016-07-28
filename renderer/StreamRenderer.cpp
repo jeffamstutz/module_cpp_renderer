@@ -103,5 +103,12 @@ namespace ospray {
       }
     }
 
+    void StreamRenderer::renderSample(void */*perFrameData*/,
+                                      ScreenSample &/*sample*/) const
+    {
+      throw std::runtime_error("Type Mismatch: calling renderSample() in a"
+                               " stream renderer...");
+    }
+
   }// namespace cpp_renderer
 }// namespace ospray
