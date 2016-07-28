@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "../common/Ray.h"
+#include "Ray.h"
 
 #include <array>
 
@@ -35,8 +35,22 @@ namespace ospray {
       int tileOffset{-1};// linear value --> comes from tileX,tileY
     };
 
-    using ScreenSampleStream = std::array<ScreenSample,
-                                          RENDERTILE_PIXELS_PER_JOB>;
+    template <int SIZE>
+    struct ScreenSampleStreamN
+    {
+      static constexpr int size = SIZE;
+
+      std::array<ospcommon::vec3i, SIZE> sampleID;
+
+      RayStreamN<SIZE> ray;
+
+      std::array<ospcommon::vec3f, SIZE> rgb;
+      std::array<float, SIZE> alpha;
+      std::array<float, SIZE> z;
+      std::array<int, SIZE> tileOffset;
+    };
+
+    using ScreenSampleStream = ScreenSampleStreamN<RENDERTILE_PIXELS_PER_JOB>;
 
   }// namespace cpp_renderer
 }// namespace ospray

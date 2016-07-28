@@ -77,13 +77,31 @@ namespace ospray {
       }
     }
 
-    void StreamRaycastRenderer::renderStream(void *perFrameData,
+    void StreamRaycastRenderer::renderStream(void */*perFrameData*/,
                                              ScreenSampleStream &stream) const
     {
-      // TODO: implement renderer with stream intersection
-      for (auto &sample : stream) {
-        if (sample.tileOffset >= 0)
-          renderSample(perFrameData, sample);
+      traceRays(stream.ray, RTC_INTERSECT_COHERENT);
+
+      for (int i = 0; i < ScreenSampleStream::size; ++i) {
+        const auto &ray = stream.ray[i];
+        auto &rgb       = stream.rgb[i];
+
+        if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
+          const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
+#if 0
+          auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+
+          auto *mat = dynamic_cast<StreamRaycastMaterial*>(dg.material);
+#endif
+
+          auto &z     = stream.z[i];
+          auto &alpha = stream.alpha[i];
+          rgb   = vec3f{c};
+          z     = ray.t;
+          alpha = 1.f;
+        } else {
+          rgb = bgColor;
+        }
       }
     }
 
@@ -92,7 +110,7 @@ namespace ospray {
       return new StreamRaycastMaterial;
     }
 
-    OSP_REGISTER_RENDERER(StreamRaycastRenderer, cpp_stream_raycast)
+    OSP_REGISTER_RENDERER(StreamRaycastRenderer, cpp_raycast_stream)
 
   }// namespace cpp_renderer
 }// namespace ospray

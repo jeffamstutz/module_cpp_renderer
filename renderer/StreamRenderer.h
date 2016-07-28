@@ -38,7 +38,22 @@ namespace ospray {
 
       virtual void renderStream(void *perFrameData,
                                 ScreenSampleStream &stream) const = 0;
+
+    protected:
+
+      void traceRays(RayStream &rays, RTCIntersectFlags flags) const;
+
     };
+
+    // Inlined member functions ///////////////////////////////////////////////
+
+    inline void StreamRenderer::traceRays(RayStream &rays,
+                                          RTCIntersectFlags flags) const
+    {
+      RTCIntersectContext ctx{flags, nullptr};
+      rtcIntersect1M(model->embreeSceneHandle, &ctx,
+                     (RTCRay*)&rays, rays.size(), sizeof(Ray));
+    }
 
   }// namespace cpp_renderer
 }// namespace ospray

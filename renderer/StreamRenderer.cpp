@@ -51,56 +51,55 @@ namespace ospray {
       for (auto i = begin; i < end; ++i) {
         const int streamID = i - begin;
 
-        ScreenSample &screenSample = screenSamples[streamID];
-        screenSample.sampleID.x = tile.region.lower.x + z_order.xs[i];
-        screenSample.sampleID.y = tile.region.lower.y + z_order.ys[i];
-        screenSample.sampleID.z = startSampleID;
+        auto &sampleID = screenSamples.sampleID[streamID];
+        sampleID.x = tile.region.lower.x + z_order.xs[i];
+        sampleID.y = tile.region.lower.y + z_order.ys[i];
+        auto &tileOffset = screenSamples.tileOffset[streamID];
+        tileOffset = -1;
 
-        auto &sampleID = screenSample.sampleID;
         if ((sampleID.x >= fbw) || (sampleID.y >= fbh))
           continue;
 
-        screenSample.tileOffset = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
-
+        tileOffset = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
         float tMax = inf;
 
         // NOTE(jda) - This assumes spp = 1
         float pixel_du = distribution(generator);
         float pixel_dv = distribution(generator);
-        screenSample.sampleID.z = startSampleID;
+        sampleID.z = startSampleID;
 
         CameraSample &cameraSample = cameraSamples[streamID];
-        cameraSample.screen.x = (screenSample.sampleID.x + pixel_du) *
+        cameraSample.screen.x = (sampleID.x + pixel_du) *
                                 rcp(float(fbw));
-        cameraSample.screen.y = (screenSample.sampleID.y + pixel_dv) *
+        cameraSample.screen.y = (sampleID.y + pixel_dv) *
                                 rcp(float(fbh));
 
         cameraSample.lens.x = distribution(generator);
         cameraSample.lens.y = distribution(generator);
 
-        auto &ray = screenSample.ray;
+        auto &ray = screenSamples.ray[streamID];
         currentCamera->getRay(cameraSample, ray);
         ray.t = tMax;
       }
 
       renderStream(perFrameData, screenSamples);
 
-      for (auto &screenSample : screenSamples) {
-        if (screenSample.tileOffset < 0)
+      for (int i = 0; i < screenSamples.ray.size(); ++i) {
+        auto &tileOffset = screenSamples.tileOffset[i];
+        if (tileOffset < 0)
           continue;
 
-        auto &rgb   = screenSample.rgb;
-        auto &z     = screenSample.z;
-        auto &alpha = screenSample.alpha;
+        auto &rgb   = screenSamples.rgb[i];
+        auto &z     = screenSamples.z[i];
+        auto &alpha = screenSamples.alpha[i];
 
         rgb *= spp_inv;
 
-        const auto &pixel = screenSample.tileOffset;
-        tile.r[pixel] = rgb.x;
-        tile.g[pixel] = rgb.y;
-        tile.b[pixel] = rgb.z;
-        tile.a[pixel] = alpha;
-        tile.z[pixel] = z;
+        tile.r[tileOffset] = rgb.x;
+        tile.g[tileOffset] = rgb.y;
+        tile.b[tileOffset] = rgb.z;
+        tile.a[tileOffset] = alpha;
+        tile.z[tileOffset] = z;
       }
     }
 

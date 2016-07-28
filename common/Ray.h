@@ -21,6 +21,8 @@
 // embree
 #include "embree2/rtcore.h"
 
+#include <array>
+
 namespace ospray {
   namespace cpp_renderer {
     /*! \brief ospray *scalar* ray class w/ correct alignment for embree  */
@@ -43,5 +45,11 @@ namespace ospray {
       int primID{RTC_INVALID_GEOMETRY_ID};
       int instID{RTC_INVALID_GEOMETRY_ID};
     };
+
+    template <int SIZE>
+    using RayStreamN = std::array<Ray, SIZE>;
+
+    using RayStream = RayStreamN<RENDERTILE_PIXELS_PER_JOB>;
+
   }// ::ospray::cpp_renderer
 } // ::ospray
