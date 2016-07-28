@@ -58,23 +58,10 @@ namespace ospray {
     }
 
     void StreamRaycastRenderer::renderSample(void */*perFrameData*/,
-                                             ScreenSample &screenSample) const
+                                             ScreenSample &/*sample*/) const
     {
-      auto &ray = screenSample.ray;
-
-      traceRay(ray);
-
-      if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
-        const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
-        auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
-
-        auto *mat = dynamic_cast<StreamRaycastMaterial*>(dg.material);
-        screenSample.rgb   = (mat != nullptr) ? c * mat->Kd : vec3f{c};
-        screenSample.z     = ray.t;
-        screenSample.alpha = 1.f;
-      } else {
-        screenSample.rgb = bgColor;
-      }
+      throw std::runtime_error("Type Mismatch: calling renderSample() in a"
+                               " stream renderer...");
     }
 
     void StreamRaycastRenderer::renderStream(void */*perFrameData*/,
