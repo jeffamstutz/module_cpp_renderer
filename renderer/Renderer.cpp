@@ -53,9 +53,6 @@ namespace ospray {
                               Tile &tile,
                               size_t jobID) const
     {
-      float pixel_du = .5f;
-      float pixel_dv = .5f;
-
       const float spp_inv = 1.f / spp;
 
       const auto begin = jobID * RENDERTILE_PIXELS_PER_JOB;
@@ -91,8 +88,8 @@ namespace ospray {
 #endif
 
         for (uint32 s = 0; s < spp; s++) {
-          pixel_du = distribution(generator);
-          pixel_dv = distribution(generator);
+          float pixel_du = distribution(generator);
+          float pixel_dv = distribution(generator);
           screenSample.sampleID.z = startSampleID+s;
 
           CameraSample cameraSample;
@@ -101,7 +98,6 @@ namespace ospray {
           cameraSample.screen.y = (screenSample.sampleID.y + pixel_dv) *
                                   rcp(float(currentFB->size.y));
 
-          // TODO: fix correlations / better RNG
           cameraSample.lens.x = distribution(generator);
           cameraSample.lens.y = distribution(generator);
 

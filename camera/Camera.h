@@ -33,6 +33,9 @@ namespace ospray {
   #endif
     };
 
+    using CameraSampleStream = std::array<CameraSample,
+                                          RENDERTILE_PIXELS_PER_JOB>;
+
     // NOTE(jda) - This injects C++ interface function(s) without needing to
     //             change OSPRay itself. Once the design of CPP* classes are
     //             satisfactory, these interfaces can be collapsed into their

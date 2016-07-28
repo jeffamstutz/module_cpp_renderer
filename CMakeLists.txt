@@ -32,6 +32,8 @@ if (OSPRAY_MODULE_CPP)
     renderer/Raycast.cpp
     renderer/Renderer.cpp
     renderer/SimpleAO.cpp
+    renderer/StreamRaycast.cpp
+    renderer/StreamRenderer.cpp
 
     util.cpp
     LINK

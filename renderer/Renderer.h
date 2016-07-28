@@ -55,8 +55,6 @@ namespace ospray {
 
       vec3f bgColor;
 
-    private:
-
       ospray::cpp_renderer::Camera *currentCamera {nullptr};
     };
 
