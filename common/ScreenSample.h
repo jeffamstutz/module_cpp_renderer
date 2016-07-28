@@ -30,7 +30,7 @@ namespace ospray {
       ospcommon::vec3f rgb {0.f, 0.f, 0.f};
       float alpha{0.f};
       float z{inf};
-      int tileCoord{-1};// linear value --> comes from tileX,tileY
+      int tileOffset{-1};// linear value --> comes from tileX,tileY
     };
 
     using ScreenSampleStream = std::array<ScreenSample,

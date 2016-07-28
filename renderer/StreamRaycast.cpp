@@ -50,7 +50,7 @@ namespace ospray {
                                           getParamObject("map_kd", nullptr));
     }
 
-    // StreamRaycastRenderer definitions ////////////////////////////////////////////
+    // StreamRaycastRenderer definitions //////////////////////////////////////
 
     std::string StreamRaycastRenderer::toString() const
     {
@@ -89,7 +89,7 @@ namespace ospray {
     {
       // TODO: implement renderer with stream intersection
       for (auto &sample : stream) {
-        if (sample.tileCoord >= 0)
+        if (sample.tileOffset >= 0)
           renderSample(perFrameData, sample);
       }
     }

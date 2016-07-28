@@ -60,7 +60,7 @@ namespace ospray {
         if ((sampleID.x >= fbw) || (sampleID.y >= fbh))
           continue;
 
-        screenSample.tileCoord = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
+        screenSample.tileOffset = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
 
         float tMax = inf;
 
@@ -86,7 +86,7 @@ namespace ospray {
       renderStream(perFrameData, screenSamples);
 
       for (auto &screenSample : screenSamples) {
-        if (screenSample.tileCoord < 0)
+        if (screenSample.tileOffset < 0)
           continue;
 
         auto &rgb   = screenSample.rgb;
@@ -95,7 +95,7 @@ namespace ospray {
 
         rgb *= spp_inv;
 
-        const auto &pixel = screenSample.tileCoord;
+        const auto &pixel = screenSample.tileOffset;
         tile.r[pixel] = rgb.x;
         tile.g[pixel] = rgb.y;
         tile.b[pixel] = rgb.z;
