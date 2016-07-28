@@ -88,15 +88,13 @@ namespace ospray {
 
         if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
           const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
-#if 0
           auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
           auto *mat = dynamic_cast<StreamRaycastMaterial*>(dg.material);
-#endif
 
           auto &z     = stream.z[i];
           auto &alpha = stream.alpha[i];
-          rgb   = vec3f{c};
+          rgb   = (mat != nullptr) ? c * mat->Kd : vec3f{c};
           z     = ray.t;
           alpha = 1.f;
         } else {
