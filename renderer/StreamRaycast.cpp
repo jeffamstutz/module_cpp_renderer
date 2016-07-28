@@ -65,18 +65,11 @@ namespace ospray {
       traceRay(ray);
 
       if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
-#if 1
         const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
         auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
         auto *mat = dynamic_cast<StreamRaycastMaterial*>(dg.material);
-        if (mat)
-          screenSample.rgb = c * mat->Kd;
-        else
-          screenSample.rgb = vec3f{c};
-#else
-        screenSample.rgb = c * make_random_color(ray.primID);
-#endif
+        screenSample.rgb   = (mat != nullptr) ? c * mat->Kd : vec3f{c};
         screenSample.z     = ray.t;
         screenSample.alpha = 1.f;
       } else {
