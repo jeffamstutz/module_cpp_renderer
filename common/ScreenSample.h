@@ -42,7 +42,7 @@ namespace ospray {
 
       std::array<ospcommon::vec3i, SIZE> sampleID;
 
-      RayStreamN<SIZE> ray;
+      RayStreamN<SIZE> rays;
 
       std::array<ospcommon::vec3f, SIZE> rgb;
       std::array<float, SIZE> alpha;

@@ -77,7 +77,7 @@ namespace ospray {
         cameraSample.lens.x = distribution(generator);
         cameraSample.lens.y = distribution(generator);
 
-        auto &ray = screenSamples.ray[streamID];
+        auto &ray = screenSamples.rays[streamID];
         currentCamera->getRay(cameraSample, ray);
         ray.t = tMax;
       }

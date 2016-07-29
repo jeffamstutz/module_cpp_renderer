@@ -118,25 +118,22 @@ namespace ospray {
     inline void
     StreamSimpleAORenderer::shade_ao(ScreenSampleStream &stream) const
     {
-      DGStream dgs;
+      DGStream dgs = postIntersect(stream.rays,
+                                   DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
+                                   DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
       for (int i = 0; i < ScreenSampleStream::size; ++i) {
+        stream.alpha[i] = 1.f;
 
-        auto &alpha = stream.alpha[i];
-        alpha = 1.f;
-
-        auto &ray   = stream.ray[i];
+        auto &ray   = stream.rays[i];
         auto &color = stream.rgb[i];
         auto &dg    = dgs[i];
 
         if (!ray.hitSomething()) {
           color = bgColor;
-          disableRay(stream.ray, i);
+          disableRay(stream.rays, i);
           continue;
         }
-
-        dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
-                                DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
         StreamSimpleAOMaterial *mat =
             dynamic_cast<StreamSimpleAOMaterial*>(dg.material);
@@ -170,13 +167,13 @@ namespace ospray {
           const float rot_y = 1.f - distribution(generator);
 
           vec3f biNormU, biNormV;
-          auto &dg      = dgs[i];
+          auto &dg = dgs[i];
           getBinormals(biNormU, biNormV, dg.Ns);
 
-          auto &ray    = stream.ray[i];
+          auto &ray    = stream.rays[i];
           auto &ao_ray = ao_rays[i];
 
-          if (rayIsActive(stream.ray, i)) {
+          if (rayIsActive(stream.rays, i)) {
             ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * dg.Ns);
             ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns,
                                       rot_x, rot_y, epsilon);
@@ -201,9 +198,9 @@ namespace ospray {
       }
 
       for (int i = 0; i < ScreenSampleStream::size; ++i) {
-        if (rayIsActive(stream.ray, i)) {
+        if (rayIsActive(stream.rays, i)) {
           auto &color   = stream.rgb[i];
-          auto &ray     = stream.ray[i];
+          auto &ray     = stream.rays[i];
           auto &dg      = dgs[i];
           float diffuse = abs(dot(dg.Ns, ray.dir));
           color *= vec3f{diffuse * (1.0f - float(hits[i])/samplesPerFrame)};
@@ -214,7 +211,7 @@ namespace ospray {
     void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
                                               ScreenSampleStream &stream) const
     {
-      traceRays(stream.ray, RTC_INTERSECT_COHERENT);
+      traceRays(stream.rays, RTC_INTERSECT_COHERENT);
       shade_ao(stream);
     }
 

@@ -47,6 +47,7 @@ namespace ospray {
       void traceRays(RayStream &rays, RTCIntersectFlags flags) const;
       void occludeRays(RayStream &rays, RTCIntersectFlags flags) const;
 
+      DGStream postIntersect(const RayStream &rays, int flags) const;
     };
 
     // Inlined member functions ///////////////////////////////////////////////
@@ -66,6 +67,20 @@ namespace ospray {
       rtcOccluded1M(model->embreeSceneHandle, &ctx,
                     (RTCRay*)&rays, rays.size(), sizeof(Ray));
     }
+
+    inline DGStream StreamRenderer::postIntersect(const RayStream &rays,
+                                                  int flags) const
+    {
+      DGStream dgs;
+
+      for (int i = 0; i < ScreenSampleStream::size; ++i) {
+        if (rays[i].hitSomething())
+          dgs[i] = cpp_renderer::Renderer::postIntersect(rays[i], flags);
+      }
+
+      return dgs;
+    }
+
 
   }// namespace cpp_renderer
 }// namespace ospray

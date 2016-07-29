@@ -60,15 +60,16 @@ namespace ospray {
     void StreamRaycastRenderer::renderStream(void */*perFrameData*/,
                                              ScreenSampleStream &stream) const
     {
-      traceRays(stream.ray, RTC_INTERSECT_COHERENT);
+      traceRays(stream.rays, RTC_INTERSECT_COHERENT);
 
       for (int i = 0; i < ScreenSampleStream::size; ++i) {
-        const auto &ray = stream.ray[i];
+        const auto &ray = stream.rays[i];
         auto &rgb       = stream.rgb[i];
 
         if (ray.hitSomething()) {
           const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
-          auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+          const int flags = DG_MATERIALID|DG_COLOR|DG_TEXCOORD;
+          auto dg = cpp_renderer::Renderer::postIntersect(ray, flags);
 
           auto *mat = dynamic_cast<StreamRaycastMaterial*>(dg.material);
 
