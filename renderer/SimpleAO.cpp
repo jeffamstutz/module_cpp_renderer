@@ -168,9 +168,7 @@ namespace ospray {
     {
       auto &ray = sample.ray;
 
-      traceRay(ray);
-
-      if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
+      if (traceRay(ray)) {
         std::uniform_real_distribution<float> distribution {0.f, 1.f};
         const float rot_x = 1.f - distribution(generator);
         const float rot_y = 1.f - distribution(generator);

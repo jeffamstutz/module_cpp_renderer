@@ -84,7 +84,7 @@ namespace ospray {
 
       renderStream(perFrameData, screenSamples);
 
-      for (int i = 0; i < screenSamples.ray.size(); ++i) {
+      for (int i = 0; i < ScreenSampleStream::size; ++i) {
         auto &tileOffset = screenSamples.tileOffset[i];
         if (tileOffset < 0)
           continue;

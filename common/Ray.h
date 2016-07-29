@@ -25,15 +25,16 @@
 
 namespace ospray {
   namespace cpp_renderer {
+
     /*! \brief ospray *scalar* ray class w/ correct alignment for embree  */
     struct RTCORE_ALIGN(16) Ray {
       /* ray input data */
       vec3fa org;
       vec3fa dir;
-      float t0;
-      float t;
+      float t0{0.f};
+      float t{inf};
       float time;
-      int32 mask;
+      int32 mask{0xFFFFFFFF};
 
       /* hit data */
       vec3fa Ng;
@@ -44,12 +45,39 @@ namespace ospray {
       int geomID{RTC_INVALID_GEOMETRY_ID};
       int primID{RTC_INVALID_GEOMETRY_ID};
       int instID{RTC_INVALID_GEOMETRY_ID};
+
+      // Helper functions //
+
+      inline bool hitSomething() const;
     };
 
     template <int SIZE>
     using RayStreamN = std::array<Ray, SIZE>;
 
     using RayStream = RayStreamN<RENDERTILE_PIXELS_PER_JOB>;
+
+    // Inlined member definitions /////////////////////////////////////////////
+
+    inline bool Ray::hitSomething() const
+    {
+      return geomID != RTC_INVALID_GEOMETRY_ID;
+    }
+
+    // Inlined helper functions ///////////////////////////////////////////////
+
+    /*! \brief helper function for querying if an individual ray is active */
+    inline bool rayIsActive(RayStream &rays, int i)
+    {
+      auto &ray = rays[i];
+      return ray.t0 <= ray.t;
+    }
+
+    /*! \brief helper function for disabling individual rays in a stream */
+    inline void disableRay(RayStream &rays, int i)
+    {
+      auto &ray = rays[i];
+      if (rayIsActive(rays, i)) std::swap(ray.t0, ray.t);
+    }
 
   }// ::ospray::cpp_renderer
 } // ::ospray

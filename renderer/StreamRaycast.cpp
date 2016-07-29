@@ -66,7 +66,7 @@ namespace ospray {
         const auto &ray = stream.ray[i];
         auto &rgb       = stream.rgb[i];
 
-        if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
+        if (ray.hitSomething()) {
           const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
           auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 

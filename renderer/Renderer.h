@@ -48,7 +48,7 @@ namespace ospray {
 
     protected:
 
-      void traceRay(Ray &ray) const;
+      bool traceRay(Ray &ray) const;
       bool isOccluded(Ray &ray) const;
 
       DifferentialGeometry postIntersect(const Ray &ray, int flags) const;
@@ -60,15 +60,16 @@ namespace ospray {
 
     // Inlined member functions ///////////////////////////////////////////////
 
-    inline void Renderer::traceRay(Ray &ray) const
+    inline bool Renderer::traceRay(Ray &ray) const
     {
       rtcIntersect(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
+      return ray.hitSomething();
     }
 
     inline bool Renderer::isOccluded(Ray &ray) const
     {
       rtcOccluded(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
-      return ray.geomID != RTC_INVALID_GEOMETRY_ID;
+      return ray.hitSomething();
     }
 
     inline DifferentialGeometry Renderer::postIntersect(const Ray &ray,

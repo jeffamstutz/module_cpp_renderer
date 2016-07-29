@@ -19,6 +19,8 @@
 #include "common/Material.h"
 #include "geometry/Geometry.h"
 
+#include <array>
+
 namespace ospray {
   namespace cpp_renderer {
 
@@ -61,6 +63,11 @@ namespace ospray {
       ospray::Geometry *geometry{nullptr}; /*! pointer to hit-point's geometry */
       ospray::Material *material{nullptr}; /*! pointer to hit-point's material */
     };
+
+    template <int SIZE>
+    using DGStreamN = std::array<DifferentialGeometry, SIZE>;
+
+    using DGStream = DGStreamN<RENDERTILE_PIXELS_PER_JOB>;
 
   }// namespace cpp_renderer
 }// namespace ospray

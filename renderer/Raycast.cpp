@@ -62,9 +62,7 @@ namespace ospray {
     {
       auto &ray = screenSample.ray;
 
-      traceRay(ray);
-
-      if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
+      if (traceRay(ray)) {
 #if 1
         const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
         auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);

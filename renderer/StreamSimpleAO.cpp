@@ -115,75 +115,73 @@ namespace ospray {
       aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
     }
 
-    inline void StreamSimpleAORenderer::shade_ao(vec3f &color,
-                                                 float &alpha,
-                                                 const Ray &ray,
-                                                 const float rot_x,
-                                                 const float rot_y) const
+    inline void
+    StreamSimpleAORenderer::shade_ao(ScreenSampleStream &stream) const
     {
-      vec3f superColor{1.f};
+      for (int i = 0; i < ScreenSampleStream::size; ++i) {
+        auto &alpha = stream.alpha[i];
+        auto &ray   = stream.ray[i];
+        auto &color = stream.rgb[i];
 
-      auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
-                                   DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
-
-      StreamSimpleAOMaterial *mat =
-          dynamic_cast<StreamSimpleAOMaterial*>(dg.material);
-
-      if (mat) {
-        superColor = mat->Kd;
-#if 0// NOTE(jda) - texture fetches not yet implemented
-        if (mat->map_Kd) {
-          vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
-          superColor = superColor *
-              vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
+        if (!ray.hitSomething()) {
+          color = bgColor;
+          disableRay(stream.ray, i);
+          continue;
         }
+
+        vec3f superColor{1.f};
+
+        std::uniform_real_distribution<float> distribution {0.f, 1.f};
+        const float rot_x = 1.f - distribution(generator);
+        const float rot_y = 1.f - distribution(generator);
+
+        auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
+                                     DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+
+        StreamSimpleAOMaterial *mat =
+            dynamic_cast<StreamSimpleAOMaterial*>(dg.material);
+
+        if (mat) {
+          superColor = mat->Kd;
+#if 0// NOTE(jda) - texture fetches not yet implemented
+          if (mat->map_Kd) {
+            vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
+            superColor = superColor *
+                vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
+          }
 #endif
+        }
+
+        // should be done in material:
+        superColor *= vec3f{dg.color.x, dg.color.y, dg.color.z};
+
+        int hits = 0;
+        vec3f biNormU, biNormV;
+        const vec3f &N = dg.Ns;
+        getBinormals(biNormU, biNormV, N);
+
+        for (int i = 0; i < samplesPerFrame; i++) {
+          Ray ao_ray;
+          ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * N);
+          ao_ray.dir = getRandomDir(biNormU, biNormV, N, rot_x, rot_y, epsilon);
+          ao_ray.t0  = epsilon;
+          ao_ray.t   = aoRayLength - epsilon;
+
+          if (dot(ao_ray.dir, N) < 0.05f || isOccluded(ao_ray))
+            hits++;
+        }
+
+        float diffuse = abs(dot(N,ray.dir));
+        color = superColor * vec3f{diffuse*(1.0f-float(hits)/samplesPerFrame)};
+        alpha = 1.f;
       }
-
-      // should be done in material:
-      superColor *= vec3f{dg.color.x, dg.color.y, dg.color.z};
-
-      int hits = 0;
-      vec3f biNormU, biNormV;
-      const vec3f &N = dg.Ns;
-      getBinormals(biNormU, biNormV, N);
-
-      for (int i = 0; i < samplesPerFrame; i++) {
-        Ray ao_ray;
-        ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * N);
-        ao_ray.dir = getRandomDir(biNormU, biNormV, N, rot_x, rot_y, epsilon);
-        ao_ray.t0 = epsilon;
-        ao_ray.t  = aoRayLength - epsilon;
-
-        if (dot(ao_ray.dir, N) < 0.05f || isOccluded(ao_ray))
-          hits++;
-      }
-
-      float diffuse = abs(dot(N,ray.dir));
-      color = superColor * vec3f{diffuse * (1.0f-float(hits)/samplesPerFrame)};
-      alpha = 1.f;
     }
 
     void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
                                               ScreenSampleStream &stream) const
     {
       traceRays(stream.ray, RTC_INTERSECT_COHERENT);
-
-      // TODO: stream all secondary rays, maybe partition rays which missed?
-      for (int i = 0; i < ScreenSampleStream::size; ++i) {
-        const auto &ray = stream.ray[i];
-        auto &rgb       = stream.rgb[i];
-
-        if (ray.geomID != RTC_INVALID_GEOMETRY_ID) {
-          std::uniform_real_distribution<float> distribution {0.f, 1.f};
-          const float rot_x = 1.f - distribution(generator);
-          const float rot_y = 1.f - distribution(generator);
-          auto &alpha = stream.alpha[i];
-          shade_ao(rgb, alpha, ray, rot_x,rot_y);
-        } else {
-          rgb = bgColor;
-        }
-      }
+      shade_ao(stream);
     }
 
     Material *StreamSimpleAORenderer::createMaterial(const char */*type*/)

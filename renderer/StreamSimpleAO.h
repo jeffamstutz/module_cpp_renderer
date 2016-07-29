@@ -33,8 +33,7 @@ namespace ospray {
 
     private:
 
-      void shade_ao(vec3f &color, float &alpha, const Ray &ray,
-                    float rot_x, float rot_y) const;
+      void shade_ao(ScreenSampleStream &stream) const;
 
       int   samplesPerFrame{1};
       float aoRayLength{1e20f};
