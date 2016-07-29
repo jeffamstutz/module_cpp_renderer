@@ -122,6 +122,8 @@ namespace ospray {
                                    DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                    DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
+      int nActiveRays = ScreenSampleStream::size;
+
       for (int i = 0; i < ScreenSampleStream::size; ++i) {
         stream.alpha[i] = 1.f;
 
@@ -132,6 +134,7 @@ namespace ospray {
         if (!ray.hitSomething()) {
           color = bgColor;
           disableRay(stream.rays, i);
+          nActiveRays--;
           continue;
         }
 
@@ -153,6 +156,9 @@ namespace ospray {
         // should be done in material:
         color *= vec3f{dg.color.x, dg.color.y, dg.color.z};
       }
+
+      if (nActiveRays <= 0)
+        return;
 
       std::array<int, ScreenSampleStream::size> hits;
       std::fill(begin(hits), end(hits), 0);
