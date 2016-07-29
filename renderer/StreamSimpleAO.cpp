@@ -118,10 +118,16 @@ namespace ospray {
     inline void
     StreamSimpleAORenderer::shade_ao(ScreenSampleStream &stream) const
     {
+      DGStream dgs;
+
       for (int i = 0; i < ScreenSampleStream::size; ++i) {
+
         auto &alpha = stream.alpha[i];
+        alpha = 1.f;
+
         auto &ray   = stream.ray[i];
         auto &color = stream.rgb[i];
+        auto &dg    = dgs[i];
 
         if (!ray.hitSomething()) {
           color = bgColor;
@@ -129,51 +135,79 @@ namespace ospray {
           continue;
         }
 
-        vec3f superColor{1.f};
-
-        std::uniform_real_distribution<float> distribution {0.f, 1.f};
-        const float rot_x = 1.f - distribution(generator);
-        const float rot_y = 1.f - distribution(generator);
-
-        auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
-                                     DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+        dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
+                                DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
         StreamSimpleAOMaterial *mat =
             dynamic_cast<StreamSimpleAOMaterial*>(dg.material);
 
         if (mat) {
-          superColor = mat->Kd;
+          color = mat->Kd;
 #if 0// NOTE(jda) - texture fetches not yet implemented
           if (mat->map_Kd) {
             vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
-            superColor = superColor *
-                vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
+            color *= vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
           }
 #endif
+        } else {
+          color = vec3f{1.f};
         }
 
         // should be done in material:
-        superColor *= vec3f{dg.color.x, dg.color.y, dg.color.z};
+        color *= vec3f{dg.color.x, dg.color.y, dg.color.z};
+      }
 
-        int hits = 0;
-        vec3f biNormU, biNormV;
-        const vec3f &N = dg.Ns;
-        getBinormals(biNormU, biNormV, N);
+      std::array<int, ScreenSampleStream::size> hits;
+      std::fill(begin(hits), end(hits), 0);
 
-        for (int i = 0; i < samplesPerFrame; i++) {
-          Ray ao_ray;
-          ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * N);
-          ao_ray.dir = getRandomDir(biNormU, biNormV, N, rot_x, rot_y, epsilon);
-          ao_ray.t0  = epsilon;
-          ao_ray.t   = aoRayLength - epsilon;
+      RayStream ao_rays;
 
-          if (dot(ao_ray.dir, N) < 0.05f || isOccluded(ao_ray))
-            hits++;
+      for (int j = 0; j < samplesPerFrame; j++) {
+        // Setup AO rays
+        for (int i = 0; i < ScreenSampleStream::size; ++i) {
+          std::uniform_real_distribution<float> distribution {0.f, 1.f};
+          const float rot_x = 1.f - distribution(generator);
+          const float rot_y = 1.f - distribution(generator);
+
+          vec3f biNormU, biNormV;
+          auto &dg      = dgs[i];
+          getBinormals(biNormU, biNormV, dg.Ns);
+
+          auto &ray    = stream.ray[i];
+          auto &ao_ray = ao_rays[i];
+
+          if (rayIsActive(stream.ray, i)) {
+            ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * dg.Ns);
+            ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns,
+                                      rot_x, rot_y, epsilon);
+            ao_ray.t0  = epsilon;
+            ao_ray.t   = aoRayLength - epsilon;
+          } else {
+            ao_ray.t0 = inf;
+            ao_ray.t  = 0.f;
+          }
         }
 
-        float diffuse = abs(dot(N,ray.dir));
-        color = superColor * vec3f{diffuse*(1.0f-float(hits)/samplesPerFrame)};
-        alpha = 1.f;
+        // Trace AO rays
+        occludeRays(ao_rays, RTC_INTERSECT_INCOHERENT);
+
+        // Record occlusion test
+        for (int i = 0; i < ScreenSampleStream::size; ++i) {
+          auto &ao_ray  = ao_rays[i];
+          auto &dg      = dgs[i];
+          if (dot(ao_ray.dir, dg.Ns) < 0.05f || ao_ray.hitSomething())
+            hits[i]++;
+        }
+      }
+
+      for (int i = 0; i < ScreenSampleStream::size; ++i) {
+        if (rayIsActive(stream.ray, i)) {
+          auto &color   = stream.rgb[i];
+          auto &ray     = stream.ray[i];
+          auto &dg      = dgs[i];
+          float diffuse = abs(dot(dg.Ns, ray.dir));
+          color *= vec3f{diffuse * (1.0f - float(hits[i])/samplesPerFrame)};
+        }
       }
     }
 

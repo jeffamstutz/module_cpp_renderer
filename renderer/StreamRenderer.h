@@ -45,6 +45,7 @@ namespace ospray {
     protected:
 
       void traceRays(RayStream &rays, RTCIntersectFlags flags) const;
+      void occludeRays(RayStream &rays, RTCIntersectFlags flags) const;
 
     };
 
@@ -56,6 +57,14 @@ namespace ospray {
       RTCIntersectContext ctx{flags, nullptr};
       rtcIntersect1M(model->embreeSceneHandle, &ctx,
                      (RTCRay*)&rays, rays.size(), sizeof(Ray));
+    }
+
+    inline void StreamRenderer::occludeRays(RayStream &rays,
+                                            RTCIntersectFlags flags) const
+    {
+      RTCIntersectContext ctx{flags, nullptr};
+      rtcOccluded1M(model->embreeSceneHandle, &ctx,
+                    (RTCRay*)&rays, rays.size(), sizeof(Ray));
     }
 
   }// namespace cpp_renderer
