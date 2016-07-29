@@ -117,9 +117,7 @@ namespace ospray {
 
     inline void SimpleAORenderer::shade_ao(vec3f &color,
                                            float &alpha,
-                                           const Ray &ray,
-                                           const float rot_x,
-                                           const float rot_y) const
+                                           const Ray &ray) const
     {
       vec3f superColor{1.f};
 
@@ -147,12 +145,16 @@ namespace ospray {
       const vec3f &N = dg.Ns;
       getBinormals(biNormU, biNormV, N);
 
+      std::uniform_real_distribution<float> distribution {0.f, 1.f};
+      const float rot_x = 1.f - distribution(generator);
+      const float rot_y = 1.f - distribution(generator);
+
       for (int i = 0; i < samplesPerFrame; i++) {
         Ray ao_ray;
         ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * N);
         ao_ray.dir = getRandomDir(biNormU, biNormV, N, rot_x, rot_y, epsilon);
-        ao_ray.t0 = epsilon;
-        ao_ray.t  = aoRayLength - epsilon;
+        ao_ray.t0  = epsilon;
+        ao_ray.t   = aoRayLength - epsilon;
 
         if (dot(ao_ray.dir, N) < 0.05f || isOccluded(ao_ray))
           hits++;
@@ -169,10 +171,7 @@ namespace ospray {
       auto &ray = sample.ray;
 
       if (traceRay(ray)) {
-        std::uniform_real_distribution<float> distribution {0.f, 1.f};
-        const float rot_x = 1.f - distribution(generator);
-        const float rot_y = 1.f - distribution(generator);
-        shade_ao(sample.rgb, sample.alpha, sample.ray, rot_x,rot_y);
+        shade_ao(sample.rgb, sample.alpha, sample.ray);
       } else {
         sample.rgb = bgColor;
       }
