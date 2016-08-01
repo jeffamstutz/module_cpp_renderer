@@ -84,23 +84,19 @@ namespace ospray {
 
       renderStream(perFrameData, screenSamples);
 
-      for (int i = 0; i < ScreenSampleStream::size; ++i) {
-        auto &tileOffset = screenSamples.tileOffset[i];
-        if (tileOffset < 0)
-          continue;
+      auto writeTile = [&](ScreenSampleRef sample)
+      {
+        sample.rgb *= spp_inv;
 
-        auto &rgb   = screenSamples.rgb[i];
-        auto &z     = screenSamples.z[i];
-        auto &alpha = screenSamples.alpha[i];
+        const auto tileOffset = sample.tileOffset;
+        tile.r[tileOffset] = sample.rgb.x;
+        tile.g[tileOffset] = sample.rgb.y;
+        tile.b[tileOffset] = sample.rgb.z;
+        tile.a[tileOffset] = sample.alpha;
+        tile.z[tileOffset] = sample.z;
+      };
 
-        rgb *= spp_inv;
-
-        tile.r[tileOffset] = rgb.x;
-        tile.g[tileOffset] = rgb.y;
-        tile.b[tileOffset] = rgb.z;
-        tile.a[tileOffset] = alpha;
-        tile.z[tileOffset] = z;
-      }
+      for_each_sample(screenSamples, writeTile, sampleEnabled);
     }
 
     void StreamRenderer::renderSample(void */*perFrameData*/,

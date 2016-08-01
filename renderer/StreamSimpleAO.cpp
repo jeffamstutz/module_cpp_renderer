@@ -25,6 +25,8 @@ static thread_local std::minstd_rand generator;
 namespace ospray {
   namespace cpp_renderer {
 
+    using SSR = ScreenSampleRef;
+
     // Material definition ////////////////////////////////////////////////////
 
     //! \brief Material used by the StreamSimpleAO renderer
@@ -124,38 +126,46 @@ namespace ospray {
 
       int nActiveRays = ScreenSampleStream::size;
 
-      for (int i = 0; i < ScreenSampleStream::size; ++i) {
-        stream.alpha[i] = 1.f;
+      for_each_sample(stream, [](SSR sample){ sample.alpha = 1.f; });
 
-        auto &ray   = stream.rays[i];
-        auto &color = stream.rgb[i];
-        auto &dg    = dgs[i];
-
-        if (!ray.hitSomething()) {
-          color = bgColor;
-          disableRay(stream.rays, i);
+      // Disable rays which didn't hit anything
+      for_each_sample(
+        stream,
+        [&](SSR sample){
+          sample.rgb = bgColor;
+          disableRay(sample.ray);
           nActiveRays--;
-          continue;
-        }
+        },
+        [](SSR sample){ return !sample.ray.hitSomething(); }
+      );
 
-        StreamSimpleAOMaterial *mat =
-            dynamic_cast<StreamSimpleAOMaterial*>(dg.material);
+      // Get material color for rays which did hit something
+      for_each_sample_n(
+        stream,
+        [&](SSR sample, int i) {
+          auto &dg = dgs[i];
 
-        if (mat) {
-          color = mat->Kd;
+          StreamSimpleAOMaterial *mat =
+              dynamic_cast<StreamSimpleAOMaterial*>(dg.material);
+
+          if (mat) {
+            sample.rgb = mat->Kd;
 #if 0// NOTE(jda) - texture fetches not yet implemented
-          if (mat->map_Kd) {
-            vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
-            color *= vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
-          }
+            if (mat->map_Kd) {
+              vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
+              sample.rgbcolor *=
+                  vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
+            }
 #endif
-        } else {
-          color = vec3f{1.f};
-        }
+          } else {
+            sample.rgb = vec3f{1.f};
+          }
 
-        // should be done in material:
-        color *= vec3f{dg.color.x, dg.color.y, dg.color.z};
-      }
+          // should be done in material:
+          sample.rgb *= vec3f{dg.color.x, dg.color.y, dg.color.z};
+        },
+        [](SSR sample) { return sample.ray.hitSomething(); }
+      );
 
       if (nActiveRays <= 0)
         return;
@@ -164,11 +174,11 @@ namespace ospray {
       std::fill(begin(hits), end(hits), 0);
 
       RayStream ao_rays;
+      std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
       for (int j = 0; j < samplesPerFrame; j++) {
         // Setup AO rays
         for (int i = 0; i < ScreenSampleStream::size; ++i) {
-          std::uniform_real_distribution<float> distribution {0.f, 1.f};
           const float rot_x = 1.f - distribution(generator);
           const float rot_y = 1.f - distribution(generator);
 
@@ -179,7 +189,7 @@ namespace ospray {
           auto &ray    = stream.rays[i];
           auto &ao_ray = ao_rays[i];
 
-          if (rayIsActive(stream.rays, i)) {
+          if (rayIsActive(ray)) {
             ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * dg.Ns);
             ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns,
                                       rot_x, rot_y, epsilon);
@@ -196,22 +206,20 @@ namespace ospray {
 
         // Record occlusion test
         for (int i = 0; i < ScreenSampleStream::size; ++i) {
-          auto &ao_ray  = ao_rays[i];
-          auto &dg      = dgs[i];
+          auto &ao_ray = ao_rays[i];
+          auto &dg     = dgs[i];
           if (dot(ao_ray.dir, dg.Ns) < 0.05f || ao_ray.hitSomething())
             hits[i]++;
         }
       }
 
-      for (int i = 0; i < ScreenSampleStream::size; ++i) {
-        if (rayIsActive(stream.rays, i)) {
-          auto &color   = stream.rgb[i];
-          auto &ray     = stream.rays[i];
-          auto &dg      = dgs[i];
-          float diffuse = abs(dot(dg.Ns, ray.dir));
-          color *= vec3f{diffuse * (1.0f - float(hits[i])/samplesPerFrame)};
-        }
-      }
+      auto writeColor = [&](SSR sample, int i)
+      {
+        float diffuse = abs(dot(dgs[i].Ns, sample.ray.dir));
+        sample.rgb *= diffuse * (1.0f - float(hits[i])/samplesPerFrame);
+      };
+
+      for_each_sample_n(stream, writeColor, sampleEnabled);
     }
 
     void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,

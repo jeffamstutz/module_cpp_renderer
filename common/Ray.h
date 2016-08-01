@@ -66,17 +66,27 @@ namespace ospray {
     // Inlined helper functions ///////////////////////////////////////////////
 
     /*! \brief helper function for querying if an individual ray is active */
-    inline bool rayIsActive(RayStream &rays, int i)
+    inline bool rayIsActive(const Ray& ray)
     {
-      auto &ray = rays[i];
       return ray.t0 <= ray.t;
+    }
+
+    /*! \brief helper function for querying if an individual ray is active */
+    inline bool rayIsActive(const RayStream &rays, int i)
+    {
+      return rayIsActive(rays[i]);
+    }
+
+    /*! \brief helper function for disabling individual rays in a stream */
+    inline void disableRay(Ray &ray)
+    {
+      if (rayIsActive(ray)) std::swap(ray.t0, ray.t);
     }
 
     /*! \brief helper function for disabling individual rays in a stream */
     inline void disableRay(RayStream &rays, int i)
     {
-      auto &ray = rays[i];
-      if (rayIsActive(rays, i)) std::swap(ray.t0, ray.t);
+      disableRay(rays[i]);
     }
 
   }// ::ospray::cpp_renderer
