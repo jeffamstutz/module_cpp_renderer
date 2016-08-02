@@ -196,7 +196,7 @@ namespace ospray {
             getBinormals(biNormU, biNormV, dg.Ns);
 
             auto &ray    = sample.ray;
-            auto &ao_ray = ao_rays[i];
+            auto &ao_ray = ao_rays[i] = Ray();
 
             ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * dg.Ns);
             ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns, epsilon);
