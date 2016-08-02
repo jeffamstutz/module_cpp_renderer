@@ -221,13 +221,15 @@ namespace ospray {
         );
       }
 
-      auto writeColor = [&](ScreenSampleRef sample, int i)
-      {
-        float diffuse = abs(dot(dgs[i].Ns, sample.ray.dir));
-        sample.rgb *= vec3f{diffuse * (1.0f - float(hits[i])/samplesPerFrame)};
-      };
-
-      for_each_sample_n(stream, writeColor, rayHit);
+      // Write pixel colors
+      for_each_sample_n(
+        stream,
+        [&](ScreenSampleRef sample, int i) {
+          float diffuse = abs(dot(dgs[i].Ns, sample.ray.dir));
+          sample.rgb *= diffuse * (1.0f - float(hits[i])/samplesPerFrame);
+        },
+        rayHit
+      );
     }
 
     void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
