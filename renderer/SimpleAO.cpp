@@ -85,11 +85,13 @@ namespace ospray {
     inline vec3f getRandomDir(const vec3f &biNorm0,
                               const vec3f &biNorm1,
                               const vec3f &gNormal,
-                              float rot_x,
-                              float rot_y,
                               float epsilon)
     {
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
+
+      const float rot_x = 1.f - distribution(generator);
+      const float rot_y = 1.f - distribution(generator);
+
       const vec2f rn = vec2f{distribution(generator), distribution(generator)};
       const float r0 = rotate(rn.x, rot_x);
       const float r1 = rotate(rn.y, rot_y);
@@ -145,14 +147,10 @@ namespace ospray {
       const vec3f &N = dg.Ns;
       getBinormals(biNormU, biNormV, N);
 
-      std::uniform_real_distribution<float> distribution {0.f, 1.f};
-      const float rot_x = 1.f - distribution(generator);
-      const float rot_y = 1.f - distribution(generator);
-
       for (int i = 0; i < samplesPerFrame; i++) {
         Ray ao_ray;
         ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * N);
-        ao_ray.dir = getRandomDir(biNormU, biNormV, N, rot_x, rot_y, epsilon);
+        ao_ray.dir = getRandomDir(biNormU, biNormV, N, epsilon);
         ao_ray.t0  = epsilon;
         ao_ray.t   = aoRayLength - epsilon;
 

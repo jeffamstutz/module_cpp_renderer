@@ -87,11 +87,13 @@ namespace ospray {
     inline vec3f getRandomDir(const vec3f &biNorm0,
                               const vec3f &biNorm1,
                               const vec3f &gNormal,
-                              float rot_x,
-                              float rot_y,
                               float epsilon)
     {
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
+
+      const float rot_x = 1.f - distribution(generator);
+      const float rot_y = 1.f - distribution(generator);
+
       const vec2f rn = vec2f{distribution(generator), distribution(generator)};
       const float r0 = rotate(rn.x, rot_x);
       const float r1 = rotate(rn.y, rot_y);
@@ -174,7 +176,6 @@ namespace ospray {
       std::fill(begin(hits), end(hits), 0);
 
       RayStream ao_rays;
-      std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
       // Disable AO rays which the primary ray missed
       for_each_sample_n(
@@ -192,9 +193,6 @@ namespace ospray {
         for_each_sample_n(
           stream,
           [&](SSR sample, int i) {
-            const float rot_x = 1.f - distribution(generator);
-            const float rot_y = 1.f - distribution(generator);
-
             vec3f biNormU, biNormV;
             auto &dg = dgs[i];
             getBinormals(biNormU, biNormV, dg.Ns);
@@ -203,8 +201,7 @@ namespace ospray {
             auto &ao_ray = ao_rays[i];
 
             ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * dg.Ns);
-            ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns,
-                                      rot_x, rot_y, epsilon);
+            ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns, epsilon);
             ao_ray.t0  = epsilon;
             ao_ray.t   = aoRayLength - epsilon;
           },
@@ -229,7 +226,7 @@ namespace ospray {
       auto writeColor = [&](SSR sample, int i)
       {
         float diffuse = abs(dot(dgs[i].Ns, sample.ray.dir));
-        sample.rgb *= diffuse * (1.0f - float(hits[i])/samplesPerFrame);
+        sample.rgb *= vec3f{diffuse * (1.0f - float(hits[i])/samplesPerFrame)};
       };
 
       for_each_sample_n(stream, writeColor, rayHit);
