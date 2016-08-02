@@ -25,8 +25,6 @@ static thread_local std::minstd_rand generator;
 namespace ospray {
   namespace cpp_renderer {
 
-    using SSR = ScreenSampleRef;
-
     // Material definition ////////////////////////////////////////////////////
 
     //! \brief Material used by the StreamSimpleAO renderer
@@ -105,7 +103,7 @@ namespace ospray {
       return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
 
-    // StreamSimpleAO definitions ///////////////////////////////////////////////////
+    // StreamSimpleAO definitions /////////////////////////////////////////////
 
     std::string StreamSimpleAORenderer::toString() const
     {
@@ -128,12 +126,12 @@ namespace ospray {
 
       int nActiveRays = ScreenSampleStream::size;
 
-      for_each_sample(stream, [](SSR sample){ sample.alpha = 1.f; });
+      for_each_sample(stream,[](ScreenSampleRef sample){ sample.alpha = 1.f; });
 
       // Disable rays which didn't hit anything
       for_each_sample(
         stream,
-        [&](SSR sample){
+        [&](ScreenSampleRef sample){
           sample.rgb = bgColor;
           disableRay(sample.ray);
           nActiveRays--;
@@ -147,7 +145,7 @@ namespace ospray {
       // Get material color for rays which did hit something
       for_each_sample_n(
         stream,
-        [&](SSR sample, int i) {
+        [&](ScreenSampleRef sample, int i) {
           auto &dg = dgs[i];
 
           StreamSimpleAOMaterial *mat =
@@ -180,7 +178,7 @@ namespace ospray {
       // Disable AO rays which the primary ray missed
       for_each_sample_n(
         stream,
-        [&](SSR /*sample*/, int i) {
+        [&](ScreenSampleRef /*sample*/, int i) {
           auto &ao_ray = ao_rays[i];
           ao_ray.t0 = inf;
           ao_ray.t  = 0.f;
@@ -192,7 +190,7 @@ namespace ospray {
         // Setup AO rays for active "lanes"
         for_each_sample_n(
           stream,
-          [&](SSR sample, int i) {
+          [&](ScreenSampleRef sample, int i) {
             vec3f biNormU, biNormV;
             auto &dg = dgs[i];
             getBinormals(biNormU, biNormV, dg.Ns);
@@ -214,7 +212,7 @@ namespace ospray {
         // Record occlusion test
         for_each_sample_n(
           stream,
-          [&](SSR /*sample*/, int i) {
+          [&](ScreenSampleRef /*sample*/, int i) {
             auto &ao_ray = ao_rays[i];
             if (dot(ao_ray.dir, dgs[i].Ns) < 0.05f || ao_ray.hitSomething())
               hits[i]++;
@@ -223,7 +221,7 @@ namespace ospray {
         );
       }
 
-      auto writeColor = [&](SSR sample, int i)
+      auto writeColor = [&](ScreenSampleRef sample, int i)
       {
         float diffuse = abs(dot(dgs[i].Ns, sample.ray.dir));
         sample.rgb *= vec3f{diffuse * (1.0f - float(hits[i])/samplesPerFrame)};
