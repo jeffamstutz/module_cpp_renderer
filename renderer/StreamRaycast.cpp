@@ -62,26 +62,28 @@ namespace ospray {
     {
       traceRays(stream.rays, RTC_INTERSECT_COHERENT);
 
-      for (int i = 0; i < ScreenSampleStream::size; ++i) {
-        const auto &ray = stream.rays[i];
-        auto &rgb       = stream.rgb[i];
+      DGStream dgs = postIntersect(stream.rays,
+                                   DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
-        if (ray.hitSomething()) {
+      // Shade rays
+      for_each_sample_n(
+        stream,
+        [&](ScreenSampleRef sample, int i) {
+          const auto &ray = sample.ray;
           const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
-          const int flags = DG_MATERIALID|DG_COLOR|DG_TEXCOORD;
-          auto dg = cpp_renderer::Renderer::postIntersect(ray, flags);
 
-          auto *mat = dynamic_cast<StreamRaycastMaterial*>(dg.material);
+          auto *mat = dynamic_cast<StreamRaycastMaterial*>(dgs[i].material);
 
-          auto &z     = stream.z[i];
-          auto &alpha = stream.alpha[i];
-          rgb   = (mat != nullptr) ? c * mat->Kd : vec3f{c};
-          z     = ray.t;
-          alpha = 1.f;
-        } else {
-          rgb = bgColor;
+          if (!ray.hitSomething()) {
+            sample.rgb = bgColor;
+            return;
+          }
+
+          sample.rgb   = (mat != nullptr) ? c * mat->Kd : vec3f{c};
+          sample.z     = ray.t;
+          sample.alpha = 1.f;
         }
-      }
+      );
     }
 
     Material *StreamRaycastRenderer::createMaterial(const char */*type*/)
