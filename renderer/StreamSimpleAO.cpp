@@ -176,41 +176,54 @@ namespace ospray {
       RayStream ao_rays;
       std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
-      for (int j = 0; j < samplesPerFrame; j++) {
-        // Setup AO rays
-        for (int i = 0; i < ScreenSampleStream::size; ++i) {
-          const float rot_x = 1.f - distribution(generator);
-          const float rot_y = 1.f - distribution(generator);
-
-          vec3f biNormU, biNormV;
-          auto &dg = dgs[i];
-          getBinormals(biNormU, biNormV, dg.Ns);
-
-          auto &ray    = stream.rays[i];
+      // Disable AO rays which the primary ray missed
+      for_each_sample_n(
+        stream,
+        [&](SSR /*sample*/, int i) {
           auto &ao_ray = ao_rays[i];
+          ao_ray.t0 = inf;
+          ao_ray.t  = 0.f;
+        },
+        rayMiss
+      );
 
-          if (rayIsActive(ray)) {
+      for (int j = 0; j < samplesPerFrame; j++) {
+        // Setup AO rays for active "lanes"
+        for_each_sample_n(
+          stream,
+          [&](SSR sample, int i) {
+            const float rot_x = 1.f - distribution(generator);
+            const float rot_y = 1.f - distribution(generator);
+
+            vec3f biNormU, biNormV;
+            auto &dg = dgs[i];
+            getBinormals(biNormU, biNormV, dg.Ns);
+
+            auto &ray    = sample.ray;
+            auto &ao_ray = ao_rays[i];
+
             ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * dg.Ns);
             ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns,
                                       rot_x, rot_y, epsilon);
             ao_ray.t0  = epsilon;
             ao_ray.t   = aoRayLength - epsilon;
-          } else {
-            ao_ray.t0 = inf;
-            ao_ray.t  = 0.f;
-          }
-        }
+          },
+          rayHit
+        );
 
         // Trace AO rays
         occludeRays(ao_rays, RTC_INTERSECT_INCOHERENT);
 
         // Record occlusion test
-        for (int i = 0; i < ScreenSampleStream::size; ++i) {
-          auto &ao_ray = ao_rays[i];
-          auto &dg     = dgs[i];
-          if (dot(ao_ray.dir, dg.Ns) < 0.05f || ao_ray.hitSomething())
-            hits[i]++;
-        }
+        for_each_sample_n(
+          stream,
+          [&](SSR /*sample*/, int i) {
+            auto &ao_ray = ao_rays[i];
+            if (dot(ao_ray.dir, dgs[i].Ns) < 0.05f || ao_ray.hitSomething())
+              hits[i]++;
+          },
+          rayHit
+        );
       }
 
       auto writeColor = [&](SSR sample, int i)
