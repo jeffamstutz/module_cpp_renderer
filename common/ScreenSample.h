@@ -134,11 +134,21 @@ namespace ospray {
       }
     }
 
-    // Predefined predicates //
+    // Predefined predicates //////////////////////////////////////////////////
 
     inline bool sampleEnabled(const ScreenSampleRef &sample)
     {
       return sample.tileOffset >= 0;
+    }
+
+    inline bool rayHit(const ScreenSampleRef &sample)
+    {
+      return sample.ray.hitSomething();
+    }
+
+    inline bool rayMiss(const ScreenSampleRef &sample)
+    {
+      return !sample.ray.hitSomething();
     }
 
   }// namespace cpp_renderer

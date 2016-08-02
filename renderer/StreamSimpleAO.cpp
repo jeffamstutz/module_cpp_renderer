@@ -136,8 +136,11 @@ namespace ospray {
           disableRay(sample.ray);
           nActiveRays--;
         },
-        [](SSR sample){ return !sample.ray.hitSomething(); }
+        rayMiss
       );
+
+      if (nActiveRays <= 0)
+        return;
 
       // Get material color for rays which did hit something
       for_each_sample_n(
@@ -164,11 +167,8 @@ namespace ospray {
           // should be done in material:
           sample.rgb *= vec3f{dg.color.x, dg.color.y, dg.color.z};
         },
-        [](SSR sample) { return sample.ray.hitSomething(); }
+        rayHit
       );
-
-      if (nActiveRays <= 0)
-        return;
 
       std::array<int, ScreenSampleStream::size> hits;
       std::fill(begin(hits), end(hits), 0);
@@ -219,7 +219,7 @@ namespace ospray {
         sample.rgb *= diffuse * (1.0f - float(hits[i])/samplesPerFrame);
       };
 
-      for_each_sample_n(stream, writeColor, sampleEnabled);
+      for_each_sample_n(stream, writeColor, rayHit);
     }
 
     void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
