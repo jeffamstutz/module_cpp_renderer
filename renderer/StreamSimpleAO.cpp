@@ -117,9 +117,11 @@ namespace ospray {
       aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
     }
 
-    inline void
-    StreamSimpleAORenderer::shade_ao(ScreenSampleStream &stream) const
+    void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
+                                              ScreenSampleStream &stream) const
     {
+      traceRays(stream.rays, RTC_INTERSECT_COHERENT);
+
       DGStream dgs = postIntersect(stream.rays,
                                    DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                    DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
@@ -230,13 +232,6 @@ namespace ospray {
         },
         rayHit
       );
-    }
-
-    void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
-                                              ScreenSampleStream &stream) const
-    {
-      traceRays(stream.rays, RTC_INTERSECT_COHERENT);
-      shade_ao(stream);
     }
 
     Material *StreamSimpleAORenderer::createMaterial(const char */*type*/)
