@@ -108,7 +108,7 @@ namespace ospray {
 
     template <int SIZE, typename FCN_T>
     inline void
-    for_each_sample_n(ScreenSampleStreamN<SIZE> &stream, const FCN_T &fcn)
+    for_each_sample_i(ScreenSampleStreamN<SIZE> &stream, const FCN_T &fcn)
     {
       // TODO: Add static_assert() check for signature of FCN_T, similar to
       //       the way TASK_T is checked for ospray::parallel_for()
@@ -119,7 +119,7 @@ namespace ospray {
 
     template <int SIZE, typename FCN_T, typename PRED_T>
     inline void
-    for_each_sample_n(ScreenSampleStreamN<SIZE> &stream,
+    for_each_sample_i(ScreenSampleStreamN<SIZE> &stream,
                       const FCN_T &fcn,
                       const PRED_T &pred)
     {

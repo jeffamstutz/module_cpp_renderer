@@ -149,7 +149,7 @@ namespace ospray {
 
       for (int i = 0; i < samplesPerFrame; i++) {
         Ray ao_ray;
-        ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * N);
+        ao_ray.org = dg.P + (1e-3f * N);
         ao_ray.dir = getRandomDir(biNormU, biNormV, N, epsilon);
         ao_ray.t0  = epsilon;
         ao_ray.t   = aoRayLength - epsilon;

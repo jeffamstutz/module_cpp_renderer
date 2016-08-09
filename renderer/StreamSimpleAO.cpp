@@ -145,7 +145,7 @@ namespace ospray {
         return;
 
       // Get material color for rays which did hit something
-      for_each_sample_n(
+      for_each_sample_i(
         stream,
         [&](ScreenSampleRef sample, int i) {
           auto &dg = dgs[i];
@@ -178,7 +178,7 @@ namespace ospray {
       RayStream ao_rays;
 
       // Disable AO rays which the primary ray missed
-      for_each_sample_n(
+      for_each_sample_i(
         stream,
         [&](ScreenSampleRef /*sample*/, int i) {
           auto &ao_ray = ao_rays[i];
@@ -190,17 +190,16 @@ namespace ospray {
 
       for (int j = 0; j < samplesPerFrame; j++) {
         // Setup AO rays for active "lanes"
-        for_each_sample_n(
+        for_each_sample_i(
           stream,
-          [&](ScreenSampleRef sample, int i) {
+          [&](ScreenSampleRef /*sample*/, int i) {
             vec3f biNormU, biNormV;
             auto &dg = dgs[i];
             getBinormals(biNormU, biNormV, dg.Ns);
 
-            auto &ray    = sample.ray;
             auto &ao_ray = ao_rays[i] = Ray();
 
-            ao_ray.org = (ray.org + ray.t * ray.dir) + (1e-3f * dg.Ns);
+            ao_ray.org = dg.P + (1e-3f * dg.Ns);
             ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns, epsilon);
             ao_ray.t0  = epsilon;
             ao_ray.t   = aoRayLength - epsilon;
@@ -212,7 +211,7 @@ namespace ospray {
         occludeRays(ao_rays, RTC_INTERSECT_INCOHERENT);
 
         // Record occlusion test
-        for_each_sample_n(
+        for_each_sample_i(
           stream,
           [&](ScreenSampleRef /*sample*/, int i) {
             auto &ao_ray = ao_rays[i];
@@ -224,7 +223,7 @@ namespace ospray {
       }
 
       // Write pixel colors
-      for_each_sample_n(
+      for_each_sample_i(
         stream,
         [&](ScreenSampleRef sample, int i) {
           float diffuse = abs(dot(dgs[i].Ns, sample.ray.dir));

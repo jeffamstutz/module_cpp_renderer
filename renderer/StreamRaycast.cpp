@@ -66,7 +66,7 @@ namespace ospray {
                                    DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
       // Shade rays
-      for_each_sample_n(
+      for_each_sample_i(
         stream,
         [&](ScreenSampleRef sample, int i) {
           const auto &ray = sample.ray;
