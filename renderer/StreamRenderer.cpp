@@ -18,8 +18,6 @@
 #include "StreamRenderer.h"
 #include "../util.h"
 
-#define FULL_TILE 1 // NOTE(jda) - enable to call renderStream()
-
 static thread_local std::minstd_rand generator;
 
 namespace ospray {
