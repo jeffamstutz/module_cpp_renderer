@@ -18,6 +18,8 @@
 #include "Renderer.h"
 #include "../util.h"
 
+#include <random>
+
 static thread_local std::minstd_rand generator;
 
 namespace ospray {
