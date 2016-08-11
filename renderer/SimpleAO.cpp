@@ -144,7 +144,7 @@ namespace ospray {
 
       int hits = 0;
       vec3f biNormU, biNormV;
-      const vec3f &N = dg.Ns;
+      const vec3f &N = dg.Ng;
       getBinormals(biNormU, biNormV, N);
 
       for (int i = 0; i < samplesPerFrame; i++) {
@@ -159,7 +159,7 @@ namespace ospray {
       }
 
       float diffuse = abs(dot(N,ray.dir));
-      color = superColor * vec3f{diffuse * (1.0f-float(hits)/samplesPerFrame)};
+      color = superColor * (diffuse * (1.0f-float(hits)/samplesPerFrame));
       alpha = 1.f;
     }
 

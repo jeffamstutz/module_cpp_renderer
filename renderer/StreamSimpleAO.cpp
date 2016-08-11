@@ -195,12 +195,12 @@ namespace ospray {
           [&](ScreenSampleRef /*sample*/, int i) {
             vec3f biNormU, biNormV;
             auto &dg = dgs[i];
-            getBinormals(biNormU, biNormV, dg.Ns);
+            getBinormals(biNormU, biNormV, dg.Ng);
 
             auto &ao_ray = ao_rays[i] = Ray();
 
-            ao_ray.org = dg.P + (1e-3f * dg.Ns);
-            ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ns, epsilon);
+            ao_ray.org = dg.P + (1e-3f * dg.Ng);
+            ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ng, epsilon);
             ao_ray.t0  = epsilon;
             ao_ray.t   = aoRayLength - epsilon;
           },
@@ -215,7 +215,7 @@ namespace ospray {
           stream,
           [&](ScreenSampleRef /*sample*/, int i) {
             auto &ao_ray = ao_rays[i];
-            if (dot(ao_ray.dir, dgs[i].Ns) < 0.05f || ao_ray.hitSomething())
+            if (dot(ao_ray.dir, dgs[i].Ng) < 0.05f || ao_ray.hitSomething())
               hits[i]++;
           },
           rayHit
@@ -226,7 +226,7 @@ namespace ospray {
       for_each_sample_i(
         stream,
         [&](ScreenSampleRef sample, int i) {
-          float diffuse = abs(dot(dgs[i].Ns, sample.ray.dir));
+          float diffuse = abs(dot(dgs[i].Ng, sample.ray.dir));
           sample.rgb *= diffuse * (1.0f - float(hits[i])/samplesPerFrame);
         },
         rayHit
