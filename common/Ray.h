@@ -60,7 +60,7 @@ namespace ospray {
 
     inline bool Ray::hitSomething() const
     {
-      return geomID != RTC_INVALID_GEOMETRY_ID;
+      return geomID != static_cast<int>(RTC_INVALID_GEOMETRY_ID);
     }
 
     // Inlined helper functions ///////////////////////////////////////////////

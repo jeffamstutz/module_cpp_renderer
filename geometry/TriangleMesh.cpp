@@ -126,7 +126,7 @@ namespace ospray {
 
       bounds = empty;
 
-      for (int i = 0; i < numVerts*vtxSize; i += vtxSize)
+      for (size_t i = 0; i < numVerts*vtxSize; i += vtxSize)
         bounds.extend(*(vec3f*)(vertex + i));
 
       if (logLevel >= 2) {
@@ -177,7 +177,6 @@ namespace ospray {
 
           if (det != 0.f) {
             const float invDet = rcp(det);
-            const int32 vtxSize = vtxSize;
             const vec3f &v0 = vertex[idx.x * vtxSize];
             const vec3f &v1 = vertex[idx.y * vtxSize];
             const vec3f &v2 = vertex[idx.z * vtxSize];

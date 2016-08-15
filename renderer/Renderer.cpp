@@ -89,7 +89,7 @@ namespace ospray {
         }
 #endif
 
-        for (uint32 s = 0; s < spp; s++) {
+        for (int s = 0; s < spp; s++) {
           float pixel_du = distribution(generator);
           float pixel_dv = distribution(generator);
           screenSample.sampleID.z = startSampleID+s;

@@ -64,6 +64,7 @@ namespace ospray {
 
       dir_00 = dir - .5f * dir_du - .5f * dir_dv;
 
+#if 0
       float scaledAperture = 0.f;
       // prescale to focal plane
       if (apertureRadius > 0.f) {
@@ -72,6 +73,7 @@ namespace ospray {
         dir_00 *= focusDistance;
         scaledAperture = apertureRadius / imgPlane_size_x;
       }
+#endif
     }
 
     void PerspectiveCamera::getRay(const CameraSample &sample,
