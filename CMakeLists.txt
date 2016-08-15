@@ -16,11 +16,14 @@
 
 option(OSPRAY_MODULE_CPP "Build 'C++' module (renderers in all C++ code)" ON)
 
-if (OSPRAY_MODULE_CPP)
+if (OSPRAY_MODULE_CPP AND
+    (NOT OSPRAY_USE_EXTERNAL_EMBREE OR NOT OSPRAY_USE_EMBREE_STREAMS))
+  message(WARNING "You must use an external Embree (v2.10.0+) AND enable "
+                  "Embree streams...OSPRAY_MODULE_CPP will not be built.")
+  set(OSPRAY_MODULE_CPP OFF)
+endif()
 
-  if (NOT OSPRAY_USE_EXTERNAL_EMBREE OR NOT OSPRAY_USE_EMBREE_STREAMS)
-    message(FATAL_ERROR "You must use an external Embree (v2.10.0+) AND enable Embree streams")
-  endif()
+if (OSPRAY_MODULE_CPP)
 
   ospray_create_library(module_cpp
     camera/Camera.h
