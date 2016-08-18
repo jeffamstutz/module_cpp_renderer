@@ -16,6 +16,7 @@
 
 // ospray
 #include "StreamSimpleAO.h"
+#include "ao_util.h"
 #include "../../util.h"
 
 #include <random>
@@ -52,55 +53,6 @@ namespace ospray {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_Kd = (Texture2D*)getParamObject("map_Kd",
                                           getParamObject("map_kd", nullptr));
-    }
-
-    // Helper functions ///////////////////////////////////////////////////////
-
-    inline vec3f getShadingNormal(const Ray &ray)
-    {
-      vec3f N = ray.Ng;
-      float f = rcp(sqrt(dot(N,N)));
-      if (dot(N,ray.dir) >= 0.f) f = -f;
-      return f*N;
-    }
-
-    inline void getBinormals(vec3f &biNorm0,
-                             vec3f &biNorm1,
-                             const vec3f &gNormal)
-    {
-      biNorm0 = vec3f{1.f,0.f,0.f};
-      if (abs(dot(biNorm0,gNormal)) > .95f)
-        biNorm0 = vec3f{0.f,1.f,0.f};
-      biNorm1 = normalize(cross(biNorm0,gNormal));
-      biNorm0 = normalize(cross(biNorm1,gNormal));
-    }
-
-    inline float rotate(float x, float dx)
-    {
-      x += dx;
-      if (x >= 1.f) x -= 1.f;
-      return x;
-    }
-
-    inline vec3f getRandomDir(const vec3f &biNorm0,
-                              const vec3f &biNorm1,
-                              const vec3f &gNormal,
-                              float epsilon)
-    {
-      static std::uniform_real_distribution<float> distribution {0.f, 1.f};
-
-      const float rot_x = 1.f - distribution(generator);
-      const float rot_y = 1.f - distribution(generator);
-
-      const vec2f rn = vec2f{distribution(generator), distribution(generator)};
-      const float r0 = rotate(rn.x, rot_x);
-      const float r1 = rotate(rn.y, rot_y);
-
-      const float w = sqrt(1.f-r1);
-      const float x = cos(float((2.f*M_PI)*r0))*w;
-      const float y = sin(float((2.f*M_PI)*r0))*w;
-      const float z = sqrt(r1) + epsilon;
-      return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
 
     // StreamSimpleAO definitions /////////////////////////////////////////////
@@ -175,6 +127,8 @@ namespace ospray {
       std::array<int, ScreenSampleStream::size> hits;
       std::fill(begin(hits), end(hits), 0);
 
+      std::array<ao_context, ScreenSampleStream::size> ao_ctxs;
+
       RayStream ao_rays;
 
       // Disable AO rays which the primary ray missed
@@ -193,16 +147,10 @@ namespace ospray {
         for_each_sample_i(
           stream,
           [&](ScreenSampleRef /*sample*/, int i) {
-            vec3f biNormU, biNormV;
-            auto &dg = dgs[i];
-            getBinormals(biNormU, biNormV, dg.Ng);
-
-            auto &ao_ray = ao_rays[i] = Ray();
-
-            ao_ray.org = dg.P + (1e-3f * dg.Ng);
-            ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ng, epsilon);
-            ao_ray.t0  = epsilon;
-            ao_ray.t   = aoRayLength - epsilon;
+            auto &dg  = dgs[i];
+            auto &ctx = ao_ctxs[i];
+            ctx = getAOContext(dg, aoRayLength, epsilon);
+            ao_rays[i] = calculateAORay(dg, ctx);
           },
           rayHit
         );

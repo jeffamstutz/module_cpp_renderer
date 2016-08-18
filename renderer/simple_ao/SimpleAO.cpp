@@ -16,11 +16,11 @@
 
 // ospray
 #include "SimpleAO.h"
+#include "ao_util.h"
 #include "../../util.h"
 
 #include <random>
 
-static thread_local std::minstd_rand generator;
 
 namespace ospray {
   namespace cpp_renderer {
@@ -52,55 +52,6 @@ namespace ospray {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_Kd = (Texture2D*)getParamObject("map_Kd",
                                           getParamObject("map_kd", nullptr));
-    }
-
-    // Helper functions ///////////////////////////////////////////////////////
-
-    inline vec3f getShadingNormal(const Ray &ray)
-    {
-      vec3f N = ray.Ng;
-      float f = rcp(sqrt(dot(N,N)));
-      if (dot(N,ray.dir) >= 0.f) f = -f;
-      return f*N;
-    }
-
-    inline void getBinormals(vec3f &biNorm0,
-                             vec3f &biNorm1,
-                             const vec3f &gNormal)
-    {
-      biNorm0 = vec3f{1.f,0.f,0.f};
-      if (abs(dot(biNorm0,gNormal)) > .95f)
-        biNorm0 = vec3f{0.f,1.f,0.f};
-      biNorm1 = normalize(cross(biNorm0,gNormal));
-      biNorm0 = normalize(cross(biNorm1,gNormal));
-    }
-
-    inline float rotate(float x, float dx)
-    {
-      x += dx;
-      if (x >= 1.f) x -= 1.f;
-      return x;
-    }
-
-    inline vec3f getRandomDir(const vec3f &biNorm0,
-                              const vec3f &biNorm1,
-                              const vec3f &gNormal,
-                              float epsilon)
-    {
-      static std::uniform_real_distribution<float> distribution {0.f, 1.f};
-
-      const float rot_x = 1.f - distribution(generator);
-      const float rot_y = 1.f - distribution(generator);
-
-      const vec2f rn = vec2f{distribution(generator), distribution(generator)};
-      const float r0 = rotate(rn.x, rot_x);
-      const float r1 = rotate(rn.y, rot_y);
-
-      const float w = sqrt(1.f-r1);
-      const float x = cos(float((2.f*M_PI)*r0))*w;
-      const float y = sin(float((2.f*M_PI)*r0))*w;
-      const float z = sqrt(r1) + epsilon;
-      return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
 
     // SimpleAO definitions ///////////////////////////////////////////////////
@@ -143,22 +94,15 @@ namespace ospray {
       superColor *= vec3f{dg.color.x, dg.color.y, dg.color.z};
 
       int hits = 0;
-      vec3f biNormU, biNormV;
-      const vec3f &N = dg.Ng;
-      getBinormals(biNormU, biNormV, N);
+      auto aoContext = getAOContext(dg, aoRayLength, epsilon);
 
       for (int i = 0; i < samplesPerFrame; i++) {
-        Ray ao_ray;
-        ao_ray.org = dg.P + (1e-3f * N);
-        ao_ray.dir = getRandomDir(biNormU, biNormV, N, epsilon);
-        ao_ray.t0  = epsilon;
-        ao_ray.t   = aoRayLength - epsilon;
-
-        if (dot(ao_ray.dir, N) < 0.05f || isOccluded(ao_ray))
+        auto ao_ray = calculateAORay(dg, aoContext);
+        if (dot(ao_ray.dir, dg.Ng) < 0.05f || isOccluded(ao_ray))
           hits++;
       }
 
-      float diffuse = abs(dot(N,ray.dir));
+      float diffuse = abs(dot(dg.Ng, ray.dir));
       color = superColor * (diffuse * (1.0f-float(hits)/samplesPerFrame));
       alpha = 1.f;
     }
