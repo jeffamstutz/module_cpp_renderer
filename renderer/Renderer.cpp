@@ -51,9 +51,7 @@ namespace ospray {
       return nullptr;
     }
 
-    void Renderer::renderTile(void *perFrameData,
-                              Tile &tile,
-                              size_t jobID) const
+    void Renderer::renderTile(void *perFrameData,Tile &tile,size_t jobID) const
     {
       const float spp_inv = 1.f / spp;
 
@@ -125,9 +123,9 @@ namespace ospray {
       }
     }
 
-    void Renderer::endFrame(void */*perFrameData*/,
-                            const int32 /*fbChannelFlags*/)
+    void Renderer::endFrame(void *perFrameData, const int32 fbChannelFlags)
     {
+      UNUSED(perFrameData, fbChannelFlags);
       // NOTE(jda) - override to *not* run default behavior
     }
 

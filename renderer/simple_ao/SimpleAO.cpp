@@ -107,9 +107,10 @@ namespace ospray {
       alpha = 1.f;
     }
 
-    void SimpleAORenderer::renderSample(void */*perFrameData*/,
+    void SimpleAORenderer::renderSample(void *perFrameData,
                                         ScreenSample &sample) const
     {
+      UNUSED(perFrameData);
       auto &ray = sample.ray;
 
       if (traceRay(ray)) {
@@ -119,8 +120,9 @@ namespace ospray {
       }
     }
 
-    Material *SimpleAORenderer::createMaterial(const char */*type*/)
+    Material *SimpleAORenderer::createMaterial(const char *type)
     {
+      UNUSED(type);
       return new SimpleAOMaterial;
     }
 

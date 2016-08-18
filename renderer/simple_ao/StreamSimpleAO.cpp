@@ -161,7 +161,8 @@ namespace ospray {
         // Record occlusion test
         for_each_sample_i(
           stream,
-          [&](ScreenSampleRef /*sample*/, int i) {
+          [&](ScreenSampleRef sample, int i) {
+            UNUSED(sample);
             auto &ao_ray = ao_rays[i];
             if (dot(ao_ray.dir, dgs[i].Ng) < 0.05f || ao_ray.hitSomething())
               hits[i]++;
@@ -181,8 +182,9 @@ namespace ospray {
       );
     }
 
-    Material *StreamSimpleAORenderer::createMaterial(const char */*type*/)
+    Material *StreamSimpleAORenderer::createMaterial(const char *type)
     {
+      UNUSED(type);
       return new StreamSimpleAOMaterial;
     }
 

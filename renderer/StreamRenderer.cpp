@@ -99,9 +99,10 @@ namespace ospray {
       for_each_sample(screenSamples, writeTile, sampleEnabled);
     }
 
-    void StreamRenderer::renderSample(void */*perFrameData*/,
-                                      ScreenSample &/*sample*/) const
+    void StreamRenderer::renderSample(void *perFrameData,
+                                      ScreenSample &sample) const
     {
+      UNUSED(perFrameData, sample);
       throw std::runtime_error("Type Mismatch: calling renderSample() in a"
                                " stream renderer...");
     }
