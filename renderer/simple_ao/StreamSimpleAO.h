@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "StreamRenderer.h"
+#include "../StreamRenderer.h"
 
 namespace ospray {
   namespace cpp_renderer {

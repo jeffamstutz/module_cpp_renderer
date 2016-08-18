@@ -16,19 +16,31 @@
 
 #pragma once
 
-#include "StreamRenderer.h"
+// embree
+#include "embree2/rtcore.h"
+
+#include "../camera/Camera.h"
+#include "../Renderer.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
-    struct StreamRaycastRenderer : public ospray::cpp_renderer::StreamRenderer
+    struct SimpleAORenderer : public ospray::cpp_renderer::Renderer
     {
       std::string toString() const override;
+      void commit() override;
 
-      void renderStream(void *perFrameData,
-                        ScreenSampleStream &stream) const override;
+      void renderSample(void *perFrameData,
+                        ScreenSample &sample) const override;
 
       ospray::Material *createMaterial(const char *type) override;
+
+    private:
+
+      void shade_ao(vec3f &color, float &alpha, const Ray &ray) const;
+
+      int   samplesPerFrame{1};
+      float aoRayLength{1e20f};
     };
 
   }// namespace cpp_renderer

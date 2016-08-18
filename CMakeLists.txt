@@ -36,12 +36,12 @@ if (OSPRAY_MODULE_CPP)
     geometry/Geometry.h
     geometry/TriangleMesh.cpp
 
-    renderer/Raycast.cpp
     renderer/Renderer.cpp
-    renderer/SimpleAO.cpp
-    renderer/StreamRaycast.cpp
     renderer/StreamRenderer.cpp
-    renderer/StreamSimpleAO.cpp
+    renderer/raycast/Raycast.cpp
+    renderer/raycast/StreamRaycast.cpp
+    renderer/simple_ao/SimpleAO.cpp
+    renderer/simple_ao/StreamSimpleAO.cpp
 
     util.cpp
     LINK

@@ -15,8 +15,8 @@
 // ======================================================================== //
 
 // ospray
-#include "StreamSimpleAO.h"
-#include "../util.h"
+#include "SimpleAO.h"
+#include "../../util.h"
 
 #include <random>
 
@@ -27,11 +27,11 @@ namespace ospray {
 
     // Material definition ////////////////////////////////////////////////////
 
-    //! \brief Material used by the StreamSimpleAO renderer
-    /*! \detailed Since the StreamSimpleAO Renderer only cares about a
+    //! \brief Material used by the SimpleAO renderer
+    /*! \detailed Since the SimpleAO Renderer only cares about a
         diffuse material component this material only stores diffuse
         and diffuse texture */
-    struct StreamSimpleAOMaterial : public ospray::Material {
+    struct SimpleAOMaterial : public ospray::Material {
       /*! \brief commit the object's outstanding changes
        *         (such as changed parameters etc) */
       void commit() override;
@@ -47,7 +47,7 @@ namespace ospray {
       Ref<Texture2D> map_Kd;
     };
 
-    void StreamSimpleAOMaterial::commit()
+    void SimpleAOMaterial::commit()
     {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_Kd = (Texture2D*)getParamObject("map_Kd",
@@ -103,142 +103,84 @@ namespace ospray {
       return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
 
-    // StreamSimpleAO definitions /////////////////////////////////////////////
+    // SimpleAO definitions ///////////////////////////////////////////////////
 
-    std::string StreamSimpleAORenderer::toString() const
+    std::string SimpleAORenderer::toString() const
     {
-      return "ospray::cpp_renderer::StreamSimpleAORenderer";
+      return "ospray::cpp_renderer::SimpleAORenderer";
     }
 
-    void StreamSimpleAORenderer::commit()
+    void SimpleAORenderer::commit()
     {
       ospray::cpp_renderer::Renderer::commit();
       samplesPerFrame = getParam1i("aoSamples", 1);
       aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
     }
 
-    void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
-                                              ScreenSampleStream &stream) const
+    inline void SimpleAORenderer::shade_ao(vec3f &color,
+                                           float &alpha,
+                                           const Ray &ray) const
     {
-      traceRays(stream.rays, RTC_INTERSECT_COHERENT);
+      vec3f superColor{1.f};
 
-      DGStream dgs = postIntersect(stream.rays,
-                                   DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
+      auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                    DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
-      int nActiveRays = ScreenSampleStream::size;
+      SimpleAOMaterial *mat = dynamic_cast<SimpleAOMaterial*>(dg.material);
 
-      for_each_sample(stream,[](ScreenSampleRef sample){ sample.alpha = 1.f; });
-
-      // Disable rays which didn't hit anything
-      for_each_sample(
-        stream,
-        [&](ScreenSampleRef sample){
-          sample.rgb = bgColor;
-          disableRay(sample.ray);
-          nActiveRays--;
-        },
-        rayMiss
-      );
-
-      if (nActiveRays <= 0)
-        return;
-
-      // Get material color for rays which did hit something
-      for_each_sample_i(
-        stream,
-        [&](ScreenSampleRef sample, int i) {
-          auto &dg = dgs[i];
-
-          StreamSimpleAOMaterial *mat =
-              dynamic_cast<StreamSimpleAOMaterial*>(dg.material);
-
-          if (mat) {
-            sample.rgb = mat->Kd;
+      if (mat) {
+        superColor = mat->Kd;
 #if 0// NOTE(jda) - texture fetches not yet implemented
-            if (mat->map_Kd) {
-              vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
-              sample.rgbcolor *=
-                  vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
-            }
+        if (mat->map_Kd) {
+          vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
+          superColor = superColor *
+              vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
+        }
 #endif
-          } else {
-            sample.rgb = vec3f{1.f};
-          }
-
-          // should be done in material:
-          sample.rgb *= vec3f{dg.color.x, dg.color.y, dg.color.z};
-        },
-        rayHit
-      );
-
-      std::array<int, ScreenSampleStream::size> hits;
-      std::fill(begin(hits), end(hits), 0);
-
-      RayStream ao_rays;
-
-      // Disable AO rays which the primary ray missed
-      for_each_sample_i(
-        stream,
-        [&](ScreenSampleRef /*sample*/, int i) {
-          auto &ao_ray = ao_rays[i];
-          ao_ray.t0 = inf;
-          ao_ray.t  = 0.f;
-        },
-        rayMiss
-      );
-
-      for (int j = 0; j < samplesPerFrame; j++) {
-        // Setup AO rays for active "lanes"
-        for_each_sample_i(
-          stream,
-          [&](ScreenSampleRef /*sample*/, int i) {
-            vec3f biNormU, biNormV;
-            auto &dg = dgs[i];
-            getBinormals(biNormU, biNormV, dg.Ng);
-
-            auto &ao_ray = ao_rays[i] = Ray();
-
-            ao_ray.org = dg.P + (1e-3f * dg.Ng);
-            ao_ray.dir = getRandomDir(biNormU, biNormV, dg.Ng, epsilon);
-            ao_ray.t0  = epsilon;
-            ao_ray.t   = aoRayLength - epsilon;
-          },
-          rayHit
-        );
-
-        // Trace AO rays
-        occludeRays(ao_rays, RTC_INTERSECT_INCOHERENT);
-
-        // Record occlusion test
-        for_each_sample_i(
-          stream,
-          [&](ScreenSampleRef /*sample*/, int i) {
-            auto &ao_ray = ao_rays[i];
-            if (dot(ao_ray.dir, dgs[i].Ng) < 0.05f || ao_ray.hitSomething())
-              hits[i]++;
-          },
-          rayHit
-        );
       }
 
-      // Write pixel colors
-      for_each_sample_i(
-        stream,
-        [&](ScreenSampleRef sample, int i) {
-          float diffuse = abs(dot(dgs[i].Ng, sample.ray.dir));
-          sample.rgb *= diffuse * (1.0f - float(hits[i])/samplesPerFrame);
-        },
-        rayHit
-      );
+      // should be done in material:
+      superColor *= vec3f{dg.color.x, dg.color.y, dg.color.z};
+
+      int hits = 0;
+      vec3f biNormU, biNormV;
+      const vec3f &N = dg.Ng;
+      getBinormals(biNormU, biNormV, N);
+
+      for (int i = 0; i < samplesPerFrame; i++) {
+        Ray ao_ray;
+        ao_ray.org = dg.P + (1e-3f * N);
+        ao_ray.dir = getRandomDir(biNormU, biNormV, N, epsilon);
+        ao_ray.t0  = epsilon;
+        ao_ray.t   = aoRayLength - epsilon;
+
+        if (dot(ao_ray.dir, N) < 0.05f || isOccluded(ao_ray))
+          hits++;
+      }
+
+      float diffuse = abs(dot(N,ray.dir));
+      color = superColor * (diffuse * (1.0f-float(hits)/samplesPerFrame));
+      alpha = 1.f;
     }
 
-    Material *StreamSimpleAORenderer::createMaterial(const char */*type*/)
+    void SimpleAORenderer::renderSample(void */*perFrameData*/,
+                                        ScreenSample &sample) const
     {
-      return new StreamSimpleAOMaterial;
+      auto &ray = sample.ray;
+
+      if (traceRay(ray)) {
+        shade_ao(sample.rgb, sample.alpha, sample.ray);
+      } else {
+        sample.rgb = bgColor;
+      }
     }
 
-    OSP_REGISTER_RENDERER(StreamSimpleAORenderer, cpp_ao_stream)
+    Material *SimpleAORenderer::createMaterial(const char */*type*/)
+    {
+      return new SimpleAOMaterial;
+    }
+
+    OSP_REGISTER_RENDERER(SimpleAORenderer, cpp_ao)
 
   }// namespace cpp_renderer
 }// namespace ospray

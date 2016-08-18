@@ -20,27 +20,19 @@
 #include "embree2/rtcore.h"
 
 #include "../camera/Camera.h"
-#include "Renderer.h"
+#include "../Renderer.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
-    struct SimpleAORenderer : public ospray::cpp_renderer::Renderer
+    struct RaycastRenderer : public ospray::cpp_renderer::Renderer
     {
       std::string toString() const override;
-      void commit() override;
 
       void renderSample(void *perFrameData,
-                        ScreenSample &sample) const override;
+                        ScreenSample &screenSample) const override;
 
       ospray::Material *createMaterial(const char *type) override;
-
-    private:
-
-      void shade_ao(vec3f &color, float &alpha, const Ray &ray) const;
-
-      int   samplesPerFrame{1};
-      float aoRayLength{1e20f};
     };
 
   }// namespace cpp_renderer
