@@ -126,7 +126,7 @@ namespace ospray {
       return new SimpleAOMaterial;
     }
 
-    OSP_REGISTER_RENDERER(SimpleAORenderer, cpp_ao)
+    OSP_REGISTER_RENDERER(SimpleAORenderer, cpp_ao);
 
   }// namespace cpp_renderer
 }// namespace ospray

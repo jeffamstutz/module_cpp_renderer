@@ -87,7 +87,7 @@ namespace ospray {
       return new RaycastMaterial;
     }
 
-    OSP_REGISTER_RENDERER(RaycastRenderer, cpp_raycast)
+    OSP_REGISTER_RENDERER(RaycastRenderer, cpp_raycast);
 
     extern "C" void ospray_init_module_cpp()
     {

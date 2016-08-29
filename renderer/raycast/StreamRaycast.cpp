@@ -91,7 +91,7 @@ namespace ospray {
       return new StreamRaycastMaterial;
     }
 
-    OSP_REGISTER_RENDERER(StreamRaycastRenderer, cpp_raycast_stream)
+    OSP_REGISTER_RENDERER(StreamRaycastRenderer, cpp_raycast_stream);
 
   }// namespace cpp_renderer
 }// namespace ospray

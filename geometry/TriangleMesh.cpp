@@ -202,8 +202,8 @@ namespace ospray {
       }
     }
 
-    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_triangles)
-    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_trianglemesh)
+    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_triangles);
+    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_trianglemesh);
 
   }// namespace cpp_renderer
 }// namespace ospray

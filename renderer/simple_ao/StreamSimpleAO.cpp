@@ -188,7 +188,7 @@ namespace ospray {
       return new StreamSimpleAOMaterial;
     }
 
-    OSP_REGISTER_RENDERER(StreamSimpleAORenderer, cpp_ao_stream)
+    OSP_REGISTER_RENDERER(StreamSimpleAORenderer, cpp_ao_stream);
 
   }// namespace cpp_renderer
 }// namespace ospray

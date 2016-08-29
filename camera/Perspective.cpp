@@ -103,7 +103,7 @@ namespace ospray {
       ray.t   = inf;
     }
 
-    OSP_REGISTER_CAMERA(PerspectiveCamera, cpp_perspective)
+    OSP_REGISTER_CAMERA(PerspectiveCamera, cpp_perspective);
 
   }// namespace cpp_renderer
 }// namespace ospray
