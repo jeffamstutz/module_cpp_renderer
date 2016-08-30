@@ -25,7 +25,7 @@ endif()
 
 if (OSPRAY_MODULE_CPP)
 
-  ospray_create_library(module_cpp
+  ospray_create_library(ospray_module_cpp
     camera/Camera.h
     camera/Perspective.cpp
 
