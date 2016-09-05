@@ -102,7 +102,7 @@ namespace ospray {
           hits++;
       }
 
-      float diffuse = abs(dot(dg.Ng, ray.dir));
+      float diffuse = ospcommon::abs(dot(dg.Ng, ray.dir));
       color = superColor * (diffuse * (1.0f-float(hits)/samplesPerFrame));
       alpha = 1.f;
     }

@@ -18,6 +18,8 @@
 
 #include "../Renderer.h"
 
+#include <random>
+
 
 namespace ospray {
   namespace cpp_renderer {
@@ -29,7 +31,7 @@ namespace ospray {
     inline vec3f getShadingNormal(const Ray &ray)
     {
       vec3f N = ray.Ng;
-      float f = rcp(sqrt(dot(N,N)));
+      float f = rcp(ospcommon::sqrt(dot(N,N)));
       if (dot(N,ray.dir) >= 0.f) f = -f;
       return f*N;
     }
@@ -39,7 +41,7 @@ namespace ospray {
                              const vec3f &gNormal)
     {
       biNorm0 = vec3f{1.f,0.f,0.f};
-      if (abs(dot(biNorm0,gNormal)) > .95f)
+      if (ospcommon::abs(dot(biNorm0,gNormal)) > .95f)
         biNorm0 = vec3f{0.f,1.f,0.f};
       biNorm1 = normalize(cross(biNorm0,gNormal));
       biNorm0 = normalize(cross(biNorm1,gNormal));
@@ -66,10 +68,10 @@ namespace ospray {
       const float r0 = rotate(rn.x, rot_x);
       const float r1 = rotate(rn.y, rot_y);
 
-      const float w = sqrt(1.f-r1);
-      const float x = cos(float((2.f*M_PI)*r0))*w;
-      const float y = sin(float((2.f*M_PI)*r0))*w;
-      const float z = sqrt(r1) + epsilon;
+      const float w = ospcommon::sqrt(1.f-r1);
+      const float x = ospcommon::cos(float((2.f*M_PI)*r0))*w;
+      const float y = ospcommon::sin(float((2.f*M_PI)*r0))*w;
+      const float z = ospcommon::sqrt(r1) + epsilon;
       return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
 

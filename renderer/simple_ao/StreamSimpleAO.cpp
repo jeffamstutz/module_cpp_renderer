@@ -175,7 +175,7 @@ namespace ospray {
       for_each_sample_i(
         stream,
         [&](ScreenSampleRef sample, int i) {
-          float diffuse = abs(dot(dgs[i].Ng, sample.ray.dir));
+          float diffuse = ospcommon::abs(dot(dgs[i].Ng, sample.ray.dir));
           sample.rgb *= diffuse * (1.0f - float(hits[i])/samplesPerFrame);
         },
         rayHit

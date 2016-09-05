@@ -70,7 +70,8 @@ namespace ospray {
         stream,
         [&](ScreenSampleRef sample, int i) {
           const auto &ray = sample.ray;
-          const float c = 0.2f + 0.8f * abs(dot(normalize(ray.Ng), ray.dir));
+          const float c =
+              0.2f + 0.8f * ospcommon::abs(dot(normalize(ray.Ng), ray.dir));
 
           auto *mat = dynamic_cast<StreamRaycastMaterial*>(dgs[i].material);
 
