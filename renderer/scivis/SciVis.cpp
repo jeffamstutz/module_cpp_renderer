@@ -14,9 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-// ospray
-#include "SimpleAO.h"
-#include "ao_util.h"
+#include "SciVis.h"
+#include "../simple_ao/ao_util.h"
 #include "../../util.h"
 
 namespace ospray {
@@ -24,11 +23,11 @@ namespace ospray {
 
     // Material definition ////////////////////////////////////////////////////
 
-    //! \brief Material used by the SimpleAO renderer
-    /*! \detailed Since the SimpleAO Renderer only cares about a
+    //! \brief Material used by the SciVis renderer
+    /*! \detailed Since the SciVis Renderer only cares about a
         diffuse material component this material only stores diffuse
         and diffuse texture */
-    struct SimpleAOMaterial : public ospray::Material {
+    struct SciVisMaterial : public ospray::Material {
       /*! \brief commit the object's outstanding changes
        *         (such as changed parameters etc) */
       void commit() override;
@@ -44,28 +43,28 @@ namespace ospray {
       Ref<Texture2D> map_Kd;
     };
 
-    void SimpleAOMaterial::commit()
+    void SciVisMaterial::commit()
     {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_Kd = (Texture2D*)getParamObject("map_Kd",
                                           getParamObject("map_kd", nullptr));
     }
 
-    // SimpleAO definitions ///////////////////////////////////////////////////
+    // SciVis definitions ///////////////////////////////////////////////////
 
-    std::string SimpleAORenderer::toString() const
+    std::string SciVisRenderer::toString() const
     {
-      return "ospray::cpp_renderer::SimpleAORenderer";
+      return "ospray::cpp_renderer::SciVisRenderer";
     }
 
-    void SimpleAORenderer::commit()
+    void SciVisRenderer::commit()
     {
       ospray::cpp_renderer::Renderer::commit();
       samplesPerFrame = getParam1i("aoSamples", 1);
       aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
     }
 
-    inline void SimpleAORenderer::shade_ao(vec3f &color,
+    inline void SciVisRenderer::shade_ao(vec3f &color,
                                            float &alpha,
                                            const Ray &ray) const
     {
@@ -74,7 +73,7 @@ namespace ospray {
       auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                    DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
-      SimpleAOMaterial *mat = dynamic_cast<SimpleAOMaterial*>(dg.material);
+      SciVisMaterial *mat = dynamic_cast<SciVisMaterial*>(dg.material);
 
       if (mat) {
         superColor = mat->Kd;
@@ -104,7 +103,7 @@ namespace ospray {
       alpha = 1.f;
     }
 
-    void SimpleAORenderer::renderSample(void *perFrameData,
+    void SciVisRenderer::renderSample(void *perFrameData,
                                         ScreenSample &sample) const
     {
       UNUSED(perFrameData);
@@ -117,13 +116,13 @@ namespace ospray {
       }
     }
 
-    Material *SimpleAORenderer::createMaterial(const char *type)
+    Material *SciVisRenderer::createMaterial(const char *type)
     {
       UNUSED(type);
-      return new SimpleAOMaterial;
+      return new SciVisMaterial;
     }
 
-    OSP_REGISTER_RENDERER(SimpleAORenderer, cpp_ao);
+    OSP_REGISTER_RENDERER(SciVisRenderer, cpp_scivis);
 
   }// namespace cpp_renderer
 }// namespace ospray
