@@ -42,8 +42,6 @@ namespace ospray {
       vec3f dir_00;
       vec3f dir_du;
       vec3f dir_dv;
-      vec2f imageStart;
-      vec2f imageEnd;
       float scaledAperture;
     };
 

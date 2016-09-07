@@ -31,7 +31,7 @@ namespace ospray {
 
     void PerspectiveCamera::commit()
     {
-      Camera::commit();
+      cpp_renderer::Camera::commit();
 
       // ------------------------------------------------------------------
       // first, "parse" the additional expected parameters
@@ -40,14 +40,6 @@ namespace ospray {
       aspect = getParamf("aspect", 1.f);
       apertureRadius = getParamf("apertureRadius", 0.f);
       focusDistance = getParamf("focusDistance", 1.f);
-
-      imageStart = getParam2f("imageStart", vec2f(0.f));
-      imageEnd   = getParam2f("imageEnd", vec2f(1.f));
-
-      assert(imageStart.x >= 0.f && imageStart.x <= 1.f);
-      assert(imageStart.y >= 0.f && imageStart.y <= 1.f);
-      assert(imageEnd.x >= 0.f && imageEnd.x <= 1.f);
-      assert(imageEnd.y >= 0.f && imageEnd.y <= 1.f);
 
       // ------------------------------------------------------------------
       // now, update the local precomputed values
