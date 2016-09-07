@@ -42,16 +42,18 @@ namespace ospray {
         float Ns {0.f};
         vec3f Kd {0.f};
         vec3f Ks {0.f};
-        float local_opacity {0.f};
-        float path_opacity {0.f};
-
-        vec3f geometryColor {0.f};
+        float local_opacity {1.f};
+        float path_opacity {1.f};
       };
 
       // Shading functions //
+      void shade_materials(vec3f &color,
+                           const DifferentialGeometry &dg,
+                           SciVisShadingInfo &info) const;
 
       void shade_ao(vec3f &color, const DifferentialGeometry &dg,
                     float &alpha, const Ray &ray) const;
+
       void shade_lights(vec3f &color,
                         const DifferentialGeometry &dg,
                         const SciVisShadingInfo &info,
@@ -64,6 +66,7 @@ namespace ospray {
       bool  singleSidedLighting {true};
       int   samplesPerFrame {1};
       float aoRayLength {1e20f};
+      float aoWeight {0.25f};
       int   maxDepth {10};
 
       std::vector<cpp_renderer::Light*> lights;

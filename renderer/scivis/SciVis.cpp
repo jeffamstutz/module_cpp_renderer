@@ -34,22 +34,32 @@ namespace ospray {
        *         (such as changed parameters etc) */
       void commit() override;
 
-      // -------------------------------------------------------
-      // member variables
-      // -------------------------------------------------------
-
-      //! \brief diffuse material component, that's all we care for
+      float d;
       vec3f Kd;
+      vec3f Ks;
+      float Ns;
 
-      //! \brief diffuse texture, if available
+      Ref<Texture2D> map_d;
       Ref<Texture2D> map_Kd;
+      Ref<Texture2D> map_Ks;
+      Ref<Texture2D> map_Ns;
     };
 
     void SciVisMaterial::commit()
     {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
+      map_d  = (Texture2D*)getParamObject("map_d", nullptr);
       map_Kd = (Texture2D*)getParamObject("map_Kd",
                                           getParamObject("map_kd", nullptr));
+      map_Ks = (Texture2D*)getParamObject("map_Ks",
+                                          getParamObject("map_ks", nullptr));
+      map_Ns = (Texture2D*)getParamObject("map_Ns",
+                                          getParamObject("map_ns", nullptr));
+
+      d  = getParam1f("d", 1.f);
+      Kd = getParam3f("kd", getParam3f("Kd", vec3f(.8f)));
+      Ks = getParam3f("ks", getParam3f("Ks", vec3f(0.f)));
+      Ns = getParam1f("ns", getParam1f("Ns", 10.f));
     }
 
     // SciVis definitions ///////////////////////////////////////////////////
@@ -70,6 +80,9 @@ namespace ospray {
       // ao parameters
       samplesPerFrame = getParam1i("aoSamples", 1);
       aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
+      aoWeight        = getParam1f("aoWeight", 0.25f);
+
+      aoWeight *= static_cast<float>(pi);
 
       auto *lightData = (Data*)getParamData("lights");
 
@@ -79,7 +92,43 @@ namespace ospray {
         auto **lightArray = (cpp_renderer::Light**)lightData->data;
         for (uint32_t i = 0; i < lightData->size(); i++)
           lights.push_back(lightArray[i]);
+        std::cerr << "lights.size() == " << lights.size() << std::endl;
       }
+    }
+
+    inline void
+    SciVisRenderer::shade_materials(vec3f &color,
+                                    const DifferentialGeometry &dg,
+                                    SciVisRenderer::SciVisShadingInfo &info) const
+    {
+      SciVisMaterial *mat = dynamic_cast<SciVisMaterial*>(dg.material);
+
+      if (mat) {
+        color = mat->Kd;
+        // textures modify (mul) values, see
+        //   http://paulbourke.net/dataformats/mtl/
+        info.Kd = mat->Kd * vec3f{dg.color.x, dg.color.y, dg.color.z};
+#if 0// NOTE(jda) - texture fetches not yet implemented
+        info.d = mat->d * get1f(mat->map_d, dg.st, 1.f);
+        if (mat->map_Kd) {
+          vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
+          info.Kd = info.Kd * make_vec3f(Kd_from_map);
+          info.d *= Kd_from_map.w;
+        }
+        info.Ks = mat->Ks * get3f(mat->map_Ks, dg.st, make_vec3f(1.f));
+        info.Ns = mat->Ns * get1f(mat->map_Ns, dg.st, 1.f);
+#else
+        info.d  = mat->d;
+        info.Ks = mat->Ks;
+        info.Ns = mat->Ns;
+#endif
+      }
+
+      // should be done in material:
+      color *= vec3f{dg.color.x, dg.color.y, dg.color.z};
+
+      info.path_opacity  = 1.f;
+      info.local_opacity = 1.f;
     }
 
     inline void SciVisRenderer::shade_ao(vec3f &color,
@@ -87,24 +136,6 @@ namespace ospray {
                                          float &alpha,
                                          const Ray &ray) const
     {
-      vec3f superColor{1.f};
-
-      SciVisMaterial *mat = dynamic_cast<SciVisMaterial*>(dg.material);
-
-      if (mat) {
-        superColor = mat->Kd;
-#if 0// NOTE(jda) - texture fetches not yet implemented
-        if (mat->map_Kd) {
-          vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
-          superColor = superColor *
-              vec3f(Kd_from_map.x, Kd_from_map.y, Kd_from_map.z);
-        }
-#endif
-      }
-
-      // should be done in material:
-      superColor *= vec3f{dg.color.x, dg.color.y, dg.color.z};
-
       int hits = 0;
       auto aoContext = getAOContext(dg, aoRayLength, epsilon);
 
@@ -115,7 +146,8 @@ namespace ospray {
       }
 
       float diffuse = ospcommon::abs(dot(dg.Ng, ray.dir));
-      color = superColor * (diffuse * (1.0f-float(hits)/samplesPerFrame));
+      color += vec3f{dg.color.x, dg.color.y, dg.color.z} *
+               (diffuse * aoWeight * (1.0f-float(hits)/samplesPerFrame));
       alpha = 1.f;
     }
 
@@ -125,17 +157,16 @@ namespace ospray {
                                       const Ray &ray,
                                       int path_depth) const
     {
-      const vec3f R = ray.dir - ((2.f * dot(ray.dir, dg.Ns)) * dg.Ns);
+      const vec3f R = ray.dir - ((2.f * dot(ray.dir, dg.Ng)) * dg.Ng);
       const vec3f P = dg.P + epsilon * dg.Ng;
 
       //calculate shading for all lights
-      //for (size_t i = 0; i < lights.size(); i++) {
       for (const auto *l : lights) {
         const vec2f s(0.5f);
         const auto light = l->sample(dg, s);
 
         if (reduce_max(light.weight) > 0.f) { // any potential contribution?
-          float cosNL = dot(light.dir, dg.Ns);
+          float cosNL = dot(light.dir, dg.Ng);
 
           if (singleSidedLighting) {
             if (cosNL < 0.0f)
@@ -162,15 +193,15 @@ namespace ospray {
                                                    maxDepth - path_depth,
                                                    epsilon);
 #else
-              float light_alpha = 1.f;
+              float light_alpha = 1.0f;
               if (isOccluded(shadowRay)) {
                 light_alpha = 0.f;
               }
 #endif
-              color = color + light_alpha * light_contrib;
+              color += light_alpha * light_contrib;
             }
           } else {
-            color = color + light_contrib;
+            color += light_contrib;
           }
         }
       }
@@ -187,12 +218,12 @@ namespace ospray {
                                      DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
         SciVisShadingInfo info;
-        info.geometryColor = vec3f(dg.color.x, dg.color.y, dg.color.z);
-        info.path_opacity  = 1.f;
-        info.local_opacity = 1.f;
 
-        shade_ao(sample.rgb, dg, sample.alpha, sample.ray);
+        sample.rgb = vec3f{1.f};
+
+        shade_materials(sample.rgb, dg, info);
         shade_lights(sample.rgb, dg, info, sample.ray, 0);
+        shade_ao(sample.rgb, dg, sample.alpha, sample.ray);
       } else {
         sample.rgb = bgColor;
       }

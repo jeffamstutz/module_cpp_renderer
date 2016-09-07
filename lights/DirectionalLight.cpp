@@ -34,11 +34,13 @@ namespace ospray {
       intensity = getParam1f("intensity", 1.f);
       angularDiameter = getParam1f("angularDiameter", 0.f);
 
-      const vec3f radiance = color * intensity;
+      radiance = color * intensity;
       direction = -normalize(direction);
 
       angularDiameter = clamp(angularDiameter, 0.f, 180.f);
-      const float cosAngle = ospcommon::cos(deg2rad(0.5f*angularDiameter));
+      cosAngle = ospcommon::cos(deg2rad(0.5f*angularDiameter));
+      pdf = cosAngle < COS_ANGLE_MAX ? uniformSampleConePDF(cosAngle) : inf;
+      frame = ospcommon::frame(direction);
     }
 
     Light_SampleRes DirectionalLight::sample(const DifferentialGeometry &dg,
