@@ -42,8 +42,6 @@ namespace ospray {
         float Ns {0.f};
         vec3f Kd {0.f};
         vec3f Ks {0.f};
-        float local_opacity {1.f};
-        float path_opacity {1.f};
       };
 
       // Shading functions //
@@ -51,8 +49,11 @@ namespace ospray {
                            const DifferentialGeometry &dg,
                            SciVisShadingInfo &info) const;
 
-      void shade_ao(vec3f &color, const DifferentialGeometry &dg,
-                    float &alpha, const Ray &ray) const;
+      void shade_ao(vec3f &color,
+                    const DifferentialGeometry &dg,
+                    const SciVisShadingInfo &info,
+                    float &alpha,
+                    const Ray &ray) const;
 
       void shade_lights(vec3f &color,
                         const DifferentialGeometry &dg,

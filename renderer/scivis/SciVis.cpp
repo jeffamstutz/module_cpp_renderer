@@ -104,7 +104,6 @@ namespace ospray {
       SciVisMaterial *mat = dynamic_cast<SciVisMaterial*>(dg.material);
 
       if (mat) {
-        color = mat->Kd;
         // textures modify (mul) values, see
         //   http://paulbourke.net/dataformats/mtl/
         info.Kd = mat->Kd * vec3f{dg.color.x, dg.color.y, dg.color.z};
@@ -122,17 +121,18 @@ namespace ospray {
         info.Ks = mat->Ks;
         info.Ns = mat->Ns;
 #endif
+      } else {
+        info.Kd = vec3f{dg.color.x, dg.color.y, dg.color.z};
       }
 
-      // should be done in material:
-      color *= vec3f{dg.color.x, dg.color.y, dg.color.z};
-
-      info.path_opacity  = 1.f;
-      info.local_opacity = 1.f;
+      // BRDF normalization
+      info.Kd *= static_cast<float>(one_over_pi);
+      info.Ks *= (info.Ns + 2.f) * static_cast<float>(one_over_two_pi);
     }
 
     inline void SciVisRenderer::shade_ao(vec3f &color,
                                          const DifferentialGeometry &dg,
+                                         const SciVisShadingInfo &info,
                                          float &alpha,
                                          const Ray &ray) const
     {
@@ -146,7 +146,7 @@ namespace ospray {
       }
 
       float diffuse = ospcommon::abs(dot(dg.Ng, ray.dir));
-      color += vec3f{dg.color.x, dg.color.y, dg.color.z} *
+      color += info.Kd *
                (diffuse * aoWeight * (1.0f-float(hits)/samplesPerFrame));
       alpha = 1.f;
     }
@@ -177,8 +177,7 @@ namespace ospray {
 
           const float cosLR = max(0.f, dot(light.dir, R));
           const vec3f brdf = info.Kd * cosNL + info.Ks * powf(cosLR, info.Ns);
-          const vec3f light_contrib = info.local_opacity
-                                      * brdf * light.weight;
+          const vec3f light_contrib = brdf * light.weight;
 
           if (shadowsEnabled) {
             const float max_contrib = reduce_max(light_contrib);
@@ -219,11 +218,11 @@ namespace ospray {
 
         SciVisShadingInfo info;
 
-        sample.rgb = vec3f{1.f};
+        sample.rgb = vec3f{0.f};
 
         shade_materials(sample.rgb, dg, info);
+        shade_ao(sample.rgb, dg, info, sample.alpha, sample.ray);
         shade_lights(sample.rgb, dg, info, sample.ray, 0);
-        shade_ao(sample.rgb, dg, sample.alpha, sample.ray);
       } else {
         sample.rgb = bgColor;
       }
