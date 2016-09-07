@@ -36,6 +36,10 @@ if (OSPRAY_MODULE_CPP)
     geometry/Geometry.h
     geometry/TriangleMesh.cpp
 
+    lights/Light.cpp
+    lights/AmbientLight.cpp
+    lights/DirectionalLight.cpp
+
     renderer/Renderer.cpp
     renderer/StreamRenderer.cpp
     renderer/raycast/Raycast.cpp
@@ -48,6 +52,19 @@ if (OSPRAY_MODULE_CPP)
     util.cpp
     LINK
     ospray
+  )
+
+  ospray_create_application(ospCppViewer
+    app/cpp_viewer.cpp
+  LINK
+    ospray
+    ospray_commandline
+    ospray_common
+    ospray_glut3d
+    ospray_minisg
+    ospray_importer
+    ${OPENGL_LIBRARIES}
+    ${GLUT_LIBRARIES}
   )
 
 endif()
