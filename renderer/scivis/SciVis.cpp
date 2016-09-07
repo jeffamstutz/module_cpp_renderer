@@ -18,6 +18,8 @@
 #include "../simple_ao/ao_util.h"
 #include "../../util.h"
 
+#include "common/Data.h"
+
 namespace ospray {
   namespace cpp_renderer {
 
@@ -59,9 +61,25 @@ namespace ospray {
 
     void SciVisRenderer::commit()
     {
-      ospray::cpp_renderer::Renderer::commit();
+      cpp_renderer::Renderer::commit();
+
+      // shadow parameters
+      shadowsEnabled      = getParam1i("shadowsEnabled", 0);
+      singleSidedLighting = getParam1i("oneSidedLighting", 1);
+
+      // ao parameters
       samplesPerFrame = getParam1i("aoSamples", 1);
       aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
+
+      auto *lightData = (Data*)getParamData("lights");
+
+      lights.clear();
+
+      if (lightData) {
+        auto **lightArray = (cpp_renderer::Light**)lightData->data;
+        for (uint32_t i = 0; i < lightData->size(); i++)
+          lights.push_back(lightArray[i]);
+      }
     }
 
     inline void SciVisRenderer::shade_ao(vec3f &color,

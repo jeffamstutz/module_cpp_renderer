@@ -17,6 +17,7 @@
 #pragma once
 
 #include "../Renderer.h"
+#include "../../lights/Light.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -35,8 +36,12 @@ namespace ospray {
 
       void shade_ao(vec3f &color, float &alpha, const Ray &ray) const;
 
+      bool  shadowsEnabled {false};
+      bool  singleSidedLighting {true};
       int   samplesPerFrame{1};
       float aoRayLength{1e20f};
+
+      std::vector<cpp_renderer::Light*> lights;
     };
 
   }// namespace cpp_renderer
