@@ -64,7 +64,7 @@ namespace ospray {
       cpp_renderer::Renderer::commit();
 
       // shadow parameters
-      shadowsEnabled      = getParam1i("shadowsEnabled", 0);
+      shadowsEnabled      = getParam1i("shadowsEnabled", 1);
       singleSidedLighting = getParam1i("oneSidedLighting", 1);
 
       // ao parameters
@@ -83,13 +83,11 @@ namespace ospray {
     }
 
     inline void SciVisRenderer::shade_ao(vec3f &color,
-                                           float &alpha,
-                                           const Ray &ray) const
+                                         const DifferentialGeometry &dg,
+                                         float &alpha,
+                                         const Ray &ray) const
     {
       vec3f superColor{1.f};
-
-      auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
-                                   DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
       SciVisMaterial *mat = dynamic_cast<SciVisMaterial*>(dg.material);
 
@@ -121,14 +119,80 @@ namespace ospray {
       alpha = 1.f;
     }
 
+    void SciVisRenderer::shade_lights(vec3f &color,
+                                      const DifferentialGeometry &dg,
+                                      const SciVisShadingInfo &info,
+                                      const Ray &ray,
+                                      int path_depth) const
+    {
+      const vec3f R = ray.dir - ((2.f * dot(ray.dir, dg.Ns)) * dg.Ns);
+      const vec3f P = dg.P + epsilon * dg.Ng;
+
+      //calculate shading for all lights
+      //for (size_t i = 0; i < lights.size(); i++) {
+      for (const auto *l : lights) {
+        const vec2f s(0.5f);
+        const auto light = l->sample(dg, s);
+
+        if (reduce_max(light.weight) > 0.f) { // any potential contribution?
+          float cosNL = dot(light.dir, dg.Ns);
+
+          if (singleSidedLighting) {
+            if (cosNL < 0.0f)
+              continue;
+          }
+          else
+            cosNL = fabs(cosNL);
+
+          const float cosLR = max(0.f, dot(light.dir, R));
+          const vec3f brdf = info.Kd * cosNL + info.Ks * powf(cosLR, info.Ns);
+          const vec3f light_contrib = info.local_opacity
+                                      * brdf * light.weight;
+
+          if (shadowsEnabled) {
+            const float max_contrib = reduce_max(light_contrib);
+            if (max_contrib > .01f) {
+              Ray shadowRay;
+              shadowRay.org = P;
+              shadowRay.dir = light.dir;
+#if 0
+              const float light_alpha = lightAlpha(shadowRay,
+                                                   model,
+                                                   max_contrib,
+                                                   maxDepth - path_depth,
+                                                   epsilon);
+#else
+              float light_alpha = 1.f;
+              if (isOccluded(shadowRay)) {
+                light_alpha = 0.f;
+              }
+#endif
+              color = color + light_alpha * light_contrib;
+            }
+          } else {
+            color = color + light_contrib;
+          }
+        }
+      }
+    }
+
     void SciVisRenderer::renderSample(void *perFrameData,
-                                        ScreenSample &sample) const
+                                      ScreenSample &sample) const
     {
       UNUSED(perFrameData);
       auto &ray = sample.ray;
 
       if (traceRay(ray)) {
-        shade_ao(sample.rgb, sample.alpha, sample.ray);
+        auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
+                                     DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+
+        SciVisShadingInfo info;
+        info.geometryColor = vec3f(dg.color.x, dg.color.y, dg.color.z);
+        info.path_opacity  = 1.f;
+        info.local_opacity = 1.f;
+
+        shade_ao(sample.rgb, dg, sample.alpha, sample.ray);
+        shade_lights(sample.rgb, dg, info, sample.ray, 0);
       } else {
         sample.rgb = bgColor;
       }
@@ -141,6 +205,7 @@ namespace ospray {
     }
 
     OSP_REGISTER_RENDERER(SciVisRenderer, cpp_scivis);
+    OSP_REGISTER_RENDERER(SciVisRenderer, cpp_sv);
 
   }// namespace cpp_renderer
 }// namespace ospray

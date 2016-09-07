@@ -42,7 +42,7 @@ namespace ospray {
     }
 
     Light_SampleRes DirectionalLight::sample(const DifferentialGeometry &dg,
-                                             const vec2f &s)
+                                             const vec2f &s) const
     {
       Light_SampleRes res;
 
@@ -60,7 +60,7 @@ namespace ospray {
 
     Light_EvalRes DirectionalLight::eval(const DifferentialGeometry &dg,
                                          const vec3f &dir,
-                                         float maxDist)
+                                         float maxDist) const
     {
       Light_EvalRes res;
       res.radiance = vec3f(0.f);

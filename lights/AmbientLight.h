@@ -29,11 +29,11 @@ namespace ospray {
         void commit() override;
 
         Light_SampleRes sample(const DifferentialGeometry &dg,
-                               const vec2f &s) override;
+                               const vec2f &s) const override;
 
         Light_EvalRes eval(const DifferentialGeometry &dg,
                            const vec3f &dir,
-                           float maxDist) override;
+                           float maxDist) const override;
 
       private:
 

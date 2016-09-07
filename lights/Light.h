@@ -42,10 +42,10 @@ namespace ospray {
     {
       virtual std::string toString() const override;
       virtual Light_SampleRes sample(const DifferentialGeometry &dg,
-                                     const vec2f &s) = 0;
+                                     const vec2f &s) const = 0;
       virtual Light_EvalRes eval(const DifferentialGeometry &dg,
                                  const vec3f &dir,
-                                 float maxDist) = 0;
+                                 float maxDist) const = 0;
     };
 
   }// namespace cpp_renderer

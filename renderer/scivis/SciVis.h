@@ -34,12 +34,37 @@ namespace ospray {
 
     private:
 
-      void shade_ao(vec3f &color, float &alpha, const Ray &ray) const;
+      // Helper types //
 
-      bool  shadowsEnabled {false};
+      struct SciVisShadingInfo
+      {
+        float d  {1.f};
+        float Ns {0.f};
+        vec3f Kd {0.f};
+        vec3f Ks {0.f};
+        float local_opacity {0.f};
+        float path_opacity {0.f};
+
+        vec3f geometryColor {0.f};
+      };
+
+      // Shading functions //
+
+      void shade_ao(vec3f &color, const DifferentialGeometry &dg,
+                    float &alpha, const Ray &ray) const;
+      void shade_lights(vec3f &color,
+                        const DifferentialGeometry &dg,
+                        const SciVisShadingInfo &info,
+                        const Ray &ray,
+                        int path_depth) const;
+
+      // Data //
+
+      bool  shadowsEnabled {true};
       bool  singleSidedLighting {true};
-      int   samplesPerFrame{1};
-      float aoRayLength{1e20f};
+      int   samplesPerFrame {1};
+      float aoRayLength {1e20f};
+      int   maxDepth {10};
 
       std::vector<cpp_renderer::Light*> lights;
     };
