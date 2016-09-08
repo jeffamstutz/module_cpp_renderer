@@ -132,11 +132,9 @@ namespace ospray {
       return info;
     }
 
-    inline void SciVisRenderer::shade_ao(vec3f &color,
-                                         const DifferentialGeometry &dg,
-                                         const SciVisShadingInfo &info,
-                                         float &alpha,
-                                         const Ray &ray) const
+    inline vec3f SciVisRenderer::shade_ao(const DifferentialGeometry &dg,
+                                          const SciVisShadingInfo &info,
+                                          const Ray &ray) const
     {
       int hits = 0;
       auto aoContext = getAOContext(dg, aoRayLength, epsilon);
@@ -148,22 +146,22 @@ namespace ospray {
       }
 
       float diffuse = ospcommon::abs(dot(dg.Ng, ray.dir));
-      color += info.Kd *
-               (diffuse * aoWeight * (1.0f-float(hits)/samplesPerFrame));
-      alpha = 1.f;
+      return info.Kd *
+             (diffuse * aoWeight * (1.0f-float(hits)/samplesPerFrame));
     }
 
-    void SciVisRenderer::shade_lights(vec3f &color,
-                                      const DifferentialGeometry &dg,
-                                      const SciVisShadingInfo &info,
-                                      const Ray &ray,
-                                      int path_depth) const
+    vec3f SciVisRenderer::shade_lights(const DifferentialGeometry &dg,
+                                       const SciVisShadingInfo &info,
+                                       const Ray &ray,
+                                       int path_depth) const
     {
       const vec3f R = ray.dir - ((2.f * dot(ray.dir, dg.Ng)) * dg.Ng);
 
       //NOTE(jda) - default epsilon doesn't seem to work here...(FIU)
       const float epsilon = 1e-3f;
       const vec3f P = dg.P + epsilon * dg.Ng;
+
+      vec3f color{0.f};
 
       //calculate shading for all lights
       for (const auto *l : lights) {
@@ -208,6 +206,8 @@ namespace ospray {
           }
         }
       }
+
+      return color;
     }
 
     void SciVisRenderer::renderSample(void *perFrameData,
@@ -223,8 +223,10 @@ namespace ospray {
 
         sample.rgb = vec3f{0.f};
 
-        shade_ao(sample.rgb, dg, info, sample.alpha, sample.ray);
-        shade_lights(sample.rgb, dg, info, sample.ray, 0);
+        auto aoColor     = shade_ao(dg, info, sample.ray);
+        auto lightsColor = shade_lights(dg, info, sample.ray, 0);
+
+        sample.rgb = aoColor + lightsColor;
 
       } else {
         sample.rgb = bgColor;

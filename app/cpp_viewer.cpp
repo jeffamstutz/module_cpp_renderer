@@ -26,7 +26,7 @@
 class CppRendererParser : public DefaultRendererParser
 {
 public:
-  CppRendererParser() { rendererType = "cpp_ao"; }
+  CppRendererParser() { rendererType = "cpp_scivis"; }
 };
 
 class CppCameraParser : public DefaultCameraParser
