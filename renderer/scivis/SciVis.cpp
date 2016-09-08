@@ -96,8 +96,7 @@ namespace ospray {
     }
 
     inline SciVisShadingInfo
-    SciVisRenderer::computeShadingInfo(vec3f &color,
-                                       const DifferentialGeometry &dg) const
+    SciVisRenderer::computeShadingInfo(const DifferentialGeometry &dg) const
     {
       SciVisShadingInfo info;
 
@@ -219,7 +218,7 @@ namespace ospray {
       if (traceRay(ray)) {
         auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                      DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
-        auto info = computeShadingInfo(sample.rgb, dg);
+        auto info = computeShadingInfo(dg);
 
         sample.rgb = vec3f{0.f};
 

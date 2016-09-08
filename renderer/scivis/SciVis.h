@@ -37,7 +37,7 @@ namespace ospray {
 
       // Shading functions //
       SciVisShadingInfo
-      computeShadingInfo(vec3f &color, const DifferentialGeometry &dg) const;
+      computeShadingInfo(const DifferentialGeometry &dg) const;
 
       vec3f shade_ao(const DifferentialGeometry &dg,
                      const SciVisShadingInfo &info,
