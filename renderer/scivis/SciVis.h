@@ -22,6 +22,8 @@
 namespace ospray {
   namespace cpp_renderer {
 
+    struct SciVisShadingInfo;
+
     struct SciVisRenderer : public ospray::cpp_renderer::Renderer
     {
       std::string toString() const override;
@@ -34,20 +36,9 @@ namespace ospray {
 
     private:
 
-      // Helper types //
-
-      struct SciVisShadingInfo
-      {
-        float d  {1.f};
-        float Ns {0.f};
-        vec3f Kd {0.f};
-        vec3f Ks {0.f};
-      };
-
       // Shading functions //
-      void shade_materials(vec3f &color,
-                           const DifferentialGeometry &dg,
-                           SciVisShadingInfo &info) const;
+      SciVisShadingInfo
+      computeShadingInfo(vec3f &color, const DifferentialGeometry &dg) const;
 
       void shade_ao(vec3f &color,
                     const DifferentialGeometry &dg,
@@ -71,6 +62,16 @@ namespace ospray {
       int   maxDepth {10};
 
       std::vector<cpp_renderer::Light*> lights;
+    };
+
+    // Helper types //
+
+    struct SciVisShadingInfo
+    {
+      float d  {1.f};
+      float Ns {0.f};
+      vec3f Kd {0.f};
+      vec3f Ks {0.f};
     };
 
   }// namespace cpp_renderer

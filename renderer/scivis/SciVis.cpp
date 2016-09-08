@@ -95,11 +95,12 @@ namespace ospray {
       }
     }
 
-    inline void
-    SciVisRenderer::shade_materials(vec3f &color,
-                                    const DifferentialGeometry &dg,
-                                    SciVisRenderer::SciVisShadingInfo &info) const
+    inline SciVisShadingInfo
+    SciVisRenderer::computeShadingInfo(vec3f &color,
+                                       const DifferentialGeometry &dg) const
     {
+      SciVisShadingInfo info;
+
       SciVisMaterial *mat = dynamic_cast<SciVisMaterial*>(dg.material);
 
       if (mat) {
@@ -127,6 +128,8 @@ namespace ospray {
       // BRDF normalization
       info.Kd *= static_cast<float>(one_over_pi);
       info.Ks *= (info.Ns + 2.f) * static_cast<float>(one_over_two_pi);
+
+      return info;
     }
 
     inline void SciVisRenderer::shade_ao(vec3f &color,
@@ -216,14 +219,13 @@ namespace ospray {
       if (traceRay(ray)) {
         auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                      DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
-
-        SciVisShadingInfo info;
+        auto info = computeShadingInfo(sample.rgb, dg);
 
         sample.rgb = vec3f{0.f};
 
-        shade_materials(sample.rgb, dg, info);
         shade_ao(sample.rgb, dg, info, sample.alpha, sample.ray);
         shade_lights(sample.rgb, dg, info, sample.ray, 0);
+
       } else {
         sample.rgb = bgColor;
       }
