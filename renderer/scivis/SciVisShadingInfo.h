@@ -16,48 +16,17 @@
 
 #pragma once
 
-#include "../Renderer.h"
-#include "../../lights/Light.h"
-#include "SciVisShadingInfo.h"
+#include "common/OSPCommon.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
-    struct SciVisRenderer : public ospray::cpp_renderer::Renderer
+    struct SciVisShadingInfo
     {
-      std::string toString() const override;
-      void commit() override;
-
-      void renderSample(void *perFrameData,
-                        ScreenSample &sample) const override;
-
-      ospray::Material *createMaterial(const char *type) override;
-
-    private:
-
-      // Shading functions //
-      SciVisShadingInfo
-      computeShadingInfo(vec3f &color, const DifferentialGeometry &dg) const;
-
-      vec3f shade_ao(const DifferentialGeometry &dg,
-                     const SciVisShadingInfo &info,
-                     const Ray &ray) const;
-
-      vec3f shade_lights(const DifferentialGeometry &dg,
-                         const SciVisShadingInfo &info,
-                         const Ray &ray,
-                         int path_depth) const;
-
-      // Data //
-
-      bool  shadowsEnabled {true};
-      bool  singleSidedLighting {true};
-      int   samplesPerFrame {1};
-      float aoRayLength {1e20f};
-      float aoWeight {0.25f};
-      int   maxDepth {10};
-
-      std::vector<cpp_renderer::Light*> lights;
+      float d  {1.f};
+      float Ns {0.f};
+      vec3f Kd {0.f};
+      vec3f Ks {0.f};
     };
 
   }// namespace cpp_renderer

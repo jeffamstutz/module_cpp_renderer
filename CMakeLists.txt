@@ -16,16 +16,9 @@
 
 option(OSPRAY_MODULE_CPP "Build 'C++' module (renderers in all C++ code)" ON)
 
-if (OSPRAY_MODULE_CPP AND
-    (NOT OSPRAY_USE_EXTERNAL_EMBREE OR NOT OSPRAY_USE_EMBREE_STREAMS))
-  message(WARNING "You must use an external Embree (v2.10.0+) AND enable "
-                  "Embree streams...OSPRAY_MODULE_CPP will not be built.")
-  set(OSPRAY_MODULE_CPP OFF)
-endif()
-
 if (OSPRAY_MODULE_CPP)
 
-  ospray_create_library(ospray_module_cpp
+  set(LIBRARY_SRCS
     camera/Camera.h
     camera/Perspective.cpp
 
@@ -41,15 +34,27 @@ if (OSPRAY_MODULE_CPP)
     lights/DirectionalLight.cpp
 
     renderer/Renderer.cpp
-    renderer/StreamRenderer.cpp
     renderer/raycast/Raycast.cpp
-    renderer/raycast/StreamRaycast.cpp
     renderer/scivis/SciVis.cpp
+    renderer/scivis/SciVisShadingInfo.h
     renderer/simple_ao/ao_util.cpp
     renderer/simple_ao/SimpleAO.cpp
-    renderer/simple_ao/StreamSimpleAO.cpp
 
     util.cpp
+  )
+
+  if (OSPRAY_USE_EMBREE_STREAMS)
+    set(LIBRARY_SRCS
+      renderer/StreamRenderer.cpp
+      renderer/raycast/StreamRaycast.cpp
+      renderer/scivis/StreamSciVis.cpp
+      renderer/simple_ao/StreamSimpleAO.cpp
+      ${LIBRARY_SRCS}
+    )
+  endif()
+
+  ospray_create_library(ospray_module_cpp
+    ${LIBRARY_SRCS}
     LINK
     ospray
   )

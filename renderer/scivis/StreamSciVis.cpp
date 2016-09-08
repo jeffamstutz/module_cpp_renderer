@@ -14,7 +14,7 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
-#include "SciVis.h"
+#include "StreamSciVis.h"
 #include "../simple_ao/ao_util.h"
 #include "../../util.h"
 
@@ -29,7 +29,7 @@ namespace ospray {
     /*! \detailed Since the SciVis Renderer only cares about a
         diffuse material component this material only stores diffuse
         and diffuse texture */
-    struct StreamSciVisMaterial : public ospray::Material {
+    struct SciVisMaterial : public ospray::Material {
       /*! \brief commit the object's outstanding changes
        *         (such as changed parameters etc) */
       void commit() override;
@@ -45,7 +45,7 @@ namespace ospray {
       Ref<Texture2D> map_Ns;
     };
 
-    void StreamSciVisMaterial::commit()
+    void SciVisMaterial::commit()
     {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_d  = (Texture2D*)getParamObject("map_d", nullptr);
@@ -64,12 +64,12 @@ namespace ospray {
 
     // SciVis definitions ///////////////////////////////////////////////////
 
-    std::string SciVisRenderer::toString() const
+    std::string StreamSciVisRenderer::toString() const
     {
-      return "ospray::cpp_renderer::SciVisRenderer";
+      return "ospray::cpp_renderer::StreamSciVisRenderer";
     }
 
-    void SciVisRenderer::commit()
+    void StreamSciVisRenderer::commit()
     {
       cpp_renderer::Renderer::commit();
 
@@ -96,12 +96,12 @@ namespace ospray {
     }
 
     inline SciVisShadingInfo
-    SciVisRenderer::computeShadingInfo(vec3f &color,
+    StreamSciVisRenderer::computeShadingInfo(vec3f &color,
                                        const DifferentialGeometry &dg) const
     {
       SciVisShadingInfo info;
 
-      auto *mat = dynamic_cast<StreamSciVisMaterial*>(dg.material);
+      SciVisMaterial *mat = dynamic_cast<SciVisMaterial*>(dg.material);
 
       if (mat) {
         // textures modify (mul) values, see
@@ -132,7 +132,7 @@ namespace ospray {
       return info;
     }
 
-    inline vec3f SciVisRenderer::shade_ao(const DifferentialGeometry &dg,
+    inline vec3f StreamSciVisRenderer::shade_ao(const DifferentialGeometry &dg,
                                           const SciVisShadingInfo &info,
                                           const Ray &ray) const
     {
@@ -150,7 +150,7 @@ namespace ospray {
              (diffuse * aoWeight * (1.0f-float(hits)/samplesPerFrame));
     }
 
-    vec3f SciVisRenderer::shade_lights(const DifferentialGeometry &dg,
+    vec3f StreamSciVisRenderer::shade_lights(const DifferentialGeometry &dg,
                                        const SciVisShadingInfo &info,
                                        const Ray &ray,
                                        int path_depth) const
@@ -210,7 +210,7 @@ namespace ospray {
       return color;
     }
 
-    void SciVisRenderer::renderSample(void *perFrameData,
+    void StreamSciVisRenderer::renderSample(void *perFrameData,
                                       ScreenSample &sample) const
     {
       UNUSED(perFrameData);
@@ -233,14 +233,14 @@ namespace ospray {
       }
     }
 
-    Material *SciVisRenderer::createMaterial(const char *type)
+    Material *StreamSciVisRenderer::createMaterial(const char *type)
     {
       UNUSED(type);
-      return new StreamSciVisMaterial;
+      return new SciVisMaterial;
     }
 
-    OSP_REGISTER_RENDERER(SciVisRenderer, cpp_scivis);
-    OSP_REGISTER_RENDERER(SciVisRenderer, cpp_sv);
+    OSP_REGISTER_RENDERER(StreamSciVisRenderer, cpp_scivis_stream);
+    OSP_REGISTER_RENDERER(StreamSciVisRenderer, cpp_sv_stream);
 
   }// namespace cpp_renderer
 }// namespace ospray

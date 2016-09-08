@@ -23,7 +23,7 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    struct SciVisRenderer : public ospray::cpp_renderer::Renderer
+    struct StreamSciVisRenderer : public ospray::cpp_renderer::Renderer
     {
       std::string toString() const override;
       void commit() override;
