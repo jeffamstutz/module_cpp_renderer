@@ -92,7 +92,6 @@ namespace ospray {
         auto **lightArray = (cpp_renderer::Light**)lightData->data;
         for (uint32_t i = 0; i < lightData->size(); i++)
           lights.push_back(lightArray[i]);
-        std::cerr << "lights.size() == " << lights.size() << std::endl;
       }
     }
 
@@ -158,12 +157,14 @@ namespace ospray {
                                       int path_depth) const
     {
       const vec3f R = ray.dir - ((2.f * dot(ray.dir, dg.Ng)) * dg.Ng);
+
+      //NOTE(jda) - default epsilon doesn't seem to work here...(FIU)
+      const float epsilon = 1e-3f;
       const vec3f P = dg.P + epsilon * dg.Ng;
 
       //calculate shading for all lights
       for (const auto *l : lights) {
-        const vec2f s(0.5f);
-        const auto light = l->sample(dg, s);
+        const auto light = l->sample(dg, vec2f{0.5f});
 
         if (reduce_max(light.weight) > 0.f) { // any potential contribution?
           float cosNL = dot(light.dir, dg.Ng);
