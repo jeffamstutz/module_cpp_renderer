@@ -62,7 +62,7 @@ namespace ospray {
       Ns = getParam1f("ns", getParam1f("Ns", 10.f));
     }
 
-    // SciVis definitions ///////////////////////////////////////////////////
+    // SciVis definitions /////////////////////////////////////////////////////
 
     std::string StreamSciVisRenderer::toString() const
     {
@@ -123,7 +123,9 @@ namespace ospray {
       if (nActiveRays <= 0)
         return;
 
-      const auto ss          = computeShadingInfo(stream, dgs);
+      const auto ss = computeShadingInfo(stream, dgs);
+
+#if 0//NOTE(jda) - stack size problem?...wacky periodic performance issues...
       const auto aoColors    = shade_ao(stream, dgs, ss);
       const auto lightColors = shade_lights(stream, dgs, ss, 0);
 
@@ -134,6 +136,27 @@ namespace ospray {
         },
         rayHit
       );
+#else
+      auto colors = shade_ao(stream, dgs, ss);
+
+      for_each_sample_i(
+        stream,
+        [&](ScreenSampleRef sample, int i) {
+          sample.rgb = colors[i];
+        },
+        rayHit
+      );
+
+      colors = shade_lights(stream, dgs, ss, 0);
+
+      for_each_sample_i(
+        stream,
+        [&](ScreenSampleRef sample, int i) {
+          sample.rgb += colors[i];
+        },
+        rayHit
+      );
+#endif
     }
 
     Material *StreamSciVisRenderer::createMaterial(const char *type)
