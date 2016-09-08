@@ -95,148 +95,111 @@ namespace ospray {
       }
     }
 
-    inline SciVisShadingInfo
-    StreamSciVisRenderer::computeShadingInfo(vec3f &color,
-                                       const DifferentialGeometry &dg) const
-    {
-      SciVisShadingInfo info;
-
-      SciVisMaterial *mat = dynamic_cast<SciVisMaterial*>(dg.material);
-
-      if (mat) {
-        // textures modify (mul) values, see
-        //   http://paulbourke.net/dataformats/mtl/
-        info.Kd = mat->Kd * vec3f{dg.color.x, dg.color.y, dg.color.z};
-#if 0// NOTE(jda) - texture fetches not yet implemented
-        info.d = mat->d * get1f(mat->map_d, dg.st, 1.f);
-        if (mat->map_Kd) {
-          vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
-          info.Kd = info.Kd * make_vec3f(Kd_from_map);
-          info.d *= Kd_from_map.w;
-        }
-        info.Ks = mat->Ks * get3f(mat->map_Ks, dg.st, make_vec3f(1.f));
-        info.Ns = mat->Ns * get1f(mat->map_Ns, dg.st, 1.f);
-#else
-        info.d  = mat->d;
-        info.Ks = mat->Ks;
-        info.Ns = mat->Ns;
-#endif
-      } else {
-        info.Kd = vec3f{dg.color.x, dg.color.y, dg.color.z};
-      }
-
-      // BRDF normalization
-      info.Kd *= static_cast<float>(one_over_pi);
-      info.Ks *= (info.Ns + 2.f) * static_cast<float>(one_over_two_pi);
-
-      return info;
-    }
-
-    inline vec3f StreamSciVisRenderer::shade_ao(const DifferentialGeometry &dg,
-                                          const SciVisShadingInfo &info,
-                                          const Ray &ray) const
-    {
-      int hits = 0;
-      auto aoContext = getAOContext(dg, aoRayLength, epsilon);
-
-      for (int i = 0; i < samplesPerFrame; i++) {
-        auto ao_ray = calculateAORay(dg, aoContext);
-        if (dot(ao_ray.dir, dg.Ng) < 0.05f || isOccluded(ao_ray))
-          hits++;
-      }
-
-      float diffuse = ospcommon::abs(dot(dg.Ng, ray.dir));
-      return info.Kd *
-             (diffuse * aoWeight * (1.0f-float(hits)/samplesPerFrame));
-    }
-
-    vec3f StreamSciVisRenderer::shade_lights(const DifferentialGeometry &dg,
-                                       const SciVisShadingInfo &info,
-                                       const Ray &ray,
-                                       int path_depth) const
-    {
-      const vec3f R = ray.dir - ((2.f * dot(ray.dir, dg.Ng)) * dg.Ng);
-
-      //NOTE(jda) - default epsilon doesn't seem to work here...(FIU)
-      const float epsilon = 1e-3f;
-      const vec3f P = dg.P + epsilon * dg.Ng;
-
-      vec3f color{0.f};
-
-      //calculate shading for all lights
-      for (const auto *l : lights) {
-        const auto light = l->sample(dg, vec2f{0.5f});
-
-        if (reduce_max(light.weight) > 0.f) { // any potential contribution?
-          float cosNL = dot(light.dir, dg.Ng);
-
-          if (singleSidedLighting) {
-            if (cosNL < 0.0f)
-              continue;
-          }
-          else
-            cosNL = fabs(cosNL);
-
-          const float cosLR = max(0.f, dot(light.dir, R));
-          const vec3f brdf = info.Kd * cosNL + info.Ks * powf(cosLR, info.Ns);
-          const vec3f light_contrib = brdf * light.weight;
-
-          if (shadowsEnabled) {
-            const float max_contrib = reduce_max(light_contrib);
-            if (max_contrib > .01f) {
-              Ray shadowRay;
-              shadowRay.org = P;
-              shadowRay.dir = light.dir;
-#if 0
-              const float light_alpha = lightAlpha(shadowRay,
-                                                   model,
-                                                   max_contrib,
-                                                   maxDepth - path_depth,
-                                                   epsilon);
-#else
-              float light_alpha = 1.0f;
-              if (isOccluded(shadowRay)) {
-                light_alpha = 0.f;
-              }
-#endif
-              color += light_alpha * light_contrib;
-            }
-          } else {
-            color += light_contrib;
-          }
-        }
-      }
-
-      return color;
-    }
-
-    void StreamSciVisRenderer::renderSample(void *perFrameData,
-                                      ScreenSample &sample) const
+    void StreamSciVisRenderer::renderStream(void *perFrameData,
+                                            ScreenSampleStream &stream) const
     {
       UNUSED(perFrameData);
-      auto &ray = sample.ray;
+      traceRays(stream.rays, RTC_INTERSECT_COHERENT);
 
-      if (traceRay(ray)) {
-        auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
-                                     DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
-        auto info = computeShadingInfo(sample.rgb, dg);
+      DGStream dgs = postIntersect(stream.rays,
+                                   DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
+                                   DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
-        sample.rgb = vec3f{0.f};
+      int nActiveRays = ScreenSampleStream::size;
 
-        auto aoColor     = shade_ao(dg, info, sample.ray);
-        auto lightsColor = shade_lights(dg, info, sample.ray, 0);
+      for_each_sample(stream,[](ScreenSampleRef sample){ sample.alpha = 1.f; });
 
-        sample.rgb = aoColor + lightsColor;
+      // Disable rays which didn't hit anything
+      for_each_sample(
+        stream,
+        [&](ScreenSampleRef sample){
+          sample.rgb = bgColor;
+          disableRay(sample.ray);
+          nActiveRays--;
+        },
+        rayMiss
+      );
 
-      } else {
-        sample.rgb = bgColor;
-      }
+      if (nActiveRays <= 0)
+        return;
     }
 
     Material *StreamSciVisRenderer::createMaterial(const char *type)
     {
       UNUSED(type);
       return new SciVisMaterial;
+    }
+
+    ShadingStream
+    StreamSciVisRenderer::computeShadingInfo(const DGStream &dg) const
+    {
+    }
+
+    RGBStream StreamSciVisRenderer::shade_ao(ScreenSampleStream &stream,
+                                             const DGStream &dgs,
+                                             const ShadingStream &ss,
+                                             const RayStream &rays) const
+    {
+      RGBStream colors;
+
+      Stream<int> hits;
+      std::fill(begin(hits), end(hits), 0);
+
+      Stream<ao_context> ao_ctxs;
+
+      RayStream ao_rays;
+
+      for (int j = 0; j < samplesPerFrame; j++) {
+        // Setup AO rays for active "lanes"
+        for_each_sample_i(
+          stream,
+          [&](ScreenSampleRef /*sample*/, int i) {
+            auto &dg  = dgs[i];
+            auto &ctx = ao_ctxs[i];
+            ctx = getAOContext(dg, aoRayLength, epsilon);
+            ao_rays[i] = calculateAORay(dg, ctx);
+          },
+          rayHit
+        );
+
+        // Trace AO rays
+        occludeRays(ao_rays, RTC_INTERSECT_INCOHERENT);
+
+        // Record occlusion test
+        for_each_sample_i(
+          stream,
+          [&](ScreenSampleRef sample, int i) {
+            UNUSED(sample);
+            auto &ao_ray = ao_rays[i];
+            if (dot(ao_ray.dir, dgs[i].Ng) < 0.05f || ao_ray.hitSomething())
+              hits[i]++;
+          },
+          rayHit
+        );
+      }
+
+      // Write pixel colors
+      for_each_sample_i(
+        stream,
+        [&](ScreenSampleRef sample, int i) {
+          float diffuse = ospcommon::abs(dot(dgs[i].Ng, sample.ray.dir));
+          auto &info = ss[i];
+          colors[i] = info.Kd *
+                      (diffuse * (1.0f - float(hits[i])/samplesPerFrame));
+        },
+        rayHit
+      );
+
+      return colors;
+    }
+
+    RGBStream StreamSciVisRenderer::shade_lights(const DGStream &dgs,
+                                                 const ShadingStream &ss,
+                                                 const RayStream &rays,
+                                                 int path_depth) const
+    {
+      RGBStream colors;
+      return colors;
     }
 
     OSP_REGISTER_RENDERER(StreamSciVisRenderer, cpp_scivis_stream);

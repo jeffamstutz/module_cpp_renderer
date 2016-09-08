@@ -16,37 +16,42 @@
 
 #pragma once
 
-#include "../Renderer.h"
+#include "../StreamRenderer.h"
 #include "../../lights/Light.h"
 #include "SciVisShadingInfo.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
-    struct StreamSciVisRenderer : public ospray::cpp_renderer::Renderer
+    using RGBStream = Stream<vec3f>;
+    using ShadingStream = Stream<SciVisShadingInfo>;
+
+    struct StreamSciVisRenderer : public ospray::cpp_renderer::StreamRenderer
     {
       std::string toString() const override;
       void commit() override;
 
-      void renderSample(void *perFrameData,
-                        ScreenSample &sample) const override;
+      void renderStream(void *perFrameData,
+                        ScreenSampleStream &stream) const override;
 
       ospray::Material *createMaterial(const char *type) override;
 
     private:
 
       // Shading functions //
-      SciVisShadingInfo
-      computeShadingInfo(vec3f &color, const DifferentialGeometry &dg) const;
 
-      vec3f shade_ao(const DifferentialGeometry &dg,
-                     const SciVisShadingInfo &info,
-                     const Ray &ray) const;
+      ShadingStream
+      computeShadingInfo(const DGStream &dg) const;
 
-      vec3f shade_lights(const DifferentialGeometry &dg,
-                         const SciVisShadingInfo &info,
-                         const Ray &ray,
-                         int path_depth) const;
+      RGBStream shade_ao(ScreenSampleStream &stream,
+                         const DGStream &dgs,
+                         const ShadingStream &ss,
+                         const RayStream &rays) const;
+
+      RGBStream shade_lights(const DGStream &dgs,
+                             const ShadingStream &ss,
+                             const RayStream &rays,
+                             int path_depth) const;
 
       // Data //
 

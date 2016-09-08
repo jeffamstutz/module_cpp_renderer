@@ -124,10 +124,10 @@ namespace ospray {
         rayHit
       );
 
-      std::array<int, ScreenSampleStream::size> hits;
+      Stream<int> hits;
       std::fill(begin(hits), end(hits), 0);
 
-      std::array<ao_context, ScreenSampleStream::size> ao_ctxs;
+      Stream<ao_context> ao_ctxs;
 
       RayStream ao_rays;
 
