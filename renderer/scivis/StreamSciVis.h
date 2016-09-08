@@ -41,16 +41,15 @@ namespace ospray {
       // Shading functions //
 
       ShadingStream
-      computeShadingInfo(const DGStream &dg) const;
+      computeShadingInfo(ScreenSampleStream &stream, const DGStream &dgs) const;
 
       RGBStream shade_ao(ScreenSampleStream &stream,
                          const DGStream &dgs,
-                         const ShadingStream &ss,
-                         const RayStream &rays) const;
+                         const ShadingStream &ss) const;
 
-      RGBStream shade_lights(const DGStream &dgs,
+      RGBStream shade_lights(ScreenSampleStream &stream,
+                             const DGStream &dgs,
                              const ShadingStream &ss,
-                             const RayStream &rays,
                              int path_depth) const;
 
       // Data //

@@ -29,7 +29,7 @@ namespace ospray {
     /*! \detailed Since the SciVis Renderer only cares about a
         diffuse material component this material only stores diffuse
         and diffuse texture */
-    struct StreamSciVisMaterial : public ospray::Material {
+    struct SciVisMaterial : public ospray::Material {
       /*! \brief commit the object's outstanding changes
        *         (such as changed parameters etc) */
       void commit() override;
@@ -45,7 +45,7 @@ namespace ospray {
       Ref<Texture2D> map_Ns;
     };
 
-    void StreamSciVisMaterial::commit()
+    void SciVisMaterial::commit()
     {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_d  = (Texture2D*)getParamObject("map_d", nullptr);
@@ -100,7 +100,7 @@ namespace ospray {
     {
       SciVisShadingInfo info;
 
-      auto *mat = dynamic_cast<StreamSciVisMaterial*>(dg.material);
+      auto *mat = dynamic_cast<SciVisMaterial*>(dg.material);
 
       if (mat) {
         // textures modify (mul) values, see
@@ -235,7 +235,7 @@ namespace ospray {
     Material *SciVisRenderer::createMaterial(const char *type)
     {
       UNUSED(type);
-      return new StreamSciVisMaterial;
+      return new SciVisMaterial;
     }
 
     OSP_REGISTER_RENDERER(SciVisRenderer, cpp_scivis);

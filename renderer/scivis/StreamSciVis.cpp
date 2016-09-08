@@ -29,7 +29,7 @@ namespace ospray {
     /*! \detailed Since the SciVis Renderer only cares about a
         diffuse material component this material only stores diffuse
         and diffuse texture */
-    struct SciVisMaterial : public ospray::Material {
+    struct StreamSciVisMaterial : public ospray::Material {
       /*! \brief commit the object's outstanding changes
        *         (such as changed parameters etc) */
       void commit() override;
@@ -45,7 +45,7 @@ namespace ospray {
       Ref<Texture2D> map_Ns;
     };
 
-    void SciVisMaterial::commit()
+    void StreamSciVisMaterial::commit()
     {
       Kd = getParam3f("color", getParam3f("kd", getParam3f("Kd", vec3f(.8f))));
       map_d  = (Texture2D*)getParamObject("map_d", nullptr);
@@ -122,23 +122,75 @@ namespace ospray {
 
       if (nActiveRays <= 0)
         return;
+
+      const auto ss          = computeShadingInfo(stream, dgs);
+      const auto aoColors    = shade_ao(stream, dgs, ss);
+      const auto lightColors = shade_lights(stream, dgs, ss, 0);
+
+      for_each_sample_i(
+        stream,
+        [&](ScreenSampleRef sample, int i) {
+          sample.rgb = aoColors[i] + lightColors[i];
+        },
+        rayHit
+      );
     }
 
     Material *StreamSciVisRenderer::createMaterial(const char *type)
     {
       UNUSED(type);
-      return new SciVisMaterial;
+      return new StreamSciVisMaterial;
     }
 
     ShadingStream
-    StreamSciVisRenderer::computeShadingInfo(const DGStream &dg) const
+    StreamSciVisRenderer::computeShadingInfo(ScreenSampleStream &stream,
+                                             const DGStream &dgs) const
     {
+      ShadingStream ss;
+
+      for_each_sample_i(
+        stream,
+        [&](ScreenSampleRef sample, int i) {
+          auto &info = ss[i];
+          auto &dg   = dgs[i];
+
+          auto *mat = dynamic_cast<StreamSciVisMaterial*>(dg.material);
+
+          if (mat) {
+            // textures modify (mul) values, see
+            //   http://paulbourke.net/dataformats/mtl/
+            info.Kd = mat->Kd * vec3f{dg.color.x, dg.color.y, dg.color.z};
+#if 0// NOTE(jda) - texture fetches not yet implemented
+            info.d = mat->d * get1f(mat->map_d, dg.st, 1.f);
+            if (mat->map_Kd) {
+              vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
+              info.Kd = info.Kd * make_vec3f(Kd_from_map);
+              info.d *= Kd_from_map.w;
+            }
+            info.Ks = mat->Ks * get3f(mat->map_Ks, dg.st, make_vec3f(1.f));
+            info.Ns = mat->Ns * get1f(mat->map_Ns, dg.st, 1.f);
+#else
+            info.d  = mat->d;
+            info.Ks = mat->Ks;
+            info.Ns = mat->Ns;
+#endif
+          } else {
+            info.Kd = vec3f{dg.color.x, dg.color.y, dg.color.z};
+          }
+
+          // BRDF normalization
+          info.Kd *= static_cast<float>(one_over_pi);
+          info.Ks *= (info.Ns + 2.f) * static_cast<float>(one_over_two_pi);
+        },
+        rayHit
+      );
+
+      return ss;
     }
 
     RGBStream StreamSciVisRenderer::shade_ao(ScreenSampleStream &stream,
                                              const DGStream &dgs,
-                                             const ShadingStream &ss,
-                                             const RayStream &rays) const
+                                             const ShadingStream &ss) const
     {
       RGBStream colors;
 
@@ -193,12 +245,78 @@ namespace ospray {
       return colors;
     }
 
-    RGBStream StreamSciVisRenderer::shade_lights(const DGStream &dgs,
+    RGBStream StreamSciVisRenderer::shade_lights(ScreenSampleStream &stream,
+                                                 const DGStream &dgs,
                                                  const ShadingStream &ss,
-                                                 const RayStream &rays,
                                                  int path_depth) const
     {
       RGBStream colors;
+
+      for_each_sample_i(
+        stream,
+        [&](ScreenSampleRef sample, int i) {
+          UNUSED(sample);
+
+          const auto &ray  = stream.rays[i];
+          const auto &dg   = dgs[i];
+          const auto &info = ss[i];
+
+          const vec3f R = ray.dir - ((2.f * dot(ray.dir, dg.Ng)) * dg.Ng);
+
+          //NOTE(jda) - default epsilon doesn't seem to work here...(FIU)
+          const float epsilon = 1e-3f;
+          const vec3f P = dg.P + epsilon * dg.Ng;
+
+          auto &color = colors[i] = vec3f{0.f};
+
+          //calculate shading for all lights
+          for (const auto *l : lights) {
+            const auto light = l->sample(dg, vec2f{0.5f});
+
+            if (reduce_max(light.weight) > 0.f) { // any potential contribution?
+              float cosNL = dot(light.dir, dg.Ng);
+
+              if (singleSidedLighting) {
+                if (cosNL < 0.0f)
+                  continue;
+              }
+              else
+                cosNL = fabs(cosNL);
+
+              const float cosLR = max(0.f, dot(light.dir, R));
+              const vec3f brdf = info.Kd * cosNL +
+                                 info.Ks * powf(cosLR, info.Ns);
+              const vec3f light_contrib = brdf * light.weight;
+
+              if (shadowsEnabled) {
+                const float max_contrib = reduce_max(light_contrib);
+                if (max_contrib > .01f) {
+                  Ray shadowRay;
+                  shadowRay.org = P;
+                  shadowRay.dir = light.dir;
+#if 0
+                  const float light_alpha = lightAlpha(shadowRay,
+                                                       model,
+                                                       max_contrib,
+                                                       maxDepth - path_depth,
+                                                       epsilon);
+#else
+                  float light_alpha = 1.0f;
+                  if (isOccluded(shadowRay)) {
+                    light_alpha = 0.f;
+                  }
+#endif
+                  color += light_alpha * light_contrib;
+                }
+              } else {
+                color += light_contrib;
+              }
+            }
+          }
+        },
+        rayHit
+      );
+
       return colors;
     }
 
