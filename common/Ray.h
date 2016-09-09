@@ -21,7 +21,7 @@
 // embree
 #include "embree2/rtcore.h"
 
-#include <array>
+#include "Stream.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -51,10 +51,7 @@ namespace ospray {
       inline bool hitSomething() const;
     };
 
-    template <int SIZE>
-    using RayStreamN = std::array<Ray, SIZE>;
-
-    using RayStream = RayStreamN<STREAM_SIZE>;
+    using RayStream = Stream<Ray>;
 
     // Inlined member definitions /////////////////////////////////////////////
 

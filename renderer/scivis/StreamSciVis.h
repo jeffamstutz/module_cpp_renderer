@@ -23,7 +23,7 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    using RGBStream = Stream<vec3f>;
+    using RGBStream     = Stream<vec3f>;
     using ShadingStream = Stream<SciVisShadingInfo>;
 
     struct StreamSciVisRenderer : public ospray::cpp_renderer::StreamRenderer

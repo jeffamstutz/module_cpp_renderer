@@ -18,8 +18,6 @@
 
 #include "Ray.h"
 
-#include <array>
-
 namespace ospray {
   namespace cpp_renderer {
 
@@ -54,7 +52,7 @@ namespace ospray {
 
       std::array<vec3i, SIZE> sampleID;
 
-      RayStreamN<SIZE> rays;
+      StreamN<Ray, SIZE> rays;
 
       std::array<vec3f, SIZE> rgb;
       std::array<float, SIZE> alpha;
@@ -67,9 +65,6 @@ namespace ospray {
     };
 
     using ScreenSampleStream = ScreenSampleStreamN<STREAM_SIZE>;
-
-    template <typename T>
-    using Stream = std::array<T, ScreenSampleStream::size>;
 
     // Inlined function definitions ///////////////////////////////////////////
 

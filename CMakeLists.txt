@@ -48,6 +48,7 @@ if (OSPRAY_MODULE_CPP)
 
   if (OSPRAY_USE_EMBREE_STREAMS)
     set(LIBRARY_SRCS
+      common/Stream.h
       renderer/StreamRenderer.cpp
       renderer/raycast/StreamRaycast.cpp
       renderer/scivis/StreamSciVis.cpp

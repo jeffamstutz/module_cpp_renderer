@@ -19,7 +19,7 @@
 #include "common/Material.h"
 #include "geometry/Geometry.h"
 
-#include <array>
+#include "Stream.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -64,10 +64,7 @@ namespace ospray {
       ospray::Material *material{nullptr}; /*! pointer to hit-point's material */
     };
 
-    template <int SIZE>
-    using DGStreamN = std::array<DifferentialGeometry, SIZE>;
-
-    using DGStream = DGStreamN<STREAM_SIZE>;
+    using DGStream = Stream<DifferentialGeometry>;
 
   }// namespace cpp_renderer
 }// namespace ospray

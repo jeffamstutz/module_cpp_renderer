@@ -19,8 +19,6 @@
 #include "camera/Camera.h"
 #include "../common/Ray.h"
 
-#include <array>
-
 namespace ospray {
   namespace cpp_renderer {
 
@@ -35,7 +33,7 @@ namespace ospray {
   #endif
     };
 
-    using CameraSampleStream = std::array<CameraSample, STREAM_SIZE>;
+    using CameraSampleStream = Stream<CameraSample>;
 
     // NOTE(jda) - This injects C++ interface function(s) without needing to
     //             change OSPRay itself. Once the design of CPP* classes are
