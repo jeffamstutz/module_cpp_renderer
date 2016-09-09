@@ -125,7 +125,6 @@ namespace ospray {
 
       const auto ss = computeShadingInfo(stream, dgs);
 
-#if 0//NOTE(jda) - stack size problem?...wacky periodic performance issues...
       const auto aoColors    = shade_ao(stream, dgs, ss);
       const auto lightColors = shade_lights(stream, dgs, ss, 0);
 
@@ -136,27 +135,6 @@ namespace ospray {
         },
         rayHit
       );
-#else
-      auto colors = shade_ao(stream, dgs, ss);
-
-      for_each_sample_i(
-        stream,
-        [&](ScreenSampleRef sample, int i) {
-          sample.rgb = colors[i];
-        },
-        rayHit
-      );
-
-      colors = shade_lights(stream, dgs, ss, 0);
-
-      for_each_sample_i(
-        stream,
-        [&](ScreenSampleRef sample, int i) {
-          sample.rgb += colors[i];
-        },
-        rayHit
-      );
-#endif
     }
 
     Material *StreamSciVisRenderer::createMaterial(const char *type)
@@ -224,11 +202,23 @@ namespace ospray {
 
       RayStream ao_rays;
 
+      // Disable AO rays which the primary ray missed
+      for_each_sample_i(
+        stream,
+        [&](ScreenSampleRef /*sample*/, int i) {
+          auto &ao_ray = ao_rays[i];
+          ao_ray.t0 = inf;
+          ao_ray.t  = 0.f;
+        },
+        rayMiss
+      );
+
       for (int j = 0; j < samplesPerFrame; j++) {
         // Setup AO rays for active "lanes"
         for_each_sample_i(
           stream,
-          [&](ScreenSampleRef /*sample*/, int i) {
+          [&](ScreenSampleRef sample, int i) {
+            UNUSED(sample);
             auto &dg  = dgs[i];
             auto &ctx = ao_ctxs[i];
             ctx = getAOContext(dg, aoRayLength, epsilon);
