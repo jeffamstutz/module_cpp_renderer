@@ -186,6 +186,8 @@ namespace ospray {
               Ray shadowRay;
               shadowRay.org = P;
               shadowRay.dir = light.dir;
+              shadowRay.t0  = 0.f;
+              shadowRay.t   = inf;
 #if 0
               const float light_alpha = lightAlpha(shadowRay,
                                                    model,

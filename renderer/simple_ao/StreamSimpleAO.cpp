@@ -131,17 +131,6 @@ namespace ospray {
 
       RayStream ao_rays;
 
-      // Disable AO rays which the primary ray missed
-      for_each_sample_i(
-        stream,
-        [&](ScreenSampleRef /*sample*/, int i) {
-          auto &ao_ray = ao_rays[i];
-          ao_ray.t0 = inf;
-          ao_ray.t  = 0.f;
-        },
-        rayMiss
-      );
-
       for (int j = 0; j < samplesPerFrame; j++) {
         // Setup AO rays for active "lanes"
         for_each_sample_i(

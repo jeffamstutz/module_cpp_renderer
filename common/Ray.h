@@ -31,8 +31,8 @@ namespace ospray {
       /* ray input data */
       vec3fa org;
       vec3fa dir;
-      float t0{0.f};
-      float t{inf};
+      float t0{inf};
+      float t{0.f};
       float time;
       int32 mask{0xFFFFFFFF};
 
