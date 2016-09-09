@@ -54,7 +54,7 @@ namespace ospray {
     template <int SIZE>
     using RayStreamN = std::array<Ray, SIZE>;
 
-    using RayStream = RayStreamN<RENDERTILE_PIXELS_PER_JOB>;
+    using RayStream = RayStreamN<STREAM_SIZE>;
 
     // Inlined member definitions /////////////////////////////////////////////
 
@@ -87,6 +87,17 @@ namespace ospray {
     inline void disableRay(RayStream &rays, int i)
     {
       disableRay(rays[i]);
+    }
+
+    inline void resetRay(Ray &ray)
+    {
+      disableRay(ray);
+      ray.geomID = RTC_INVALID_GEOMETRY_ID;
+    }
+
+    inline void resetRay(RayStream &rays, int i)
+    {
+      resetRay(rays[i]);
     }
 
   }// ::ospray::cpp_renderer

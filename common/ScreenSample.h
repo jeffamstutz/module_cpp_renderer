@@ -66,7 +66,7 @@ namespace ospray {
       ScreenSampleRef get(int i);
     };
 
-    using ScreenSampleStream = ScreenSampleStreamN<RENDERTILE_PIXELS_PER_JOB>;
+    using ScreenSampleStream = ScreenSampleStreamN<STREAM_SIZE>;
 
     template <typename T>
     using Stream = std::array<T, ScreenSampleStream::size>;

@@ -39,64 +39,68 @@ namespace ospray {
       const int fbw = currentFB->size.x;
       const int fbh = currentFB->size.y;
 
-      const auto begin = jobID * RENDERTILE_PIXELS_PER_JOB;
-      const auto end   = begin + RENDERTILE_PIXELS_PER_JOB;
       const auto startSampleID = max(tile.accumID, 0)*spp;
 
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
-      ScreenSampleStream screenSamples;
-      CameraSampleStream cameraSamples;
+      constexpr int STREAM_ITERATIONS = RENDERTILE_PIXELS_PER_JOB / STREAM_SIZE;
 
-      for (auto i = begin; i < end; ++i) {
-        const int streamID = i - begin;
+      for (auto j = 0; j < STREAM_ITERATIONS; ++j) {
 
-        auto &sampleID = screenSamples.sampleID[streamID];
-        sampleID.x = tile.region.lower.x + z_order.xs[i];
-        sampleID.y = tile.region.lower.y + z_order.ys[i];
-        auto &tileOffset = screenSamples.tileOffset[streamID];
-        tileOffset = -1;
+        ScreenSampleStream screenSamples;
+        CameraSampleStream cameraSamples;
+        const auto begin = jobID * RENDERTILE_PIXELS_PER_JOB + j * STREAM_SIZE;
+        const auto end   = begin + STREAM_SIZE;
 
-        if ((sampleID.x >= fbw) || (sampleID.y >= fbh))
-          continue;
+        for (auto i = begin; i < end; ++i) {
+          const int streamID = i - begin;
 
-        tileOffset = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
-        float tMax = inf;
+          auto &sampleID = screenSamples.sampleID[streamID];
+          sampleID.x = tile.region.lower.x + z_order.xs[i];
+          sampleID.y = tile.region.lower.y + z_order.ys[i];
+          auto &tileOffset = screenSamples.tileOffset[streamID];
+          tileOffset = -1;
+          resetRay(screenSamples.rays, streamID);
 
-        // NOTE(jda) - This assumes spp = 1
-        float pixel_du = distribution(generator);
-        float pixel_dv = distribution(generator);
-        sampleID.z = startSampleID;
+          if ((sampleID.x >= fbw) || (sampleID.y >= fbh))
+            continue;
 
-        CameraSample &cameraSample = cameraSamples[streamID];
-        cameraSample.screen.x = (sampleID.x + pixel_du) *
-                                rcp(float(fbw));
-        cameraSample.screen.y = (sampleID.y + pixel_dv) *
-                                rcp(float(fbh));
+          tileOffset = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
+          float tMax = inf;
 
-        cameraSample.lens.x = distribution(generator);
-        cameraSample.lens.y = distribution(generator);
+          // NOTE(jda) - This assumes spp = 1
+          float pixel_du = distribution(generator);
+          float pixel_dv = distribution(generator);
+          sampleID.z = startSampleID;
 
-        auto &ray = screenSamples.rays[streamID];
-        currentCamera->getRay(cameraSample, ray);
-        ray.t = tMax;
+          CameraSample &cameraSample = cameraSamples[streamID];
+          cameraSample.screen.x = (sampleID.x + pixel_du) * rcp(float(fbw));
+          cameraSample.screen.y = (sampleID.y + pixel_dv) * rcp(float(fbh));
+
+          cameraSample.lens.x = distribution(generator);
+          cameraSample.lens.y = distribution(generator);
+
+          auto &ray = screenSamples.rays[streamID];
+          currentCamera->getRay(cameraSample, ray);
+          ray.t = tMax;
+        }
+
+        renderStream(perFrameData, screenSamples);
+
+        auto writeTile = [&](ScreenSampleRef sample)
+        {
+          sample.rgb *= spp_inv;
+
+          const auto tileOffset = sample.tileOffset;
+          tile.r[tileOffset] = sample.rgb.x;
+          tile.g[tileOffset] = sample.rgb.y;
+          tile.b[tileOffset] = sample.rgb.z;
+          tile.a[tileOffset] = sample.alpha;
+          tile.z[tileOffset] = sample.z;
+        };
+
+        for_each_sample(screenSamples, writeTile, sampleEnabled);
       }
-
-      renderStream(perFrameData, screenSamples);
-
-      auto writeTile = [&](ScreenSampleRef sample)
-      {
-        sample.rgb *= spp_inv;
-
-        const auto tileOffset = sample.tileOffset;
-        tile.r[tileOffset] = sample.rgb.x;
-        tile.g[tileOffset] = sample.rgb.y;
-        tile.b[tileOffset] = sample.rgb.z;
-        tile.a[tileOffset] = sample.alpha;
-        tile.z[tileOffset] = sample.z;
-      };
-
-      for_each_sample(screenSamples, writeTile, sampleEnabled);
     }
 
     void StreamRenderer::renderSample(void *perFrameData,

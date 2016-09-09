@@ -67,7 +67,7 @@ namespace ospray {
     template <int SIZE>
     using DGStreamN = std::array<DifferentialGeometry, SIZE>;
 
-    using DGStream = DGStreamN<RENDERTILE_PIXELS_PER_JOB>;
+    using DGStream = DGStreamN<STREAM_SIZE>;
 
   }// namespace cpp_renderer
 }// namespace ospray
