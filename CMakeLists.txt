@@ -43,18 +43,17 @@ if (OSPRAY_MODULE_CPP)
     renderer/simple_ao/ao_util.cpp
     renderer/simple_ao/SimpleAO.cpp
 
+    common/Stream.h
+    renderer/StreamRenderer.cpp
+    renderer/raycast/StreamRaycast.cpp
+    renderer/scivis/StreamSciVis.cpp
+    renderer/simple_ao/StreamSimpleAO.cpp
+
     util.cpp
   )
 
   if (OSPRAY_USE_EMBREE_STREAMS)
-    set(LIBRARY_SRCS
-      common/Stream.h
-      renderer/StreamRenderer.cpp
-      renderer/raycast/StreamRaycast.cpp
-      renderer/scivis/StreamSciVis.cpp
-      renderer/simple_ao/StreamSimpleAO.cpp
-      ${LIBRARY_SRCS}
-    )
+    add_definitions(-DUSE_EMBREE_STREAMS)
   endif()
 
   ospray_create_library(ospray_module_cpp

@@ -18,6 +18,7 @@
 
 // embree
 #include "embree2/rtcore.h"
+#include "embree2/rtcore_scene.h"
 
 #include "../camera/Camera.h"
 #include "../common/DifferentialGeometry.h"
@@ -55,17 +56,35 @@ namespace ospray {
     inline void StreamRenderer::traceRays(RayStream &rays,
                                           RTCIntersectFlags flags) const
     {
+#if USE_EMBREE_STREAMS
       RTCIntersectContext ctx{flags, nullptr};
       rtcIntersect1M(model->embreeSceneHandle, &ctx,
                      (RTCRay*)&rays, rays.size(), sizeof(Ray));
+#else
+      UNUSED(flags);
+      for (int i = 0; i < ScreenSampleStream::size; ++i) {
+        auto &ray = rays[i];
+        if (rayIsActive(ray))
+          traceRay(ray);
+      }
+#endif
     }
 
     inline void StreamRenderer::occludeRays(RayStream &rays,
                                             RTCIntersectFlags flags) const
     {
+#if USE_EMBREE_STREAMS
       RTCIntersectContext ctx{flags, nullptr};
       rtcOccluded1M(model->embreeSceneHandle, &ctx,
                     (RTCRay*)&rays, rays.size(), sizeof(Ray));
+#else
+      UNUSED(flags);
+      for (int i = 0; i < ScreenSampleStream::size; ++i) {
+        auto &ray = rays[i];
+        if (rayIsActive(ray))
+          isOccluded(ray);
+      }
+#endif
     }
 
     inline DGStream StreamRenderer::postIntersect(const RayStream &rays,
