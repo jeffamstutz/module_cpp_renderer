@@ -39,7 +39,7 @@ namespace ospray {
       static int numPrints = 0;
       numPrints++;
 
-      if (logLevel >= 2)
+      if (logLevel() >= 2)
         if (numPrints < 5)
           std::cout << "ospray: finalizing triangle mesh ..." << std::endl;
 
@@ -122,7 +122,7 @@ namespace ospray {
       for (size_t i = 0; i < numVerts*vtxSize; i += vtxSize)
         bounds.extend(*(vec3f*)(vertex + i));
 
-      if (logLevel >= 2) {
+      if (logLevel() >= 2) {
         if (numPrints < 5) {
           cout << "  created triangle mesh (" << numTris << " tris "
                << ", " << numVerts << " vertices)" << endl;
