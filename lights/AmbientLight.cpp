@@ -56,6 +56,11 @@ namespace ospray {
       return res;
     }
 
+    vec3f AmbientLight::getRadiance() const
+    {
+      return radiance;
+    }
+
     std::string cpp_renderer::AmbientLight::toString() const
     {
       return "ospray::cpp_renderer::AmbientLight";

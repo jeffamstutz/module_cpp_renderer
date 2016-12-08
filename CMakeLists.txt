@@ -21,6 +21,8 @@ if (OSPRAY_MODULE_CPP)
   set(OSPRAY_MODULE_CPP_STREAM_SIZE ${OSPRAY_TILE_SIZE} CACHE INT "Stream size")
   add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
 
+  include_directories(${CMAKE_CURRENT_LIST_DIR}/..)
+
   set(LIBRARY_SRCS
     camera/Camera.h
     camera/Perspective.cpp

@@ -53,8 +53,8 @@ namespace ospray {
       bool  shadowsEnabled {true};
       bool  singleSidedLighting {true};
       int   samplesPerFrame {1};
-      float aoRayLength {1e20f};
-      float aoWeight {0.25f};
+      float aoDistance {1e20f};
+      vec3f aoColor {0.f};
       int   maxDepth {10};
 
       std::vector<cpp_renderer::Light*> lights;

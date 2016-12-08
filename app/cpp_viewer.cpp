@@ -62,6 +62,20 @@ public:
     ospLight.commit();
     lights.push_back(ospLight.handle());
 
+    ospcommon::vec4f ambient(.85, .9, 1, .2*3.14);
+
+    if (ambient.w > 0.f && reduce_max(ambient) > 0.f) {
+      auto ambLight = renderer.newLight("cpp_ambient");
+      if (ambLight.handle() == nullptr) {
+        throw std::runtime_error("Failed to create a 'AmbientLight'!");
+      }
+      ambLight.set("name", "ambient");
+      ambLight.set("color", ambient.x, ambient.y, ambient.z);
+      ambLight.set("intensity", ambient.w);
+      ambLight.commit();
+      lights.push_back(ambLight.handle());
+    }
+
     auto lightArray = ospray::cpp::Data(lights.size(),
                                         OSP_OBJECT,
                                         lights.data());

@@ -35,6 +35,8 @@ namespace ospray {
                            const vec3f &dir,
                            float maxDist) const override;
 
+        vec3f getRadiance() const;
+
       private:
 
         vec3f color {1.f};     //!< RGB color of the light

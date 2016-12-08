@@ -19,6 +19,7 @@
 #include "../../util.h"
 
 #include "common/Data.h"
+#include "cpp_renderer/lights/AmbientLight.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -73,26 +74,38 @@ namespace ospray {
     {
       cpp_renderer::Renderer::commit();
 
+      auto *lightData = (Data*)getParamData("lights");
+
+      lights.clear();
+
+      aoColor = vec3f(0.f);
+      bool ambientLights = false;
+
+      if (lightData) {
+        auto **lightArray = (cpp_renderer::Light**)lightData->data;
+        for (uint32_t i = 0; i < lightData->size(); i++) {
+          auto *light = lightArray[i];
+          // extract color from ambient lights and remove them
+          auto *ambient = dynamic_cast<cpp_renderer::AmbientLight *>(light);
+          if (ambient) {
+            ambientLights = true;
+            aoColor += ambient->getRadiance();
+          } else
+            lights.push_back(lightArray[i]);
+        }
+      }
+
       // shadow parameters
       shadowsEnabled      = getParam1i("shadowsEnabled", 1);
       singleSidedLighting = getParam1i("oneSidedLighting", 1);
 
       // ao parameters
       samplesPerFrame = getParam1i("aoSamples", 1);
-      aoRayLength     = getParam1f("aoDistance", 1e20f);
-      aoWeight        = getParam1f("aoWeight", 0.25f);
+      aoDistance      = getParam1f("aoDistance", 1e20f);
 
-      aoWeight *= static_cast<float>(pi);
-
-      auto *lightData = (Data*)getParamData("lights");
-
-      lights.clear();
-
-      if (lightData) {
-        auto **lightArray = (cpp_renderer::Light**)lightData->data;
-        for (uint32_t i = 0; i < lightData->size(); i++)
-          lights.push_back(lightArray[i]);
-      }
+      // "aoWeight" is deprecated, use an ambient light instead
+      if (!ambientLights)
+        aoColor = vec3f(getParam1f("aoWeight", 0.f));
     }
 
     inline SciVisShadingInfo
@@ -136,7 +149,7 @@ namespace ospray {
                                           const Ray &ray) const
     {
       int hits = 0;
-      auto aoContext = getAOContext(dg, aoRayLength, epsilon);
+      auto aoContext = getAOContext(dg, aoDistance, epsilon);
 
       for (int i = 0; i < samplesPerFrame; i++) {
         auto ao_ray = calculateAORay(dg, aoContext);
@@ -146,7 +159,7 @@ namespace ospray {
 
       float diffuse = ospcommon::abs(dot(dg.Ng, ray.dir));
       return info.Kd *
-             (diffuse * aoWeight * (1.0f-float(hits)/samplesPerFrame));
+             (diffuse * aoColor * (1.0f-float(hits)/samplesPerFrame));
     }
 
     vec3f SciVisRenderer::shade_lights(const DifferentialGeometry &dg,
