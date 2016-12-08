@@ -79,7 +79,7 @@ namespace ospray {
 
       // ao parameters
       samplesPerFrame = getParam1i("aoSamples", 1);
-      aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
+      aoRayLength     = getParam1f("aoDistance", 1e20f);
       aoWeight        = getParam1f("aoWeight", 0.25f);
 
       aoWeight *= static_cast<float>(pi);

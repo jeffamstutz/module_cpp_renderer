@@ -26,7 +26,7 @@
 class CppRendererParser : public DefaultRendererParser
 {
 public:
-  CppRendererParser() { rendererType = "cpp_scivis"; }
+  CppRendererParser() { rendererType = "cpp_scivis_stream"; }
 };
 
 class CppCameraParser : public DefaultCameraParser
@@ -83,10 +83,10 @@ int main(int ac, const char **av)
                                   CppSceneParser,
                                   CppLightsParser>(ac, av);
 
-  std::deque<ospcommon::box3f>     bbox;
-  std::deque<ospray::cpp::Model>    model;
-  ospray::cpp::Renderer renderer;
-  ospray::cpp::Camera   camera;
+  std::deque<ospcommon::box3f>   bbox;
+  std::deque<ospray::cpp::Model> model;
+  ospray::cpp::Renderer          renderer;
+  ospray::cpp::Camera            camera;
 
   std::tie(bbox, model, renderer, camera) = ospObjs;
 
