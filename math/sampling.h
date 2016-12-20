@@ -21,7 +21,7 @@
 // convention is to return the sample (vec3f) generated from given
 // vec2f 's'ample as last parameter
 
-// sampling functions often come in pairs: sample and pdf (needed later for MIS)
+// sampling functions often come in pairs: sample and pdf (needed for MIS)
 // good reference is "Total Compendium" by Philip Dutre
 // http://people.cs.kuleuven.be/~philip.dutre/GI/
 
@@ -31,8 +31,8 @@ namespace ospcommon {
 
   inline vec3f cartesian(float phi, float sinTheta, float cosTheta)
   {
-    double sinPhi, cosPhi;
-    sincos(phi, &sinPhi, &cosPhi);
+    double sinPhi = sin(phi);
+    double cosPhi = cos(phi);
     return vec3f(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
   }
 
@@ -96,14 +96,14 @@ namespace ospcommon {
     return rcp(static_cast<float>(two_pi)*(1.0f - cosAngle));
   }
 
-  /// uniform sampling of disk ////////////////////////////////////////////////
+  // uniform sampling of disk /////////////////////////////////////////////////
 
   inline vec3f uniformSampleDisk(const float radius, const vec2f &s)
   {
     const float r = sqrtf(s.x) * radius;
     const float phi = static_cast<float>(two_pi) * s.y;
-    double sinPhi, cosPhi;
-    sincos(phi, &sinPhi, &cosPhi);
+    double sinPhi = sin(phi);
+    double cosPhi = cos(phi);
     return vec3f(r * cosPhi, r * sinPhi, 0.f);
   }
 
