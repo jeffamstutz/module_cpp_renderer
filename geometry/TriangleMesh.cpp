@@ -140,9 +140,9 @@ namespace ospray {
       const vec3i idx = vec3i{index[base+0], index[base+1], index[base+2]};
 
       if ((flags & DG_NS) && normal) {
-        const vec3f &n0 = normal[idx.x * norSize];
-        const vec3f &n1 = normal[idx.y * norSize];
-        const vec3f &n2 = normal[idx.z * norSize];
+        auto &n0 = reinterpret_cast<const vec3f&>(normal[idx.x*norSize]);
+        auto &n1 = reinterpret_cast<const vec3f&>(normal[idx.y*norSize]);
+        auto &n2 = reinterpret_cast<const vec3f&>(normal[idx.z*norSize]);
         dg.Ns = (1.f-ray.u-ray.v) * n0 + (ray.u * n1) + (ray.v * n2);
       }
 
@@ -170,9 +170,9 @@ namespace ospray {
 
           if (det != 0.f) {
             const float invDet = rcp(det);
-            const vec3f &v0 = vertex[idx.x * vtxSize];
-            const vec3f &v1 = vertex[idx.y * vtxSize];
-            const vec3f &v2 = vertex[idx.z * vtxSize];
+            auto &v0 = reinterpret_cast<const vec3f&>(vertex[idx.x*vtxSize]);
+            auto &v1 = reinterpret_cast<const vec3f&>(vertex[idx.y*vtxSize]);
+            auto &v2 = reinterpret_cast<const vec3f&>(vertex[idx.z*vtxSize]);
             const vec3f dp02 = v0 - v2;
             const vec3f dp12 = v1 - v2;
             dg.dPds = (dst12.y * dp02 - dst02.y * dp12) * invDet;
