@@ -83,7 +83,7 @@ public:
     renderer.set("lights", lightArray);
   }
 
-  bool parse(int ac, const char **&av) {}
+  bool parse(int ac, const char **&av) { return false; }
 };
 
 int main(int ac, const char **av)
