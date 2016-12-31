@@ -20,10 +20,6 @@
 #include "embree2/rtcore.h"
 #include "embree2/rtcore_scene.h"
 
-#include "../camera/Camera.h"
-#include "../common/DifferentialGeometry.h"
-#include "../common/ScreenSample.h"
-#include "../geometry/Geometry.h"
 #include "Renderer.h"
 
 namespace ospray {
