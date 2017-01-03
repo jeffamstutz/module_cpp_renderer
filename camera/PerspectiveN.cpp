@@ -77,16 +77,16 @@ namespace ospray {
       auto dir_du = simd::vec3f{this->dir_du};
       auto dir_dv = simd::vec3f{this->dir_dv};
 
-      auto result =
-          (sample.screen.x * (dir_du * simd::vfloat{(imageEnd.x - imageStart.x)}));
+      auto imageStart_x = simd::vfloat{imageStart.x};
+      auto imageStart_y = simd::vfloat{imageStart.y};
+      auto imageEnd_x   = simd::vfloat{imageEnd.x};
+      auto imageEnd_y   = simd::vfloat{imageEnd.y};
 
-#if 0
       simd::vec3f dir = dir_00
-        + ((imageStart.x * dir_du)
-           + (screen.x * (dir_du * (imageEnd.x - imageStart.x))))
-        + ((imageStart.y * dir_dv)
-           + (screen.y * (dir_dv * (imageEnd.y - imageStart.y))));
-#endif
+        + ((imageStart_x * dir_du)
+           + (sample.screen.x * (dir_du * (imageEnd_x - imageStart_x))))
+        + ((imageStart_y * dir_dv)
+           + (sample.screen.y * (dir_dv * (imageEnd_y - imageStart_y))));
 
   #if 0
       if (self->super.doesDOF) {
@@ -100,7 +100,7 @@ namespace ospray {
   #endif
 
       ray.org = org;
-      //ray.dir = normalize(dir);
+      ray.dir = dir;//normalize(dir);
       ray.t0  = nearClip;
       ray.t   = inf;
     }
