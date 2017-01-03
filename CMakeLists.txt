@@ -26,6 +26,8 @@ if (OSPRAY_MODULE_CPP)
     ${CMAKE_CURRENT_LIST_DIR}/include
   )
 
+  set(CMAKE_CXX_FLAGS "-mavx ${CMAKE_CXX_FLAGS}")
+
   set(LIBRARY_SRCS
 
     camera/Camera.h

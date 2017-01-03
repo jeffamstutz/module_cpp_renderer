@@ -16,12 +16,16 @@
 
 #pragma once
 
-// ospcommon
-#include "ospcommon/vec.h"
 // boost.simd
 #include "boost/simd.hpp"
+//#include "boost/simd/arithmetic.hpp"
 #include "boost/simd/function/enumerate.hpp"
 #include "boost/simd/function/all.hpp"
+// ospcommon
+namespace ospcommon {
+  using namespace boost::simd;
+}
+#include "ospcommon/vec.h"
 // std
 #include <random>
 
@@ -84,7 +88,7 @@ namespace ospray {
     // Algorithms /////////////////////////////////////////////////////////////
 
     template <typename SIMD_T, typename FCN_T>
-    inline void vforeach(SIMD_T &v, FCN_T &&fcn)
+    inline void foreach_v(SIMD_T &v, FCN_T &&fcn)
     {
       // NOTE(jda) - need to static_assert() FCN_T's signature
 
@@ -125,12 +129,15 @@ namespace ospray {
 
     // Helper functions ///////////////////////////////////////////////////////
 
+    // NOTE(jda) - This adds a random number generator per C++ translation unit,
+    //             which means random number sequences between different .cpp
+    //             files may overlap or be identical...beware!
     static thread_local std::minstd_rand generator;
     static std::uniform_real_distribution<float> distribution {0.f, 1.f};
     static inline simd::vfloat randUniformDist()
     {
       simd::vfloat retval;
-      simd::vforeach(retval, [&](float &v, int i) {
+      simd::foreach_v(retval, [&](float &v, int i) {
         v = distribution(generator);
       });
       return retval;
@@ -138,7 +145,7 @@ namespace ospray {
 
     // Constants //////////////////////////////////////////////////////////////
 
-    const int  width        = vfloat::static_size;
+    constexpr int  width    = vfloat::static_size;
     const vint programIndex = boost::simd::enumerate<vint>(0, 1);
 
   }// namespace simd
