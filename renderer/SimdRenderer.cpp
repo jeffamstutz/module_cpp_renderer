@@ -17,13 +17,11 @@
 // ospray
 #include "SimdRenderer.h"
 #include "../util.h"
-// std
-#include <random>
-
-static thread_local std::minstd_rand generator;
 
 namespace ospray {
   namespace cpp_renderer {
+
+    // SimdRenderer definitions ///////////////////////////////////////////////
 
     std::string SimdRenderer::toString() const
     {
@@ -59,17 +57,17 @@ namespace ospray {
       const auto end   = begin + RENDERTILE_PIXELS_PER_JOB;
       const auto startSampleID = max(tile.accumID, 0)*spp;
 
-      static std::uniform_real_distribution<float> distribution {0.f, 1.f};
-
       for (auto i = begin; i < end; i += simd::width) {
         ScreenSampleN screenSample;
 
-        // NOTE(jda) - SIMDify sampleID calculation (z_order)
-        screenSample.sampleID.x = tile.region.lower.x + z_order.xs[i];
-        screenSample.sampleID.y = tile.region.lower.y + z_order.ys[i];
+        // NOTE(jda) - THIS MIGHT BE BROKEN...
+        screenSample.sampleID.x = tile.region.lower.x +
+                                  simd::load<simd::vint>(&z_order.xs[i]);
+        screenSample.sampleID.y = tile.region.lower.y +
+                                  simd::load<simd::vint>(&z_order.ys[i]);
         screenSample.sampleID.z = startSampleID;
 
-        auto &sampleID = screenSample.sampleID;
+        const auto &sampleID = screenSample.sampleID;
 
         auto active = (sampleID.x < simd::vint{currentFB->size.x}) ||
                       (sampleID.y < simd::vint{currentFB->size.y});
@@ -92,21 +90,19 @@ namespace ospray {
 #endif
 
         for (int s = 0; s < spp; s++) {
-          // NOTE(jda) - random numbers need to be random across SIMD lanes!
-          simd::vfloat du {distribution(generator)};
-          simd::vfloat dv {distribution(generator)};
+          auto du = simd::randUniformDist();
+          auto dv = simd::randUniformDist();
           screenSample.sampleID.z = startSampleID + s;
 
           CameraSampleN cameraSample;
 
           du += simd::cast<simd::vfloat>(screenSample.sampleID.x);
           dv += simd::cast<simd::vfloat>(screenSample.sampleID.y);
-          cameraSample.screen.x = du * (1.f / simd::vfloat{currentFB->size.x});
-          cameraSample.screen.y = dv * (1.f / simd::vfloat{currentFB->size.y});
+          cameraSample.screen.x = du * (1.f / currentFB->size.x);
+          cameraSample.screen.y = dv * (1.f / currentFB->size.y);
 
-          // NOTE(jda) - random numbers need to be random across SIMD lanes!
-          cameraSample.lens.x = simd::vfloat{distribution(generator)};
-          cameraSample.lens.y = simd::vfloat{distribution(generator)};
+          cameraSample.lens.x = simd::randUniformDist();
+          cameraSample.lens.y = simd::randUniformDist();
 
           auto &ray = screenSample.ray;
           currentCameraN->getRay(cameraSample, ray);
@@ -120,7 +116,6 @@ namespace ospray {
 
           rgb *= simd::vfloat{spp_inv};
 
-          // NOTE(jda) - make this a generic function call (foreach_active?)
           simd::foreach_active(active, [&](int j) {
             const auto pixel = z_order.xs[i+j] + (z_order.ys[i+j] * TILE_SIZE);
             tile.r[pixel] = rgb.x[j];

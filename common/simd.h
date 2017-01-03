@@ -22,6 +22,8 @@
 #include "boost/simd.hpp"
 #include "boost/simd/function/enumerate.hpp"
 #include "boost/simd/function/all.hpp"
+// std
+#include <random>
 
 namespace ospray {
   namespace simd {
@@ -82,7 +84,7 @@ namespace ospray {
     // Algorithms /////////////////////////////////////////////////////////////
 
     template <typename SIMD_T, typename FCN_T>
-    inline void foreach(SIMD_T &v, FCN_T &&fcn)
+    inline void vforeach(SIMD_T &v, FCN_T &&fcn)
     {
       // NOTE(jda) - need to static_assert() FCN_T's signature
 
@@ -103,7 +105,7 @@ namespace ospray {
     }
 
     template <typename MASK_T, typename SIMD_T, typename FCN_T>
-    inline void foreach_active(const MASK_T &l, SIMD_T &v, const FCN_T &fcn)
+    inline void foreach_active(const MASK_T &l, SIMD_T &v, FCN_T &&fcn)
     {
       // NOTE(jda) - need to static_assert() FCN_T's signature
       static_assert(std::is_same<typename MASK_T::value_type,
@@ -121,9 +123,22 @@ namespace ospray {
       }
     }
 
+    // Helper functions ///////////////////////////////////////////////////////
+
+    static thread_local std::minstd_rand generator;
+    static std::uniform_real_distribution<float> distribution {0.f, 1.f};
+    static inline simd::vfloat randUniformDist()
+    {
+      simd::vfloat retval;
+      simd::vforeach(retval, [&](float &v, int i) {
+        v = distribution(generator);
+      });
+      return retval;
+    }
+
     // Constants //////////////////////////////////////////////////////////////
 
-    const int width         = vfloat::static_size;
+    const int  width        = vfloat::static_size;
     const vint programIndex = boost::simd::enumerate<vint>(0, 1);
 
   }// namespace simd
