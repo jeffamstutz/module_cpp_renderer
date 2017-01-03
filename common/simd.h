@@ -20,31 +20,53 @@
 #include "ospcommon/vec.h"
 // boost.simd
 #include "boost/simd.hpp"
+#include "boost/simd/function/enumerate.hpp"
 #include "boost/simd/function/all.hpp"
 
 namespace ospray {
-
   namespace simd {
 
     using namespace boost::simd;
 
     // Aliases for vector types based on boost::simd types ////////////////////
 
-    using vfloat = boost::simd::pack<float>;
-    using vint   = boost::simd::pack<int>;
-    using vmaskf = boost::simd::pack<boost::simd::logical<float>>;
-    using vmaski = boost::simd::pack<boost::simd::logical<int>>;
+    // Pack types //
 
-    const int width = vfloat::static_size;
+    template <typename T>
+    using pack = boost::simd::pack<T>;
+
+    using vfloat = pack<float>;
+    using vint   = pack<int>;
+    using vuint  = pack<uint32_t>;
+
+    // Mask types //
+
+    template <typename T>
+    using mask_t = boost::simd::logical<T>;
+
+    using maskf = mask_t<float>;
+    using maski = mask_t<int>;
+    using masku = mask_t<uint32_t>;
+
+    using vmaskf = pack<maskf>;
+    using vmaski = pack<maski>;
+    using vmasku = pack<masku>;
+
+    // Vector math types //
 
     using vec2f = ospcommon::vec_t<vfloat, 2>;
     using vec2i = ospcommon::vec_t<vint,   2>;
+    using vec2u = ospcommon::vec_t<vuint,  2>;
+
     using vec3f = ospcommon::vec_t<vfloat, 3>;
     using vec3i = ospcommon::vec_t<vint,   3>;
+    using vec3u = ospcommon::vec_t<vuint,  3>;
+
     using vec4f = ospcommon::vec_t<vfloat, 4>;
     using vec4i = ospcommon::vec_t<vint,   4>;
+    using vec4u = ospcommon::vec_t<vuint,  4>;
 
-    // Cast operatons //
+    // Cast operatons /////////////////////////////////////////////////////////
 
     template <typename NewType, typename OriginalType>
     NewType cast(const OriginalType &t)
@@ -56,5 +78,53 @@ namespace ospray {
 
       return nt;
     }
-  }
-}
+
+    // Algorithms /////////////////////////////////////////////////////////////
+
+    template <typename SIMD_T, typename FCN_T>
+    inline void foreach(SIMD_T &v, FCN_T &&fcn)
+    {
+      // NOTE(jda) - need to static_assert() FCN_T's signature
+
+      for (int i = 0; i < SIMD_T::static_size; ++i) {
+        typename SIMD_T::value_type tmp = v[i];
+        fcn(tmp, i);
+        v[i] = tmp;
+      }
+    }
+
+    template <typename MASK_T, typename FCN_T>
+    inline void foreach_active(const MASK_T &l, FCN_T &&fcn)
+    {
+      // NOTE(jda) - need to static_assert() FCN_T's signature
+
+      for (int i = 0; i < MASK_T::static_size; ++i)
+        if (mask_t<typename MASK_T::value_type>{l[i]}) fcn(i);
+    }
+
+    template <typename MASK_T, typename SIMD_T, typename FCN_T>
+    inline void foreach_active(const MASK_T &l, SIMD_T &v, const FCN_T &fcn)
+    {
+      // NOTE(jda) - need to static_assert() FCN_T's signature
+      static_assert(std::is_same<typename MASK_T::value_type,
+                                 typename SIMD_T::value_type>::value,
+                    "The LOGICAL_T and SIMD_T types provided must be of the "
+                    "same value type. In other words, you can't mismatch the "
+                    "mask type and simd type. (i.e. can't do maskf with vint)");
+
+      for (int i = 0; i < SIMD_T::static_size; ++i) {
+        if (mask_t<typename MASK_T::value_type>{l[i]}) {
+          typename SIMD_T::value_type tmp = v[i];
+          fcn(tmp, i);
+          v[i] = tmp;
+        }
+      }
+    }
+
+    // Constants //////////////////////////////////////////////////////////////
+
+    const int width         = vfloat::static_size;
+    const vint programIndex = boost::simd::enumerate<vint>(0, 1);
+
+  }// namespace simd
+}// namespace ospray

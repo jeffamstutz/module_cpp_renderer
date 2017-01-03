@@ -63,14 +63,16 @@ namespace ospray {
 
       for (auto i = begin; i < end; i += simd::width) {
         ScreenSampleN screenSample;
+
+        // NOTE(jda) - SIMDify sampleID calculation (z_order)
         screenSample.sampleID.x = tile.region.lower.x + z_order.xs[i];
         screenSample.sampleID.y = tile.region.lower.y + z_order.ys[i];
         screenSample.sampleID.z = startSampleID;
 
         auto &sampleID = screenSample.sampleID;
 
-        auto active = (sampleID.x >= simd::vint{currentFB->size.x}) ||
-                      (sampleID.y >= simd::vint{currentFB->size.y});
+        auto active = (sampleID.x < simd::vint{currentFB->size.x}) ||
+                      (sampleID.y < simd::vint{currentFB->size.y});
 
         if (!simd::any(active))
           continue;
@@ -90,10 +92,10 @@ namespace ospray {
 #endif
 
         for (int s = 0; s < spp; s++) {
-          // NOTE(jda) - random numbers need to be random across varying values!
+          // NOTE(jda) - random numbers need to be random across SIMD lanes!
           simd::vfloat du {distribution(generator)};
           simd::vfloat dv {distribution(generator)};
-          screenSample.sampleID.z = startSampleID+s;
+          screenSample.sampleID.z = startSampleID + s;
 
           CameraSampleN cameraSample;
 
@@ -102,7 +104,7 @@ namespace ospray {
           cameraSample.screen.x = du * (1.f / simd::vfloat{currentFB->size.x});
           cameraSample.screen.y = dv * (1.f / simd::vfloat{currentFB->size.y});
 
-          // NOTE(jda) - random numbers need to be random across varying values!
+          // NOTE(jda) - random numbers need to be random across SIMD lanes!
           cameraSample.lens.x = simd::vfloat{distribution(generator)};
           cameraSample.lens.y = simd::vfloat{distribution(generator)};
 
@@ -119,14 +121,14 @@ namespace ospray {
           rgb *= simd::vfloat{spp_inv};
 
           // NOTE(jda) - make this a generic function call (foreach_active?)
-          for (int j = 0; j < simd::width; ++j) {
+          simd::foreach_active(active, [&](int j) {
             const auto pixel = z_order.xs[i+j] + (z_order.ys[i+j] * TILE_SIZE);
             tile.r[pixel] = rgb.x[j];
             tile.g[pixel] = rgb.y[j];
             tile.b[pixel] = rgb.z[j];
             tile.a[pixel] = alpha[j];
             tile.z[pixel] = z[j];
-          }
+          });
         }
       }
     }
