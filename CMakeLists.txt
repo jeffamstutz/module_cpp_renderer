@@ -21,9 +21,13 @@ if (OSPRAY_MODULE_CPP)
   set(OSPRAY_MODULE_CPP_STREAM_SIZE ${OSPRAY_TILE_SIZE} CACHE INT "Stream size")
   add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
 
-  include_directories(${CMAKE_CURRENT_LIST_DIR}/..)
+  include_directories(
+    ${CMAKE_CURRENT_LIST_DIR}/..
+    ${CMAKE_CURRENT_LIST_DIR}/include
+  )
 
   set(LIBRARY_SRCS
+
     camera/Camera.h
     camera/Perspective.cpp
 
@@ -52,6 +56,17 @@ if (OSPRAY_MODULE_CPP)
     renderer/simple_ao/StreamSimpleAO.cpp
 
     util.cpp
+
+    ## SIMD ##
+
+    common/simd.h
+    common/DifferentialGeometryN.h
+    common/RayN.h
+    common/ScreenSampleN.h
+    camera/CameraN.h
+    camera/PerspectiveN.cpp
+    renderer/SimdRenderer.cpp
+    renderer/raycast/SimdRaycast.cpp
   )
 
   if (OSPRAY_USE_EMBREE_STREAMS)
