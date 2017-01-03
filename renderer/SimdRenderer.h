@@ -24,8 +24,6 @@
 #include "../camera/CameraN.h"
 #include "../common/DifferentialGeometryN.h"
 #include "../common/ScreenSampleN.h"
-// std
-#include <type_traits>
 
 namespace ospray {
   namespace cpp_renderer {
@@ -51,47 +49,41 @@ namespace ospray {
 
     protected:
 
-      template <typename>
       simd::vmaski traceRay(simd::vmaski active, RayN &ray) const;
-      template <typename RayN_T>
-      simd::vmaski isOccluded(simd::vmaski active, RayN_T &ray) const;
+      simd::vmaski isOccluded(simd::vmaski active, RayN &ray) const;
 
       DifferentialGeometryN postIntersect(const RayN &ray, int flags) const;
 
       // Data //
 
       ospray::cpp_renderer::CameraN *currentCameraN {nullptr};
+
+    private:
+
+      template <int SIMD_W>
+      simd::vmaski traceRayImpl(simd::vmaski active, RayN &ray) const;
+
+      template <int SIMD_W>
+      simd::vmaski isOccludedImpl(simd::vmaski active, RayN &ray) const;
     };
 
     // Inlined member functions ///////////////////////////////////////////////
 
-    // Helper types for function selection //
-
-    using is_width_4_t =
-      std::conditional<simd::width == 4, std::true_type, std::false_type>::type;
-    using is_width_8_t =
-      std::conditional<simd::width == 8, std::true_type, std::false_type>::type;
-
-    using enable_if_w_4 = std::enable_if<std::is_same<is_width_4_t, std::true_type>>;
-    using enable_if_w_8 = std::enable_if<std::is_same<is_width_8_t, std::true_type>>;
-
     // traceRay() definitions //
 
-#if 1
-    template <typename = typename enable_if_w_4::type>
+    template <>
     inline simd::vmaski
-    SimdRenderer::traceRay(simd::vmaski active, RayN &ray) const
+    SimdRenderer::traceRayImpl<4>(simd::vmaski active, RayN &ray) const
     {
       rtcIntersect4(reinterpret_cast<int*>(&active),
                     model->embreeSceneHandle,
                     reinterpret_cast<RTCRay4&>(ray));
       return ray.hitSomething();
     }
-#endif
 
-    template <typename = typename enable_if_w_8::type>
+    template <>
     inline simd::vmaski
-    SimdRenderer::traceRay(simd::vmaski active, RayN &ray) const
+    SimdRenderer::traceRayImpl<8>(simd::vmaski active, RayN &ray) const
     {
       rtcIntersect8(reinterpret_cast<int*>(&active),
                     model->embreeSceneHandle,
@@ -99,31 +91,61 @@ namespace ospray {
       return ray.hitSomething();
     }
 
-#if 0
-    template <typename RayN_T>
+    template <>
     inline simd::vmaski
-    SimdRenderer::traceRay(simd::vmaski active,
-                           typename std::enable_if<simd::width == 16,
-                                          RayN_T>::type &ray) const
+    SimdRenderer::traceRayImpl<16>(simd::vmaski active, RayN &ray) const
     {
       rtcIntersect16(reinterpret_cast<int*>(&active),
-                    model->embreeSceneHandle,
-                    reinterpret_cast<RTCRay16&>(ray));
+                     model->embreeSceneHandle,
+                     reinterpret_cast<RTCRay16&>(ray));
       return ray.hitSomething();
     }
-#endif
+
+    inline simd::vmaski
+    SimdRenderer::traceRay(simd::vmaski active, RayN &ray) const
+    {
+      return traceRayImpl<simd::width>(active, ray);
+    }
 
     // isOccluded() definitions //
 
-    template <typename RayN_T>
-    inline std::enable_if<simd::width == 8, simd::vmaski>::type
-    SimdRenderer::isOccluded(simd::vmaski active, RayN_T &ray) const
+    template <>
+    inline simd::vmaski
+    SimdRenderer::isOccludedImpl<4>(simd::vmaski active, RayN &ray) const
+    {
+      rtcOccluded4(reinterpret_cast<int*>(&active),
+                   model->embreeSceneHandle,
+                   reinterpret_cast<RTCRay4&>(ray));
+      return ray.hitSomething();
+    }
+
+    template <>
+    inline simd::vmaski
+    SimdRenderer::isOccludedImpl<8>(simd::vmaski active, RayN &ray) const
     {
       rtcOccluded8(reinterpret_cast<int*>(&active),
                    model->embreeSceneHandle,
                    reinterpret_cast<RTCRay8&>(ray));
       return ray.hitSomething();
     }
+
+    template <>
+    inline simd::vmaski
+    SimdRenderer::isOccludedImpl<16>(simd::vmaski active, RayN &ray) const
+    {
+      rtcOccluded16(reinterpret_cast<int*>(&active),
+                    model->embreeSceneHandle,
+                    reinterpret_cast<RTCRay16&>(ray));
+      return ray.hitSomething();
+    }
+
+    inline simd::vmaski
+    SimdRenderer::isOccluded(simd::vmaski active, RayN &ray) const
+    {
+      return isOccludedImpl<simd::width>(active, ray);
+    }
+
+    // Other Definitions //
 
     inline DifferentialGeometryN SimdRenderer::postIntersect(const RayN &ray,
                                                              int flags) const
