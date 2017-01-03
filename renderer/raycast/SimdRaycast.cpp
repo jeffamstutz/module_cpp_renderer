@@ -57,30 +57,46 @@ namespace ospray {
       return "ospray::cpp_renderer::RaycastRenderer";
     }
 
-    void SimdRaycastRenderer::renderSample(void */*perFrameData*/,
+    void SimdRaycastRenderer::renderSample(simd::vmaski active,
+                                           void */*perFrameData*/,
                                            ScreenSampleN &screenSample) const
     {
       auto &ray = screenSample.ray;
 
-      if (simd::any(traceRay(ray))) {
-        const float c = 1.f;
+      auto hit = traceRay(active, ray);
+      auto miss = !hit;
+
+      if (simd::any(hit)) {
+        const float c = 0.f;
          //   0.2f + 0.8f * ospcommon::abs(dot(normalize(ray.Ng), ray.dir));
 #if 0
+#  if 0
         auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
         auto *mat = dynamic_cast<SimdRaycastMaterial*>(dg.material);
         if (mat)
           screenSample.rgb = c * mat->Kd;
         else
+#  endif
           screenSample.rgb = vec3f{c};
 #else
-        auto col =  c * make_random_color(ray.primID[0]);
-        screenSample.rgb = simd::vec3f{simd::vfloat{col.x},
-                                       simd::vfloat{col.y},
-                                       simd::vfloat{col.z}};
+        auto col =  c * make_random_color(1);
+        simd::foreach_active(hit, [&](int i) {
+          screenSample.rgb.x[i] = col.x;
+          screenSample.rgb.y[i] = col.y;
+          screenSample.rgb.z[i] = col.z;
+          screenSample.z[i]     = ray.t[i];
+          screenSample.alpha[i] = 1.f;
+        });
+
+        if (simd::any(miss)) {
+          simd::foreach_active(miss, [&](int i) {
+            screenSample.rgb.x[i] = bgColor.x;
+            screenSample.rgb.y[i] = bgColor.y;
+            screenSample.rgb.z[i] = bgColor.z;
+          });
+        }
 #endif
-        screenSample.z     = ray.t;
-        screenSample.alpha = 1.f;
       } else {
         screenSample.rgb = simd::vec3f{simd::vfloat{bgColor.x},
                                        simd::vfloat{bgColor.y},

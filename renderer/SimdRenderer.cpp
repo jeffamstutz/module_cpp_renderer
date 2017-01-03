@@ -108,7 +108,7 @@ namespace ospray {
           currentCameraN->getRay(cameraSample, ray);
           ray.t = tMax;
 
-          renderSample(perFrameData, screenSample);
+          renderSample(active, perFrameData, screenSample);
 
           auto &rgb   = screenSample.rgb;
           auto &z     = screenSample.z;

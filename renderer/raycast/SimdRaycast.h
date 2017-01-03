@@ -25,7 +25,8 @@ namespace ospray {
     {
       std::string toString() const override;
 
-      void renderSample(void *perFrameData,
+      void renderSample(simd::vmaski active,
+                        void *perFrameData,
                         ScreenSampleN &screenSample) const override;
 
       ospray::Material *createMaterial(const char *type) override;

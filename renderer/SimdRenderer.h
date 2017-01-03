@@ -40,7 +40,8 @@ namespace ospray {
                               Tile &tile,
                               size_t jobID) const override;
 
-      virtual void renderSample(void *perFrameData,
+      virtual void renderSample(simd::vmaski active,
+                                void *perFrameData,
                                 ScreenSampleN &screenSample) const = 0;
 
       void renderSample(void *perFrameData,
@@ -48,8 +49,8 @@ namespace ospray {
 
     protected:
 
-      simd::vmaski traceRay(RayN &ray) const;
-      simd::vmaski isOccluded(RayN &ray) const;
+      simd::vmaski traceRay(simd::vmaski active, RayN &ray) const;
+      simd::vmaski isOccluded(simd::vmaski active, RayN &ray) const;
 
       DifferentialGeometryN postIntersect(const RayN &ray, int flags) const;
 
@@ -60,15 +61,21 @@ namespace ospray {
 
     // Inlined member functions ///////////////////////////////////////////////
 
-    inline simd::vmaski SimdRenderer::traceRay(RayN &ray) const
+    inline simd::vmaski
+    SimdRenderer::traceRay(simd::vmaski active, RayN &ray) const
     {
-      //rtcIntersect(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
+      rtcIntersect8(reinterpret_cast<int*>(&active),
+                    model->embreeSceneHandle,
+                    reinterpret_cast<RTCRay8&>(ray));
       return ray.hitSomething();
     }
 
-    inline simd::vmaski SimdRenderer::isOccluded(RayN &ray) const
+    inline simd::vmaski
+    SimdRenderer::isOccluded(simd::vmaski active, RayN &ray) const
     {
-      //rtcOccluded(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
+      rtcOccluded8(reinterpret_cast<int*>(&active),
+                   model->embreeSceneHandle,
+                   reinterpret_cast<RTCRay8&>(ray));
       return ray.hitSomething();
     }
 
