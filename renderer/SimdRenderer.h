@@ -150,8 +150,8 @@ namespace ospray {
     inline DifferentialGeometryN SimdRenderer::postIntersect(const RayN &ray,
                                                              int flags) const
     {
+      DifferentialGeometryN dg;
 #if 0
-      DifferentialGeometry dg;
 
       if (flags & DG_COLOR)
         dg.color = vec4f{1.f};
@@ -212,8 +212,8 @@ namespace ospray {
 #undef  DG_NG_NORMALIZE
 #undef  DG_NS_NORMALIZE
 
-      return dg;
 #endif
+      return dg;
     }
 
   }// namespace cpp_renderer
