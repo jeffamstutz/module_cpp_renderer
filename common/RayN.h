@@ -16,12 +16,12 @@
 
 #pragma once
 
+// ospray_cpp
+#include "simd.h"
 // ospray
 #include "ospray/common/OSPCommon.h"
 // embree
 #include "embree2/rtcore.h"
-// ospray_cpp
-#include "simd.h"
 
 #include "Stream.h"
 

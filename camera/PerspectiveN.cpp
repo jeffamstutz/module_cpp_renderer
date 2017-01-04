@@ -100,7 +100,7 @@ namespace ospray {
   #endif
 
       ray.org = org;
-      ray.dir = dir;//normalize(dir);
+      ray.dir = normalize(dir);
       ray.t0  = nearClip;
       ray.t   = inf;
     }

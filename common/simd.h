@@ -18,12 +18,26 @@
 
 // boost.simd
 #include "boost/simd.hpp"
-//#include "boost/simd/arithmetic.hpp"
+#include "boost/simd/arithmetic.hpp"
 #include "boost/simd/function/enumerate.hpp"
 #include "boost/simd/function/all.hpp"
 // ospcommon
 namespace ospcommon {
   using namespace boost::simd;
+
+  // Pack types //
+
+  template <typename T>
+  using pack = boost::simd::pack<T>;
+
+  using vfloat = pack<float>;
+  using vint   = pack<int>;
+  using vuint  = pack<uint32_t>;
+
+  inline vfloat rsqrt(vfloat val)
+  {
+    return boost::simd::rsqrt(val);
+  }
 }
 #include "ospcommon/vec.h"
 // std

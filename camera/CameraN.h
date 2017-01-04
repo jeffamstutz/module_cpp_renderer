@@ -16,8 +16,10 @@
 
 #pragma once
 
-#include "camera/Camera.h"
+// cpp_renderer
 #include "../common/RayN.h"
+// ospray
+#include "camera/Camera.h"
 
 namespace ospray {
   namespace cpp_renderer {

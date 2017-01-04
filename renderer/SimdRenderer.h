@@ -16,14 +16,14 @@
 
 #pragma once
 
-// embree
-#include "embree2/rtcore.h"
-#include "embree2/rtcore_scene.h"
 // ospray_cpp
-#include "Renderer.h"
 #include "../camera/CameraN.h"
 #include "../common/DifferentialGeometryN.h"
 #include "../common/ScreenSampleN.h"
+#include "Renderer.h"
+// embree
+#include "embree2/rtcore.h"
+#include "embree2/rtcore_scene.h"
 
 namespace ospray {
   namespace cpp_renderer {
