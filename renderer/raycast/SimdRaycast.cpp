@@ -67,8 +67,9 @@ namespace ospray {
       auto miss = !hit;
 
       if (simd::any(hit)) {
-        const float c = 0.f;
-         //   0.2f + 0.8f * ospcommon::abs(dot(normalize(ray.Ng), ray.dir));
+        const auto c =
+            0.2f + 0.8f * simd::abs(dot(ray.Ng, ray.dir));
+            //0.2f + 0.8f * ospcommon::abs(dot(normalize(ray.Ng), ray.dir));
 #if 0
 #  if 0
         auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
@@ -80,11 +81,11 @@ namespace ospray {
 #  endif
           screenSample.rgb = vec3f{c};
 #else
-        auto col =  c * make_random_color(1);
+        auto col =  c * simd::vec3f{simd::vfloat{0.5f}};//make_random_color(1);
         simd::foreach_active(hit, [&](int i) {
-          screenSample.rgb.x[i] = col.x;
-          screenSample.rgb.y[i] = col.y;
-          screenSample.rgb.z[i] = col.z;
+          screenSample.rgb.x[i] = col.x[i];
+          screenSample.rgb.y[i] = col.y[i];
+          screenSample.rgb.z[i] = col.z[i];
           screenSample.z[i]     = ray.t[i];
           screenSample.alpha[i] = 1.f;
         });
