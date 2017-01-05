@@ -19,6 +19,7 @@
 // boost.simd
 #include "boost/simd.hpp"
 #include "boost/simd/arithmetic.hpp"
+#include "boost/simd/trigonometric.hpp"
 #include "boost/simd/function/all.hpp"
 #include "boost/simd/function/enumerate.hpp"
 #include "boost/simd/function/store.hpp"
@@ -38,6 +39,11 @@ namespace ospcommon {
   inline vfloat rsqrt(const vfloat &val)
   {
     return boost::simd::rsqrt(val);
+  }
+
+  inline vfloat rcp(const vfloat &val)
+  {
+    return 1.f / val;
   }
 }
 #include "ospcommon/vec.h"
@@ -196,6 +202,11 @@ namespace ospray {
     }
 
     // Helper functions ///////////////////////////////////////////////////////
+
+    inline simd::vec3f make_vec3f(float x, float y, float z)
+    {
+      return {vfloat{x}, vfloat{y}, vfloat{z}};
+    }
 
     // NOTE(jda) - This adds a random number generator per C++ translation unit,
     //             which means random number sequences between different .cpp

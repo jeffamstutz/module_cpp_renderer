@@ -69,6 +69,8 @@ if (OSPRAY_MODULE_CPP)
     camera/PerspectiveN.cpp
     renderer/SimdRenderer.cpp
     renderer/raycast/SimdRaycast.cpp
+    renderer/simple_ao/ao_util_simd.h
+    renderer/simple_ao/SimdSimpleAO.cpp
   )
 
   if (OSPRAY_USE_EMBREE_STREAMS)
