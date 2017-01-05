@@ -115,10 +115,9 @@ namespace ospray {
                              superColor*(diffuse * (1.f-hits/samplesPerFrame)),
                              simd::vec3f{bgColor});
       } else {
-        const auto c = 0.2f + 0.8f * simd::abs(dot(normalize(ray.Ng), ray.dir));
-        superColor *= c;
-        color = simd::select(active, superColor, simd::vec3f{bgColor});
+        color = simd::select(active, superColor*diffuse, simd::vec3f{bgColor});
       }
+
       alpha = simd::select(active, simd::vfloat{1.f}, alpha);
     }
 
@@ -127,9 +126,8 @@ namespace ospray {
                                             ScreenSampleN &sample) const
     {
       UNUSED(perFrameData);
-      auto &ray = sample.ray;
 
-      auto rayHit = traceRay(active, ray);
+      auto rayHit = traceRay(active, sample.ray);
 
       if (simd::any(rayHit)) {
         shade_ao(rayHit, sample.rgb, sample.alpha, sample.ray);

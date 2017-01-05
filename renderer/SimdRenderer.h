@@ -203,6 +203,7 @@ namespace ospray {
 #define  DG_NG_NORMALIZE   (DG_NG | DG_NORMALIZE)
 #define  DG_NS_NORMALIZE   (DG_NS | DG_NORMALIZE)
 
+#if 0 // NOTE(jda) - enable once postIntersect() is called above
       if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
         dg.Ng = normalize(dg.Ng);
       if ((flags & DG_NS_NORMALIZE) == DG_NS_NORMALIZE)
@@ -213,6 +214,15 @@ namespace ospray {
 
       if ((flags & DG_NS_FACEFORWARD) == DG_NS_FACEFORWARD)
         dg.Ns = simd::select(dot(ray.dir, dg.Ns) >= 0.f, -dg.Ns, dg.Ns);
+#else
+      if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
+        dg.Ng = normalize(ray.Ng);
+
+      if ((flags & DG_NG_FACEFORWARD) == DG_NG_FACEFORWARD)
+        dg.Ng = simd::select(dot(ray.dir, dg.Ng) >= 0.f, -dg.Ng, dg.Ng);
+
+      dg.Ns = dg.Ng;
+#endif
 
 #undef  DG_NG_FACEFORWARD
 #undef  DG_NS_FACEFORWARD
