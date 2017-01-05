@@ -19,8 +19,9 @@
 // boost.simd
 #include "boost/simd.hpp"
 #include "boost/simd/arithmetic.hpp"
-#include "boost/simd/function/enumerate.hpp"
 #include "boost/simd/function/all.hpp"
+#include "boost/simd/function/enumerate.hpp"
+#include "boost/simd/function/store.hpp"
 // ospcommon
 namespace ospcommon {
   using namespace boost::simd;

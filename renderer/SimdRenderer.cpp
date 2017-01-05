@@ -60,16 +60,16 @@ namespace ospray {
       for (auto i = begin; i < end; i += simd::width) {
         ScreenSampleN screenSample;
 
-        // NOTE(jda) - THIS MIGHT BE BROKEN...
-        screenSample.sampleID.x = tile.region.lower.x +
-                                  simd::load<simd::vint>(&z_order.xs[i]);
-        screenSample.sampleID.y = tile.region.lower.y +
-                                  simd::load<simd::vint>(&z_order.ys[i]);
+        auto tile_x = simd::load<simd::vint>(&z_order.xs[i]);
+        auto tile_y = simd::load<simd::vint>(&z_order.ys[i]);
+
+        screenSample.sampleID.x = tile.region.lower.x + tile_x;
+        screenSample.sampleID.y = tile.region.lower.y + tile_y;
         screenSample.sampleID.z = startSampleID;
 
         const auto &sampleID = screenSample.sampleID;
 
-        auto active = (sampleID.x < simd::vint{currentFB->size.x}) ||
+        auto active = (sampleID.x < simd::vint{currentFB->size.x}) &&
                       (sampleID.y < simd::vint{currentFB->size.y});
 
         if (!simd::any(active))
@@ -116,14 +116,20 @@ namespace ospray {
 
           rgb *= simd::vfloat{spp_inv};
 
-          simd::foreach_active(active, [&](int j) {
-            const auto pixel = z_order.xs[i+j] + (z_order.ys[i+j] * TILE_SIZE);
-            tile.r[pixel] = rgb.x[j];
-            tile.g[pixel] = rgb.y[j];
-            tile.b[pixel] = rgb.z[j];
-            tile.a[pixel] = alpha[j];
-            tile.z[pixel] = z[j];
-          });
+          const auto pixel = tile_x + (tile_y * TILE_SIZE);
+#if 0 // NOTE(jda) - adding the active mask seems to mask out ALL lanes...
+          simd::store(rgb.x, (float*)tile.r, pixel, active);
+          simd::store(rgb.y, (float*)tile.g, pixel, active);
+          simd::store(rgb.z, (float*)tile.b, pixel, active);
+          simd::store(alpha, (float*)tile.a, pixel, active);
+          simd::store(z    , (float*)tile.z, pixel, active);
+#else
+          simd::store(rgb.x, (float*)tile.r, pixel);
+          simd::store(rgb.y, (float*)tile.g, pixel);
+          simd::store(rgb.z, (float*)tile.b, pixel);
+          simd::store(alpha, (float*)tile.a, pixel);
+          simd::store(z    , (float*)tile.z, pixel);
+#endif
         }
       }
     }
