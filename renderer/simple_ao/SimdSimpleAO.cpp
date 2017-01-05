@@ -79,12 +79,10 @@ namespace ospray {
       simd::foreach_active(active, [&](int i) {
         auto *mat = dynamic_cast<SimdSimpleAOMaterial*>(dg.material[i]);
 
-        vec3f color{1.f};
-
         if (mat) {
-          superColor.x[i] = color.x;
-          superColor.y[i] = color.y;
-          superColor.z[i] = color.z;
+          superColor.x[i] = mat->Kd.x;
+          superColor.y[i] = mat->Kd.y;
+          superColor.z[i] = mat->Kd.z;
 #if 0// NOTE(jda) - texture fetches not yet implemented
           if (mat->map_Kd) {
             vec4f Kd_from_map = get4f(mat->map_Kd, dg.st);
@@ -103,16 +101,18 @@ namespace ospray {
 
       for (int i = 0; i < samplesPerFrame; i++) {
         auto ao_ray = calculateAORay(dg, aoContext);
-        auto rayOccluded = isOccluded(active, ao_ray);
-        rayOccluded |= dot(ao_ray.dir, dg.Ng) < 0.05f;
+
+        auto rayOccluded = isOccluded(active, ao_ray) ||
+                           dot(ao_ray.dir, dg.Ng) < 0.05f;
+
         hits = simd::select(rayOccluded, hits+1, hits);
       }
 
       auto diffuse = simd::abs(dot(dg.Ng, ray.dir));
       color = simd::select(active,
-                           superColor * (diffuse * (1.0f-hits/samplesPerFrame)),
+                           superColor * (diffuse * (1.f-hits/samplesPerFrame)),
                            simd::vec3f{bgColor});
-      alpha = 1.f;
+      alpha = simd::select(active, simd::vfloat{1.f}, alpha);
     }
 
     void SimdSimpleAORenderer::renderSample(simd::vmaski active,
