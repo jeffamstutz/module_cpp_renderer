@@ -25,7 +25,7 @@ namespace ospray {
 
     inline simd::vec3f getShadingNormal(const RayN &ray)
     {
-      simd::vec3f N = ray.Ng;
+      const auto &N = ray.Ng;
       auto f = ospcommon::rcp(simd::sqrt(dot(N,N)));
       f = simd::select(dot(N,ray.dir) >= 0.f, -f, f);
       return f*N;
@@ -35,10 +35,9 @@ namespace ospray {
                              simd::vec3f &biNorm1,
                              const simd::vec3f &gNormal)
     {
-      biNorm0 = simd::make_vec3f(1.f,0.f,0.f);
       biNorm0 = simd::select(simd::abs(dot(biNorm0,gNormal)) > .95f,
-                             simd::make_vec3f(1.f, 0.f, 0.f),
-                             simd::make_vec3f(0.f, 1.f, 0.f));
+                             simd::make_vec3f(0.f, 1.f, 0.f),
+                             simd::make_vec3f(1.f, 0.f, 0.f));
       biNorm1 = normalize(cross(biNorm0,gNormal));
       biNorm0 = normalize(cross(biNorm1,gNormal));
     }
@@ -63,8 +62,8 @@ namespace ospray {
       const auto r1 = rotate(rn.y, rot_y);
 
       const auto w = simd::sqrt(1.f-r1);
-      const auto x = simd::cos((2.f*M_PI*r0))*w;
-      const auto y = simd::sin((2.f*M_PI*r0))*w;
+      const auto x = simd::cos((2.f*simd::vfloat{M_PI}*r0))*w;
+      const auto y = simd::sin((2.f*simd::vfloat{M_PI}*r0))*w;
       const auto z = simd::sqrt(r1) + epsilon;
       return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
