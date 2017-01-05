@@ -109,9 +109,16 @@ namespace ospray {
       }
 
       auto diffuse = simd::abs(dot(dg.Ng, ray.dir));
-      color = simd::select(active,
-                           superColor * (diffuse * (1.f-hits/samplesPerFrame)),
-                           simd::vec3f{bgColor});
+
+      if (samplesPerFrame > 0) {
+        color = simd::select(active,
+                             superColor*(diffuse * (1.f-hits/samplesPerFrame)),
+                             simd::vec3f{bgColor});
+      } else {
+        const auto c = 0.2f + 0.8f * simd::abs(dot(normalize(ray.Ng), ray.dir));
+        superColor *= c;
+        color = simd::select(active, superColor, simd::vec3f{bgColor});
+      }
       alpha = simd::select(active, simd::vfloat{1.f}, alpha);
     }
 
@@ -122,10 +129,10 @@ namespace ospray {
       UNUSED(perFrameData);
       auto &ray = sample.ray;
 
-      auto activeRays = traceRay(active, ray);
+      auto rayHit = traceRay(active, ray);
 
-      if (simd::any(activeRays)) {
-        shade_ao(activeRays, sample.rgb, sample.alpha, sample.ray);
+      if (simd::any(rayHit)) {
+        shade_ao(rayHit, sample.rgb, sample.alpha, sample.ray);
       } else {
         sample.rgb = simd::vec3f{bgColor};
       }
