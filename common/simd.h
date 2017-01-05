@@ -35,7 +35,7 @@ namespace ospcommon {
   using vint   = pack<int>;
   using vuint  = pack<uint32_t>;
 
-  inline vfloat rsqrt(vfloat val)
+  inline vfloat rsqrt(const vfloat &val)
   {
     return boost::simd::rsqrt(val);
   }
@@ -84,17 +84,20 @@ namespace ospray {
 
     // Vector math types //
 
-    using vec2f = ospcommon::vec_t<vfloat, 2>;
-    using vec2i = ospcommon::vec_t<vint,   2>;
-    using vec2u = ospcommon::vec_t<vuint,  2>;
+    template <typename T, int N>
+    using vec_t = ospcommon::vec_t<T, N>;
 
-    using vec3f = ospcommon::vec_t<vfloat, 3>;
-    using vec3i = ospcommon::vec_t<vint,   3>;
-    using vec3u = ospcommon::vec_t<vuint,  3>;
+    using vec2f = vec_t<vfloat, 2>;
+    using vec2i = vec_t<vint,   2>;
+    using vec2u = vec_t<vuint,  2>;
 
-    using vec4f = ospcommon::vec_t<vfloat, 4>;
-    using vec4i = ospcommon::vec_t<vint,   4>;
-    using vec4u = ospcommon::vec_t<vuint,  4>;
+    using vec3f = vec_t<vfloat, 3>;
+    using vec3i = vec_t<vint,   3>;
+    using vec3u = vec_t<vuint,  3>;
+
+    using vec4f = vec_t<vfloat, 4>;
+    using vec4i = vec_t<vint,   4>;
+    using vec4u = vec_t<vuint,  4>;
 
     // Cast operatons /////////////////////////////////////////////////////////
 
@@ -111,6 +114,8 @@ namespace ospray {
 
     // Algorithms /////////////////////////////////////////////////////////////
 
+    // foreach //
+
     template <typename SIMD_T, typename FCN_T>
     inline void foreach_v(SIMD_T &v, FCN_T &&fcn)
     {
@@ -122,6 +127,8 @@ namespace ospray {
         v[i] = tmp;
       }
     }
+
+    // foreach_active //
 
     template <typename MASK_T, typename FCN_T>
     inline void foreach_active(const MASK_T &l, FCN_T &&fcn)
@@ -140,7 +147,7 @@ namespace ospray {
                                  typename SIMD_T::value_type>::value,
                     "The LOGICAL_T and SIMD_T types provided must be of the "
                     "same value type. In other words, you can't mismatch the "
-                    "mask type and simd type. (i.e. can't do maskf with vint)");
+                    "mask type and simd type. (ex: can't do vmaskf with vint)");
 
       for (int i = 0; i < SIMD_T::static_size; ++i) {
         if (mask_t<typename MASK_T::value_type>{l[i]}) {
@@ -150,6 +157,42 @@ namespace ospray {
         }
       }
     }
+
+    // select //
+
+    template <typename MASK_T, typename T1, typename T2>
+    inline auto select(const MASK_T &m, const T1 &t, const T2& f)
+      -> decltype(boost::simd::if_else(m, t, f))
+    {
+      return boost::simd::if_else(m, t, f);
+    }
+
+#if 0 // NOTE(jda) - not yet working??
+    template <typename MASK_T, typename T>
+    inline vec_t<T, 2> select(const MASK_T &m,
+                              const vec_t<T, 2> &t,
+                              const vec_t<T, 2> &f)
+    {
+      return {select(m, t.x, f.x), select(m, t.y, f.y)};
+    }
+
+    template <typename MASK_T, typename T>
+    inline vec_t<T, 3> select(const MASK_T &m,
+                              const vec_t<T, 3> &t,
+                              const vec_t<T, 3> &f)
+    {
+      return {select(m, t.x, f.x), select(m, t.y, f.y), select(m, t.z, f.z)};
+    }
+
+    template <typename MASK_T, typename T>
+    inline vec_t<T, 4> select(const MASK_T &m,
+                              const vec_t<T, 4> &t,
+                              const vec_t<T, 4> &f)
+    {
+      return {select(m, t.x, f.x), select(m, t.y, f.y),
+              select(m, t.z, f.z), select(m, t.w, f.w)};
+    }
+#endif
 
     // Helper functions ///////////////////////////////////////////////////////
 

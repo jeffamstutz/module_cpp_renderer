@@ -83,21 +83,13 @@ namespace ospray {
           }
         });
 
-        simd::foreach_active(hit, [&](int i) {
-          screenSample.rgb.x[i] = col.x[i];
-          screenSample.rgb.y[i] = col.y[i];
-          screenSample.rgb.z[i] = col.z[i];
-          screenSample.z[i]     = ray.t[i];
-          screenSample.alpha[i] = 1.f;
-        });
+        // NOTE(jda) - use vec_t select!
+        screenSample.rgb.x = simd::select(hit, col.x, bgColor.x);
+        screenSample.rgb.y = simd::select(hit, col.y, bgColor.y);
+        screenSample.rgb.z = simd::select(hit, col.z, bgColor.z);
 
-        if (simd::any(miss)) {
-          simd::foreach_active(miss, [&](int i) {
-            screenSample.rgb.x[i] = bgColor.x;
-            screenSample.rgb.y[i] = bgColor.y;
-            screenSample.rgb.z[i] = bgColor.z;
-          });
-        }
+        screenSample.z     = simd::select(hit, ray.t, screenSample.z);
+        screenSample.alpha = simd::select(hit, ray.t, screenSample.alpha);
       } else {
         screenSample.rgb = simd::vec3f{simd::vfloat{bgColor.x},
                                        simd::vfloat{bgColor.y},
