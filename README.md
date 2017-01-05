@@ -15,6 +15,7 @@ Where valid renderers are:
 SIMD rendering using boost.simd is being developed, where the following renderers are defined:
 
 - cpp_raycast_simd
+- cpp_ao_simd
 
 NOTE: SIMD renderers need a SIMD camera, such as cpp_perspective_simd
 
