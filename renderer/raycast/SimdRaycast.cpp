@@ -63,21 +63,26 @@ namespace ospray {
     {
       auto &ray = screenSample.ray;
 
-      auto hit = traceRay(active, ray);
+      auto hit  = traceRay(active, ray);
       auto miss = !hit;
 
       if (simd::any(hit)) {
-        const auto c =
-            0.2f + 0.8f * simd::abs(dot(normalize(ray.Ng), ray.dir));
-#  if 0
-        auto dg = postIntersect(ray, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+        const auto c = 0.2f + 0.8f * simd::abs(dot(normalize(ray.Ng), ray.dir));
+        auto dg = postIntersect(hit,ray,DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
-        auto *mat = dynamic_cast<SimdRaycastMaterial*>(dg.material);
-        if (mat)
-          screenSample.rgb = c * mat->Kd;
-        else
-#  endif
-        auto col =  c * simd::vec3f{simd::vfloat{1.f}};//make_random_color(1);
+        simd::vec3f col{c};
+
+        simd::foreach_active(hit, [&](int i) {
+          auto *mat = dynamic_cast<SimdRaycastMaterial*>(dg.material[i]);
+
+          auto eye_col = c[i];
+          if (mat) {
+            col.x[i] = eye_col * mat->Kd.x;
+            col.y[i] = eye_col * mat->Kd.y;
+            col.z[i] = eye_col * mat->Kd.z;
+          }
+        });
+
         simd::foreach_active(hit, [&](int i) {
           screenSample.rgb.x[i] = col.x[i];
           screenSample.rgb.y[i] = col.y[i];

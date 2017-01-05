@@ -48,6 +48,12 @@ namespace ospray {
 
     using namespace boost::simd;
 
+    // Constants //////////////////////////////////////////////////////////////
+
+    constexpr auto width    = boost::simd::pack<float>::static_size;
+    const auto programIndex =
+        boost::simd::enumerate<boost::simd::pack<int>>(0, 1);
+
     // Aliases for vector types based on boost::simd types ////////////////////
 
     // Pack types //
@@ -58,6 +64,9 @@ namespace ospray {
     using vfloat = pack<float>;
     using vint   = pack<int>;
     using vuint  = pack<uint32_t>;
+
+    template <typename T>
+    using vptr = std::array<T*, width>;
 
     // Mask types //
 
@@ -156,11 +165,6 @@ namespace ospray {
       });
       return retval;
     }
-
-    // Constants //////////////////////////////////////////////////////////////
-
-    constexpr int  width    = vfloat::static_size;
-    const vint programIndex = boost::simd::enumerate<vint>(0, 1);
 
   }// namespace simd
 }// namespace ospray

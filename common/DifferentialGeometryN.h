@@ -44,10 +44,10 @@ namespace ospray {
                                  "prim.materialID" array (-1 if that value isn't
                                   specified) */
 
-#if 0
-      ospray::Geometry *geometry{nullptr}; /*! pointer to hit-point's geometry */
-      ospray::Material *material{nullptr}; /*! pointer to hit-point's material */
-#endif
+      /*! pointer to hit-point's geometry */
+      simd::vptr<ospray::Geometry> geometry{nullptr};
+      /*! pointer to hit-point's material */
+      simd::vptr<ospray::Material> material{nullptr};
     };
 
     using DGNStream = Stream<DifferentialGeometryN>;
