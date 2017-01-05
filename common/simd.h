@@ -167,7 +167,9 @@ namespace ospray {
       return boost::simd::if_else(m, t, f);
     }
 
-#if 0 // NOTE(jda) - not yet working??
+    // NOTE(jda) - Add variants which allow scalar values for either t or f
+    //             types.
+
     template <typename MASK_T, typename T>
     inline vec_t<T, 2> select(const MASK_T &m,
                               const vec_t<T, 2> &t,
@@ -192,7 +194,6 @@ namespace ospray {
       return {select(m, t.x, f.x), select(m, t.y, f.y),
               select(m, t.z, f.z), select(m, t.w, f.w)};
     }
-#endif
 
     // Helper functions ///////////////////////////////////////////////////////
 

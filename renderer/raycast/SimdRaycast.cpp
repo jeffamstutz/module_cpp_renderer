@@ -83,11 +83,7 @@ namespace ospray {
           }
         });
 
-        // NOTE(jda) - use vec_t select!
-        screenSample.rgb.x = simd::select(hit, col.x, bgColor.x);
-        screenSample.rgb.y = simd::select(hit, col.y, bgColor.y);
-        screenSample.rgb.z = simd::select(hit, col.z, bgColor.z);
-
+        screenSample.rgb   = simd::select(hit, col, simd::vec3f{bgColor});
         screenSample.z     = simd::select(hit, ray.t, screenSample.z);
         screenSample.alpha = simd::select(hit, ray.t, screenSample.alpha);
       } else {
