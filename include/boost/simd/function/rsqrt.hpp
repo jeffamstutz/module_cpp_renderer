@@ -48,6 +48,9 @@ namespace boost { namespace simd
 } }
 #endif
 
+#include <boost/simd/constant/smallestposval.hpp>
+#include <boost/simd/constant/zero.hpp>
+#include <boost/simd/constant/inf.hpp>
 #include <boost/simd/function/scalar/rsqrt.hpp>
 #include <boost/simd/function/scalar/rsqrt.hpp>
 #include <boost/simd/function/simd/rsqrt.hpp>
