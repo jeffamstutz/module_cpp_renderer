@@ -72,7 +72,7 @@ namespace ospray {
         auto active = (sampleID.x < simd::vint{currentFB->size.x}) &&
                       (sampleID.y < simd::vint{currentFB->size.y});
 
-        if (!simd::any(active))
+        if (simd::none(active))
           continue;
 
         float tMax = inf;
