@@ -109,7 +109,9 @@ namespace ospray {
       }
 
       auto diffuse = simd::abs(dot(dg.Ng, ray.dir));
-      color = superColor * (diffuse * (1.0f-hits/samplesPerFrame));
+      color = simd::select(active,
+                           superColor * (diffuse * (1.0f-hits/samplesPerFrame)),
+                           simd::vec3f{bgColor});
       alpha = 1.f;
     }
 
