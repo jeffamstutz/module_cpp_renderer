@@ -103,12 +103,12 @@ namespace ospray {
         auto ao_ray = calculateAORay(dg, aoContext);
 
         auto rayOccluded = isOccluded(active, ao_ray) ||
-                           dot(ao_ray.dir, dg.Ng) < 0.05f;
+                           dot(ao_ray.dir, dg.Ns) < 0.05f;
 
         hits = simd::select(rayOccluded, hits+1, hits);
       }
 
-      auto diffuse = simd::abs(dot(dg.Ng, ray.dir));
+      auto diffuse = simd::abs(dot(dg.Ns, ray.dir));
 
       if (samplesPerFrame > 0) {
         color = simd::select(active,

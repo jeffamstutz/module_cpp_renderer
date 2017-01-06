@@ -159,7 +159,8 @@ namespace ospray {
       if (flags & DG_COLOR)
         dg.color = simd::vec4f{simd::vfloat{1.f}};
 
-      dg.P = ray.org + ray.t * ray.dir;
+      dg.P  = ray.org + ray.t * ray.dir;
+      dg.Ng = dg.Ns = ray.Ng;
 
       // a first hack for instancing: problem is that ospray assumes that
       // 'ray.geomid' specifies the respective sub-geometry of a model
@@ -170,40 +171,45 @@ namespace ospray {
       // instances directly in ospray, but for now let's try this hack
       // here:
       auto regularGeometry = ray.instID < 0 && active;
+      auto instGeometry    = !regularGeometry && active;
       if (simd::any(regularGeometry)) {
         simd::foreach_active(regularGeometry, [&](int i) {
           auto geomID = ray.geomID[i];
           auto *geom = dynamic_cast<Geometry*>(model->geometry[geomID].ptr);
-          dg.geometry[i] = geom;
-          dg.material[i] = geom->material.ptr;
-          // TODO: implement load/store scalar dg (and other structures, too)
+          if (geom) {
+            dg.geometry[i] = geom;
+            dg.material[i] = geom->material.ptr;
+            // TODO: implement load/store scalar dg (and other structures, too)
 #if 0
-          geom->postIntersect(dg, ray, flags);
+            geom->postIntersect(dg, ray, flags);
 #endif
+          }
         });
-      }
-#if 0// NOTE(jda) --> C++ version not yet implemented
-      else {
+      } else if (simd::any(instGeometry)) {
         // instanced geometry: create copy of ray, iterate over
         // ray.instIDs, and remove that instancing info from the ray (so
         // the next level of model doesn't get confused by it)
-        Ray newRay = ray;
-        foreach_unique(instID in ray.instID) {
-          uniform Geometry *uniform instGeom = model->geometry[instID];
-          dg.geometry = instGeom;
-          dg.material = instGeom->material;
-          newRay.instID = -1;
-          instGeom->postIntersect(instGeom,model,dg,newRay,flags);
-        }
-      }
+        simd::foreach_active(instGeometry, [&](int i) {
+          auto instID = ray.instID[i];
+          auto *instGeom = dynamic_cast<Geometry*>(model->geometry[instID].ptr);
+          if (instGeom) {
+            dg.geometry[i] = instGeom;
+            dg.material[i] = instGeom->material.ptr;
+            // TODO: implement load/store scalar dg (and other structures, too)
+#if 0
+            auto newRay = ray;
+            newRay.instID = RTC_INVALID_GEOMETRY_ID;
+            instGeom->postIntersect(dg, newRay[i], flags);
 #endif
+          }
+        });
+      }
 
 #define  DG_NG_FACEFORWARD (DG_NG | DG_FACEFORWARD)
 #define  DG_NS_FACEFORWARD (DG_NS | DG_FACEFORWARD)
 #define  DG_NG_NORMALIZE   (DG_NG | DG_NORMALIZE)
 #define  DG_NS_NORMALIZE   (DG_NS | DG_NORMALIZE)
 
-#if 0 // NOTE(jda) - enable once postIntersect() is called above
       if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
         dg.Ng = normalize(dg.Ng);
       if ((flags & DG_NS_NORMALIZE) == DG_NS_NORMALIZE)
@@ -214,15 +220,6 @@ namespace ospray {
 
       if ((flags & DG_NS_FACEFORWARD) == DG_NS_FACEFORWARD)
         dg.Ns = simd::select(dot(ray.dir, dg.Ns) >= 0.f, -dg.Ns, dg.Ns);
-#else
-      if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
-        dg.Ng = normalize(ray.Ng);
-
-      if ((flags & DG_NG_FACEFORWARD) == DG_NG_FACEFORWARD)
-        dg.Ng = simd::select(dot(ray.dir, dg.Ng) >= 0.f, -dg.Ng, dg.Ng);
-
-      dg.Ns = dg.Ng;
-#endif
 
 #undef  DG_NG_FACEFORWARD
 #undef  DG_NS_FACEFORWARD

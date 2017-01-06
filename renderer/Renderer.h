@@ -80,7 +80,7 @@ namespace ospray {
       if (flags & DG_COLOR)
         dg.color = vec4f{1.f};
 
-      dg.P = ray.org + ray.t * ray.dir;
+      dg.P  = ray.org + ray.t * ray.dir;
       dg.Ng = dg.Ns = ray.Ng;
 
       // a first hack for instancing: problem is that ospray assumes that
@@ -120,7 +120,6 @@ namespace ospray {
 #define  DG_NG_NORMALIZE   (DG_NG | DG_NORMALIZE)
 #define  DG_NS_NORMALIZE   (DG_NS | DG_NORMALIZE)
 
-#if 1
       if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
         dg.Ng = safe_normalize(dg.Ng);
       if ((flags & DG_NS_NORMALIZE) == DG_NS_NORMALIZE)
@@ -133,16 +132,6 @@ namespace ospray {
       if ((flags & DG_NS_FACEFORWARD) == DG_NS_FACEFORWARD &&
           (dot(ray.dir,dg.Ns) >= 0.f))
         dg.Ns = -dg.Ns;
-#else
-      if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
-        dg.Ng = safe_normalize(ray.Ng);
-
-      if ((flags & DG_NG_FACEFORWARD) == DG_NG_FACEFORWARD &&
-          (dot(ray.dir,dg.Ng) >= 0.f))
-        dg.Ng = -dg.Ng;
-
-      dg.Ns = dg.Ng;
-#endif
 
 #undef  DG_NG_FACEFORWARD
 #undef  DG_NS_FACEFORWARD

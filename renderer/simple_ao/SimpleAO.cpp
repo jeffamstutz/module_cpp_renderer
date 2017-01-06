@@ -108,9 +108,8 @@ namespace ospray {
                                         ScreenSample &sample) const
     {
       UNUSED(perFrameData);
-      auto &ray = sample.ray;
 
-      if (traceRay(ray)) {
+      if (traceRay(sample.ray)) {
         shade_ao(sample.rgb, sample.alpha, sample.ray);
       } else {
         sample.rgb = bgColor;
