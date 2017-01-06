@@ -118,6 +118,18 @@ namespace ospray {
       return nt;
     }
 
+    template <typename NewUnderlyingType, typename OriginalUnderlyingType>
+    simd::pack<simd::mask_t<NewUnderlyingType>>
+    mask_cast(const simd::pack<simd::mask_t<OriginalUnderlyingType>> &t)
+    {
+      simd::pack<simd::mask_t<NewUnderlyingType>> nt;
+
+      for (int i = 0; i < vfloat::static_size; ++i)
+        nt[i] = simd::mask_t<NewUnderlyingType>(t[i]);
+
+      return nt;
+    }
+
     // Algorithms /////////////////////////////////////////////////////////////
 
     // foreach //

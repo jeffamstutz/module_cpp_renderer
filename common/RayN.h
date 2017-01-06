@@ -75,30 +75,32 @@ namespace ospray {
       return rayIsActive(rays[i]);
     }
 
-#if 0
     /*! \brief helper function for disabling individual rays in a stream */
-    inline void disableRay(Ray &ray)
+    inline void disableRay(RayN &ray)
     {
-      if (rayIsActive(ray)) std::swap(ray.t0, ray.t);
+      auto t0 = ray.t0;
+      auto t  = ray.t;
+      auto active = rayIsActive(ray);
+      t0 = simd::select(active, t0, t);
+      t  = simd::select(active, t, t0);
     }
 
     /*! \brief helper function for disabling individual rays in a stream */
-    inline void disableRay(RayStream &rays, int i)
+    inline void disableRay(RayNStream &rays, int i)
     {
       disableRay(rays[i]);
     }
 
-    inline void resetRay(Ray &ray)
+    inline void resetRay(RayN &ray)
     {
       disableRay(ray);
       ray.geomID = RTC_INVALID_GEOMETRY_ID;
     }
 
-    inline void resetRay(RayStream &rays, int i)
+    inline void resetRay(RayNStream &rays, int i)
     {
       resetRay(rays[i]);
     }
-#endif
 
   }// ::ospray::cpp_renderer
 } // ::ospray

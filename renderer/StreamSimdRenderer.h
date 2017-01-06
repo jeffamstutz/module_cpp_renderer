@@ -56,54 +56,52 @@ namespace ospray {
     inline void StreamSimdRenderer::traceRays(RayNStream &rays,
                                               RTCIntersectFlags flags) const
     {
-#if 0
 #if USE_EMBREE_STREAMS
       RTCIntersectContext ctx{flags, nullptr};
-      rtcIntersect1M(model->embreeSceneHandle, &ctx,
-                     (RTCRay*)&rays, rays.size(), sizeof(Ray));
+      rtcIntersectNM(model->embreeSceneHandle, &ctx,
+                     (RTCRayN*)&rays, simd::width, rays.size(), sizeof(RayN));
 #else
       UNUSED(flags);
       for (int i = 0; i < ScreenSampleStream::size; ++i) {
         auto &ray = rays[i];
-        if (rayIsActive(ray))
-          traceRay(ray);
+        auto active = simd::mask_cast<int>(rayIsActive(ray));
+        if (simd::any(active))
+          traceRay(active, ray);
       }
-#endif
 #endif
     }
 
     inline void StreamSimdRenderer::occludeRays(RayNStream &rays,
                                                 RTCIntersectFlags flags) const
     {
-#if 0
 #if USE_EMBREE_STREAMS
       RTCIntersectContext ctx{flags, nullptr};
-      rtcOccluded1M(model->embreeSceneHandle, &ctx,
-                    (RTCRay*)&rays, rays.size(), sizeof(Ray));
+      rtcOccludedNM(model->embreeSceneHandle, &ctx,
+                    (RTCRayN*)&rays, simd::width, rays.size(), sizeof(RayN));
 #else
       UNUSED(flags);
       for (int i = 0; i < ScreenSampleStream::size; ++i) {
         auto &ray = rays[i];
-        if (rayIsActive(ray))
-          isOccluded(ray);
+        auto active = simd::mask_cast<int>(rayIsActive(ray));
+        if (simd::any(active))
+          isOccluded(active, ray);
       }
-#endif
 #endif
     }
 
     inline DGNStream StreamSimdRenderer::postIntersect(const RayNStream &rays,
                                                        int flags) const
     {
-#if 0
       DGNStream dgs;
 
+#if 0
       for (int i = 0; i < ScreenSampleStream::size; ++i) {
         if (rays[i].hitSomething())
           dgs[i] = cpp_renderer::Renderer::postIntersect(rays[i], flags);
       }
+#endif
 
       return dgs;
-#endif
     }
 
 

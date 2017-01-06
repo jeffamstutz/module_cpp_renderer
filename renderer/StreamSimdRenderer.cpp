@@ -18,10 +18,6 @@
 #include "StreamSimdRenderer.h"
 #include "../util.h"
 
-#include <random>
-
-static thread_local std::minstd_rand generator;
-
 namespace ospray {
   namespace cpp_renderer {
 
@@ -34,13 +30,12 @@ namespace ospray {
                                         Tile &tile,
                                         size_t jobID) const
     {
-#if 0
       const float spp_inv = 1.f / spp;
 
       const int fbw = currentFB->size.x;
       const int fbh = currentFB->size.y;
 
-      const auto startSampleID = max(tile.accumID, 0)*spp;
+      const auto startSampleID = ospcommon::max(tile.accumID, 0)*spp;
 
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
@@ -48,8 +43,8 @@ namespace ospray {
 
       for (auto j = 0; j < STREAM_ITERATIONS; ++j) {
 
-        ScreenSampleStream screenSamples;
-        CameraSampleStream cameraSamples;
+        ScreenSampleNStream screenSamples;
+        CameraSampleNStream cameraSamples;
         const auto begin = jobID * RENDERTILE_PIXELS_PER_JOB + j * STREAM_SIZE;
         const auto end   = begin + STREAM_SIZE;
 
@@ -63,29 +58,36 @@ namespace ospray {
           tileOffset = -1;
           resetRay(screenSamples.rays, streamID);
 
-          if ((sampleID.x >= fbw) || (sampleID.y >= fbh))
+          auto active = (sampleID.x < fbw) && (sampleID.y < fbh);
+
+          if (simd::none(active))
             continue;
 
           tileOffset = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
           float tMax = inf;
 
           // NOTE(jda) - This assumes spp = 1
-          float pixel_du = distribution(generator);
-          float pixel_dv = distribution(generator);
+          auto pixel_du = simd::randUniformDist();
+          auto pixel_dv = simd::randUniformDist();
           sampleID.z = startSampleID;
 
-          CameraSample &cameraSample = cameraSamples[streamID];
-          cameraSample.screen.x = (sampleID.x + pixel_du) * rcp(float(fbw));
-          cameraSample.screen.y = (sampleID.y + pixel_dv) * rcp(float(fbh));
+          auto &cameraSample = cameraSamples[streamID];
+          cameraSample.screen.x =
+              (simd::cast<simd::vfloat>(sampleID.x) + pixel_du)
+               * rcp(float(fbw));
+          cameraSample.screen.y =
+              (simd::cast<simd::vfloat>(sampleID.y) + pixel_dv)
+              * rcp(float(fbh));
 
-          cameraSample.lens.x = distribution(generator);
-          cameraSample.lens.y = distribution(generator);
+          cameraSample.lens.x = simd::randUniformDist();
+          cameraSample.lens.y = simd::randUniformDist();
 
           auto &ray = screenSamples.rays[streamID];
-          currentCamera->getRay(cameraSample, ray);
+          currentCameraN->getRay(cameraSample, ray);
           ray.t = tMax;
         }
 
+#if 0
         renderStream(perFrameData, screenSamples);
 
         auto writeTile = [&](ScreenSampleRef sample)
@@ -101,8 +103,8 @@ namespace ospray {
         };
 
         for_each_sample(screenSamples, writeTile, sampleEnabled);
-      }
 #endif
+      }
     }
 
     void StreamSimdRenderer::renderSample(simd::vmaski active,
