@@ -51,7 +51,7 @@ namespace ospray {
       Light_EvalRes res;
 
       res.radiance = static_cast<float>(inf) <= maxDist ? radiance : vec3f(0.f);
-      res.pdf = cosineSampleHemispherePDF(max(dot(dg.Ns, dir), 0.f));
+      res.pdf = cosineSampleHemispherePDF(ospcommon::max(dot(dg.Ns, dir), 0.f));
 
       return res;
     }

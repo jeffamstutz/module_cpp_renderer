@@ -39,7 +39,7 @@ namespace ospray {
       const int fbw = currentFB->size.x;
       const int fbh = currentFB->size.y;
 
-      const auto startSampleID = max(tile.accumID, 0)*spp;
+      const auto startSampleID = ospcommon::max(tile.accumID, 0)*spp;
 
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
 

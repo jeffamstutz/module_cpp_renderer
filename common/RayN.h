@@ -52,7 +52,7 @@ namespace ospray {
       inline simd::vmaski hitSomething() const;
     };
 
-    using RayNStream = Stream<RayN>;
+    using RayNStream = SimdStream<RayN>;
 
     // Inlined member definitions /////////////////////////////////////////////
 

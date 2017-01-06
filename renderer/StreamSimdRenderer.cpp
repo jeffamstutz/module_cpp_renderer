@@ -39,7 +39,8 @@ namespace ospray {
 
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
-      constexpr int STREAM_ITERATIONS = RENDERTILE_PIXELS_PER_JOB / STREAM_SIZE;
+      constexpr int STREAM_ITERATIONS =
+                      (RENDERTILE_PIXELS_PER_JOB / simd::width) / STREAM_SIZE;
 
       for (auto j = 0; j < STREAM_ITERATIONS; ++j) {
 

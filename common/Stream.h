@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "simd.h"
 #include <array>
 
 namespace ospray {
@@ -26,6 +27,11 @@ namespace ospray {
 
     template <typename T>
     using Stream = StreamN<T, STREAM_SIZE>;
+
+    constexpr auto SIMD_STREAM_SIZE = STREAM_SIZE / simd::width;
+
+    template <typename T>
+    using SimdStream = StreamN<T, SIMD_STREAM_SIZE>;
 
   }// namespace cpp_renderer
 }// namespace ospray

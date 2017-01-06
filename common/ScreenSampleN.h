@@ -65,7 +65,7 @@ namespace ospray {
       ScreenSampleNRef get(int i);
     };
 
-    using ScreenSampleNStream = ScreenSampleNStreamN<STREAM_SIZE>;
+    using ScreenSampleNStream = ScreenSampleNStreamN<SIMD_STREAM_SIZE>;
 
     // Inlined function definitions ///////////////////////////////////////////
 

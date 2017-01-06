@@ -297,7 +297,7 @@ namespace ospray {
               else
                 cosNL = fabs(cosNL);
 
-              const float cosLR = max(0.f, dot(light.dir, R));
+              const float cosLR = ospcommon::max(0.f, dot(light.dir, R));
               const vec3f brdf = info.Kd * cosNL +
                                  info.Ks * powf(cosLR, info.Ns);
               const vec3f light_contrib = brdf * light.weight;
