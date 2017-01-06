@@ -135,7 +135,6 @@ namespace ospray {
                                      const Ray &ray,
                                      int flags) const
     {
-      dg.Ng = dg.Ns = ray.Ng;
       const int base = idxSize * ray.primID;
       const vec3i idx = vec3i{index[base+0], index[base+1], index[base+2]};
 

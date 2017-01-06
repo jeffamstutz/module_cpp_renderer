@@ -81,6 +81,7 @@ namespace ospray {
         dg.color = vec4f{1.f};
 
       dg.P = ray.org + ray.t * ray.dir;
+      dg.Ng = dg.Ns = ray.Ng;
 
       // a first hack for instancing: problem is that ospray assumes that
       // 'ray.geomid' specifies the respective sub-geometry of a model
@@ -94,23 +95,24 @@ namespace ospray {
         // a regular geometry
         auto *geom =
             dynamic_cast<Geometry*>(model->geometry[ray.geomID].ptr);
-        dg.geometry = geom;
-        dg.material = geom->material.ptr;
-        geom->postIntersect(dg, ray, flags);
+        if (geom) {
+          dg.geometry = geom;
+          dg.material = geom->material.ptr;
+          geom->postIntersect(dg, ray, flags);
+        }
       } else {
         // instanced geometry: create copy of ray, iterate over
         // ray.instIDs, and remove that instancing info from the ray (so
         // the next level of model doesn't get confused by it)
-#if 0// NOTE(jda) --> C++ version not yet implemented
-        Ray newRay = ray;
-        foreach_unique(instID in ray.instID) {
-          uniform Geometry *uniform instGeom = model->geometry[instID];
+        auto newRay = ray;
+        auto *instGeom =
+            dynamic_cast<Geometry*>(model->geometry[ray.instID].ptr);
+        if (instGeom) {
           dg.geometry = instGeom;
-          dg.material = instGeom->material;
-          newRay.instID = -1;
-          instGeom->postIntersect(instGeom,model,dg,newRay,flags);
+          dg.material = instGeom->material.ptr;
+          newRay.instID = RTC_INVALID_GEOMETRY_ID;
+          instGeom->postIntersect(dg, newRay, flags);
         }
-#endif
       }
 
 #define  DG_NG_FACEFORWARD (DG_NG | DG_FACEFORWARD)
@@ -118,6 +120,7 @@ namespace ospray {
 #define  DG_NG_NORMALIZE   (DG_NG | DG_NORMALIZE)
 #define  DG_NS_NORMALIZE   (DG_NS | DG_NORMALIZE)
 
+#if 1
       if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
         dg.Ng = safe_normalize(dg.Ng);
       if ((flags & DG_NS_NORMALIZE) == DG_NS_NORMALIZE)
@@ -130,6 +133,16 @@ namespace ospray {
       if ((flags & DG_NS_FACEFORWARD) == DG_NS_FACEFORWARD &&
           (dot(ray.dir,dg.Ns) >= 0.f))
         dg.Ns = -dg.Ns;
+#else
+      if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
+        dg.Ng = safe_normalize(ray.Ng);
+
+      if ((flags & DG_NG_FACEFORWARD) == DG_NG_FACEFORWARD &&
+          (dot(ray.dir,dg.Ng) >= 0.f))
+        dg.Ng = -dg.Ng;
+
+      dg.Ns = dg.Ng;
+#endif
 
 #undef  DG_NG_FACEFORWARD
 #undef  DG_NS_FACEFORWARD

@@ -95,11 +95,11 @@ namespace ospray {
 
       for (int i = 0; i < samplesPerFrame; i++) {
         auto ao_ray = calculateAORay(dg, aoContext);
-        if (dot(ao_ray.dir, dg.Ng) < 0.05f || isOccluded(ao_ray))
+        if (dot(ao_ray.dir, dg.Ns) < 0.05f || isOccluded(ao_ray))
           hits++;
       }
 
-      float diffuse = ospcommon::abs(dot(dg.Ng, ray.dir));
+      float diffuse = ospcommon::abs(dot(dg.Ns, ray.dir));
       color = superColor * (diffuse * (1.0f-float(hits)/samplesPerFrame));
       alpha = 1.f;
     }
