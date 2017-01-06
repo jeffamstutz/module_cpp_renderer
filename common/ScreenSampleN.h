@@ -99,9 +99,7 @@ namespace ospray {
 
       for (int i = 0; i < SIZE; ++i) {
         auto sample = stream.get(i);
-        if (pred(sample)) {
-          fcn(sample);
-        }
+        fcn(pred(sample), sample);
       }
     }
 
@@ -127,9 +125,7 @@ namespace ospray {
 
       for (int i = 0; i < SIZE; ++i) {
         auto sample = stream.get(i);
-        if (pred(sample)) {
-          fcn(sample, i);
-        }
+        fcn(pred(sample), sample, i);
       }
     }
 

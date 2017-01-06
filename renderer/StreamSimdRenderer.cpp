@@ -48,22 +48,27 @@ namespace ospray {
         const auto begin = jobID * RENDERTILE_PIXELS_PER_JOB + j * STREAM_SIZE;
         const auto end   = begin + STREAM_SIZE;
 
+        mask_stream masks;
+
         for (auto i = begin; i < end; ++i) {
           const int streamID = i - begin;
 
           auto &sampleID = screenSamples.sampleID[streamID];
-          sampleID.x = tile.region.lower.x + z_order.xs[i];
-          sampleID.y = tile.region.lower.y + z_order.ys[i];
+          auto tile_x = simd::load<simd::vint>(&z_order.xs[i]);
+          auto tile_y = simd::load<simd::vint>(&z_order.ys[i]);
+          sampleID.x = tile.region.lower.x + tile_x;
+          sampleID.y = tile.region.lower.y + tile_y;
           auto &tileOffset = screenSamples.tileOffset[streamID];
           tileOffset = -1;
           resetRay(screenSamples.rays, streamID);
 
-          auto active = (sampleID.x < fbw) && (sampleID.y < fbh);
+          auto &active = masks[streamID];
+          active = (sampleID.x < fbw) && (sampleID.y < fbh);
 
           if (simd::none(active))
             continue;
 
-          tileOffset = z_order.xs[i] + (z_order.ys[i] * TILE_SIZE);
+          tileOffset = tile_x + (tile_y * TILE_SIZE);
           float tMax = inf;
 
           // NOTE(jda) - This assumes spp = 1
@@ -87,21 +92,30 @@ namespace ospray {
           ray.t = tMax;
         }
 
-#if 0
-        renderStream(perFrameData, screenSamples);
+        renderStream(masks, perFrameData, screenSamples);
 
-        auto writeTile = [&](ScreenSampleRef sample)
+        auto writeTile = [&](const simd::vmaski &active,
+                             ScreenSampleNRef sample)
         {
-          sample.rgb *= spp_inv;
+          sample.rgb *= simd::vfloat{spp_inv};
 
           const auto tileOffset = sample.tileOffset;
-          tile.r[tileOffset] = sample.rgb.x;
-          tile.g[tileOffset] = sample.rgb.y;
-          tile.b[tileOffset] = sample.rgb.z;
-          tile.a[tileOffset] = sample.alpha;
-          tile.z[tileOffset] = sample.z;
+#if 0 // NOTE(jda) - adding the active mask seems to mask out ALL lanes...
+          simd::store(sample.rgb.x, (float*)tile.r, tileOffset, active);
+          simd::store(sample.rgb.y, (float*)tile.g, tileOffset, active);
+          simd::store(sample.rgb.z, (float*)tile.b, tileOffset, active);
+          simd::store(sample.alpha, (float*)tile.a, tileOffset, active);
+          simd::store(sample.z    , (float*)tile.z, tileOffset, active);
+#else
+          simd::store(sample.rgb.x, (float*)tile.r, tileOffset);
+          simd::store(sample.rgb.y, (float*)tile.g, tileOffset);
+          simd::store(sample.rgb.z, (float*)tile.b, tileOffset);
+          simd::store(sample.alpha, (float*)tile.a, tileOffset);
+          simd::store(sample.z    , (float*)tile.z, tileOffset);
+#endif
         };
 
+#if 0
         for_each_sample(screenSamples, writeTile, sampleEnabled);
 #endif
       }
