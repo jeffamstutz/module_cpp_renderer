@@ -21,9 +21,22 @@ if (OSPRAY_MODULE_CPP)
   set(OSPRAY_MODULE_CPP_STREAM_SIZE ${OSPRAY_TILE_SIZE} CACHE INT "Stream size")
   add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
 
-  include_directories(${CMAKE_CURRENT_LIST_DIR}/..)
+  include_directories(
+    ${CMAKE_CURRENT_LIST_DIR}/..
+    ${CMAKE_CURRENT_LIST_DIR}/include
+  )
+
+  if (OSPRAY_BUILD_ISA STREQUAL "AVX")
+    set(CMAKE_CXX_FLAGS "-mavx ${CMAKE_CXX_FLAGS}")
+  elseif (OSPRAY_BUILD_ISA STREQUAL "AVX2" OR OSPRAY_BUILD_ISA STREQUAL "AVX512")
+    set(CMAKE_CXX_FLAGS "-mavx2 ${CMAKE_CXX_FLAGS}")
+  elseif (OSPRAY_BUILD_ISA STREQUAL "ALL")
+    message(FATAL_ERROR
+            "Please choose only one build ISA when building the C++ module")
+  endif()
 
   set(LIBRARY_SRCS
+
     camera/Camera.h
     camera/Perspective.cpp
 
@@ -52,6 +65,19 @@ if (OSPRAY_MODULE_CPP)
     renderer/simple_ao/StreamSimpleAO.cpp
 
     util.cpp
+
+    ## SIMD ##
+
+    common/simd.h
+    common/DifferentialGeometryN.h
+    common/RayN.h
+    common/ScreenSampleN.h
+    camera/CameraN.h
+    camera/PerspectiveN.cpp
+    renderer/SimdRenderer.cpp
+    renderer/raycast/SimdRaycast.cpp
+    renderer/simple_ao/ao_util_simd.h
+    renderer/simple_ao/SimdSimpleAO.cpp
   )
 
   if (OSPRAY_USE_EMBREE_STREAMS)
@@ -76,5 +102,22 @@ if (OSPRAY_MODULE_CPP)
     ${OPENGL_LIBRARIES}
     ${GLUT_LIBRARIES}
   )
+
+  if (OSPRAY_MODULE_OSPIMGUI)
+    ospray_create_application(ospCppImGuiViewer
+      app/cpp_imgui_viewer.cpp
+    LINK
+      glfw
+      gl3w
+      imgui
+      ${OPENGL_LIBRARIES}
+      ospray
+      ospray_commandline
+      ospray_common
+      ospray_imgui3d
+      ospray_minisg
+      ospray_importer
+    )
+  endif()
 
 endif()
