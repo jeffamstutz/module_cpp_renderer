@@ -37,12 +37,19 @@ if (OSPRAY_MODULE_CPP)
 
   set(LIBRARY_SRCS
 
+    common/simd.h
+
     camera/Camera.h
+    camera/CameraN.h
     camera/Perspective.cpp
+    camera/PerspectiveN.cpp
 
     common/DifferentialGeometry.h
+    common/DifferentialGeometryN.h
     common/Ray.h
+    common/RayN.h
     common/ScreenSample.h
+    common/ScreenSampleN.h
 
     geometry/Geometry.h
     geometry/TriangleMesh.cpp
@@ -52,6 +59,8 @@ if (OSPRAY_MODULE_CPP)
     lights/DirectionalLight.cpp
 
     renderer/Renderer.cpp
+    renderer/SimdRenderer.cpp
+
     renderer/raycast/Raycast.cpp
     renderer/scivis/SciVis.cpp
     renderer/scivis/SciVisShadingInfo.h
@@ -64,20 +73,14 @@ if (OSPRAY_MODULE_CPP)
     renderer/scivis/StreamSciVis.cpp
     renderer/simple_ao/StreamSimpleAO.cpp
 
-    util.cpp
-
-    ## SIMD ##
-
-    common/simd.h
-    common/DifferentialGeometryN.h
-    common/RayN.h
-    common/ScreenSampleN.h
-    camera/CameraN.h
-    camera/PerspectiveN.cpp
-    renderer/SimdRenderer.cpp
+    renderer/StreamSimdRenderer.cpp
     renderer/raycast/SimdRaycast.cpp
     renderer/simple_ao/ao_util_simd.h
     renderer/simple_ao/SimdSimpleAO.cpp
+
+    renderer/raycast/StreamSimdRaycast.cpp
+
+    util.cpp
   )
 
   if (OSPRAY_USE_EMBREE_STREAMS)
