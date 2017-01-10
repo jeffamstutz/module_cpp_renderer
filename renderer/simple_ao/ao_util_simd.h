@@ -42,6 +42,24 @@ namespace ospray {
       biNorm0 = normalize(cross(biNorm1,gNormal));
     }
 
+    struct ao_contextN
+    {
+      simd::vec3f biNormU, biNormV;
+      float rayLength;
+      float epsilon;
+    };
+
+    inline ao_contextN getAOContext(const DifferentialGeometryN &dg,
+                                    float rayLength = 1e20f,
+                                    float epsilon   = 1e-6)
+    {
+      ao_contextN ctx;
+      getBinormals(ctx.biNormU, ctx.biNormV, dg.Ng);
+      ctx.rayLength = rayLength;
+      ctx.epsilon   = epsilon;
+      return ctx;
+    }
+
     inline simd::vfloat rotate(simd::vfloat x, simd::vfloat dx)
     {
       x += dx;
@@ -68,22 +86,24 @@ namespace ospray {
       return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
 
-    struct ao_contextN
+    // NOTE(jda) - RandomTEA variant of getRandomDir()
+    inline simd::vec3f getRandomDir(simd::RandomTEA &rng,
+                                    const simd::vec3f &biNorm0,
+                                    const simd::vec3f &biNorm1,
+                                    const simd::vec3f &gNormal,
+                                    float epsilon)
     {
-      simd::vec3f biNormU, biNormV;
-      float rayLength;
-      float epsilon;
-    };
+      const auto rot = simd::vfloat{1.f} - rng.getFloats();
+      const auto rn = rng.getFloats();
 
-    inline ao_contextN getAOContext(const DifferentialGeometryN &dg,
-                                    float rayLength = 1e20f,
-                                    float epsilon   = 1e-6)
-    {
-      ao_contextN ctx;
-      getBinormals(ctx.biNormU, ctx.biNormV, dg.Ng);
-      ctx.rayLength = rayLength;
-      ctx.epsilon   = epsilon;
-      return ctx;
+      const auto r0 = rotate(rn.x, rot.x);
+      const auto r1 = rotate(rn.y, rot.y);
+
+      const auto w = simd::sqrt(1.f-r1);
+      const auto x = simd::cos((2.f*simd::vfloat{M_PI}*r0))*w;
+      const auto y = simd::sin((2.f*simd::vfloat{M_PI}*r0))*w;
+      const auto z = simd::sqrt(r1) + epsilon;
+      return x*biNorm0 + y*biNorm1 + z*gNormal;
     }
 
     inline RayN calculateAORay(const DifferentialGeometryN &dg,
@@ -96,6 +116,21 @@ namespace ospray {
       ao_ray.t   = ctx.rayLength - ctx.epsilon;
       return ao_ray;
     }
+
+    // NOTE(jda) - RandomTEA variant of calculateAORay()
+    inline RayN calculateAORay(const DifferentialGeometryN &dg,
+                               const ao_contextN &ctx,
+                               simd::RandomTEA &rng)
+    {
+      RayN ao_ray;
+      ao_ray.org = dg.P + (simd::vfloat{1e-3f} * dg.Ng);
+      ao_ray.dir = getRandomDir(rng, ctx.biNormU, ctx.biNormV,
+                                dg.Ng, ctx.epsilon);
+      ao_ray.t0  = ctx.epsilon;
+      ao_ray.t   = ctx.rayLength - ctx.epsilon;
+      return ao_ray;
+    }
+
 
   }// namespace cpp_renderer
 }// namespace ospray

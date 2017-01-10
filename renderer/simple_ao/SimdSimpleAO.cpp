@@ -19,6 +19,8 @@
 #include "ao_util_simd.h"
 #include "../../util.h"
 
+#define USE_RANDOMTEA_RNG 1
+
 namespace ospray {
   namespace cpp_renderer {
 
@@ -99,8 +101,21 @@ namespace ospray {
       simd::vfloat hits {0.f};
       auto aoContext = getAOContext(dg, aoRayLength, epsilon);
 
+#if USE_RANDOMTEA_RNG
+      const auto &fbWidth = currentFB->size.x;
+      const auto pixel_x = simd::cast<simd::vuint>(sample.sampleID.x);
+      const auto pixel_y = simd::cast<simd::vuint>(sample.sampleID.y);
+      const auto accumID = simd::cast<simd::vuint>(sample.sampleID.z);
+
+      simd::RandomTEA rng((pixel_y * fbWidth) + pixel_x, accumID);
+#endif
+
       for (int i = 0; i < samplesPerFrame; i++) {
+#if USE_RANDOMTEA_RNG
+        auto ao_ray = calculateAORay(dg, aoContext, rng);
+#else
         auto ao_ray = calculateAORay(dg, aoContext);
+#endif
 
         auto rayOccluded = isOccluded(active, ao_ray) ||
                            dot(ao_ray.dir, dg.Ns) < 0.05f;
