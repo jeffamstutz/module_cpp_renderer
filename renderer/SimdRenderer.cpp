@@ -18,6 +18,8 @@
 #include "SimdRenderer.h"
 #include "../util.h"
 
+#define USE_RANDOMTEA_RNG 1
+
 namespace ospray {
   namespace cpp_renderer {
 
@@ -89,9 +91,22 @@ namespace ospray {
         }
 #endif
 
+#if USE_RANDOMTEA_RNG
+        const auto &fbWidth = currentFB->size.x;
+        const auto pixel_x = simd::cast<simd::vuint>(screenSample.sampleID.x);
+        const auto pixel_y = simd::cast<simd::vuint>(screenSample.sampleID.y);
+        const auto accumID = simd::cast<simd::vuint>(screenSample.sampleID.z);
+        simd::RandomTEA rng((pixel_y * fbWidth) + pixel_x, accumID);
+
+        for (int s = 0; s < spp; s++) {
+          auto randDuDv = rng.getFloats();
+          auto &du = randDuDv.x;
+          auto &dv = randDuDv.y;
+#else
         for (int s = 0; s < spp; s++) {
           auto du = simd::randUniformDist();
           auto dv = simd::randUniformDist();
+#endif
           screenSample.sampleID.z = startSampleID + s;
 
           CameraSampleN cameraSample;
