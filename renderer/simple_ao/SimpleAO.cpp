@@ -65,16 +65,16 @@ namespace ospray {
       aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
     }
 
-    inline void SimpleAORenderer::shade_ao(vec3f &color,
-                                           float &alpha,
-                                           const Ray &ray) const
+    inline void SimpleAORenderer::shade_ao(ScreenSample &sample) const
     {
       vec3f superColor{1.f};
+      auto &color = sample.rgb;
+      auto &ray   = sample.ray;
 
       auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                    DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
-      SimpleAOMaterial *mat = dynamic_cast<SimpleAOMaterial*>(dg.material);
+      auto *mat = dynamic_cast<SimpleAOMaterial*>(dg.material);
 
       if (mat) {
         superColor = mat->Kd;
@@ -101,7 +101,7 @@ namespace ospray {
 
       float diffuse = ospcommon::abs(dot(dg.Ns, ray.dir));
       color = superColor * (diffuse * (1.0f-float(hits)/samplesPerFrame));
-      alpha = 1.f;
+      sample.alpha = 1.f;
     }
 
     void SimpleAORenderer::renderSample(void *perFrameData,
@@ -110,7 +110,7 @@ namespace ospray {
       UNUSED(perFrameData);
 
       if (traceRay(sample.ray)) {
-        shade_ao(sample.rgb, sample.alpha, sample.ray);
+        shade_ao(sample);
       } else {
         sample.rgb = bgColor;
       }

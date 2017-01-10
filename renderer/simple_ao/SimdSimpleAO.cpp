@@ -66,11 +66,11 @@ namespace ospray {
     }
 
     inline void SimdSimpleAORenderer::shade_ao(simd::vmaski active,
-                                               simd::vec3f &color,
-                                               simd::vfloat &alpha,
-                                               const RayN &ray) const
+                                               ScreenSampleN &sample) const
     {
       auto superColor = simd::make_vec3f(1.f, 1.f, 1.f);
+
+      auto &ray = sample.ray;
 
       auto dg = postIntersect(active, ray,
                               DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
@@ -110,6 +110,8 @@ namespace ospray {
 
       auto diffuse = simd::abs(dot(dg.Ns, ray.dir));
 
+      auto &color = sample.rgb;
+
       if (samplesPerFrame > 0) {
         color = simd::select(active,
                              superColor*(diffuse * (1.f-hits/samplesPerFrame)),
@@ -118,7 +120,7 @@ namespace ospray {
         color = simd::select(active, superColor*diffuse, simd::vec3f{bgColor});
       }
 
-      alpha = simd::select(active, simd::vfloat{1.f}, alpha);
+      sample.alpha = simd::select(active, simd::vfloat{1.f}, sample.alpha);
     }
 
     void SimdSimpleAORenderer::renderSample(simd::vmaski active,
@@ -130,7 +132,7 @@ namespace ospray {
       auto rayHit = traceRay(active, sample.ray);
 
       if (simd::any(rayHit)) {
-        shade_ao(rayHit, sample.rgb, sample.alpha, sample.ray);
+        shade_ao(rayHit, sample);
       } else {
         sample.rgb = simd::vec3f{bgColor};
       }

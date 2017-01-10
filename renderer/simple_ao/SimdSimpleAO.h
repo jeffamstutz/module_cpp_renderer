@@ -34,8 +34,7 @@ namespace ospray {
 
     private:
 
-      void shade_ao(simd::vmaski active, simd::vec3f &color,
-                    simd::vfloat &alpha, const RayN &ray) const;
+      void shade_ao(simd::vmaski active, ScreenSampleN &sample) const;
 
       int   samplesPerFrame{1};
       float aoRayLength{1e20f};
