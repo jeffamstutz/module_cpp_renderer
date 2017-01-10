@@ -22,3 +22,5 @@ NOTE: SIMD renderers need a SIMD camera, such as cpp_perspective_simd
 Alternatively, you can run 'ospCppViewer' directly, which by default adds
 everything you need by default (including module load). You can then override
 any object type, such as the renderer, just as you would do so in the GLUT viewer.
+Furthermore, you can have everything substituted for Stream/Simd variants by passing
+"-simd" or "-stream" (having both enabled doesn't work yet).

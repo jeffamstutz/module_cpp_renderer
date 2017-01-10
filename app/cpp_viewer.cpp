@@ -23,24 +23,30 @@
 
 #include "ospray_cpp/Data.h"
 
+static std::string g_prefix  = "cpp_";
+static std::string g_postfix = "";
+
+static bool isSimd   = false;
+static bool isStream = false;
+
 class CppRendererParser : public DefaultRendererParser
 {
 public:
-  CppRendererParser() { rendererType = "cpp_scivis_stream"; }
+  CppRendererParser() { rendererType = g_prefix + "scivis" + g_postfix; }
 };
 
 class CppCameraParser : public DefaultCameraParser
 {
 public:
-  CppCameraParser() { cameraType = "cpp_perspective"; }
+  CppCameraParser() { cameraType = g_prefix + "perspective" + g_postfix; }
 };
 
 class CppSceneParser : public TriangleMeshSceneParser
 {
 public:
   CppSceneParser(ospray::cpp::Renderer renderer,
-                 std::string geometryType = "cpp_triangles") :
-    TriangleMeshSceneParser(renderer, geometryType) {}
+                 std::string geometryType = g_prefix + "triangles" + g_postfix)
+    : TriangleMeshSceneParser(renderer, geometryType) {}
 };
 
 class CppLightsParser : public LightsParser
@@ -50,7 +56,7 @@ public:
   {
     std::vector<OSPLight> lights;
 
-    auto ospLight = renderer.newLight("cpp_directional");
+    auto ospLight = renderer.newLight(g_prefix + "directional");
     if (ospLight.handle() == nullptr) {
       throw std::runtime_error("Failed to create a 'DirectionalLight'!");
     }
@@ -65,7 +71,7 @@ public:
     ospcommon::vec4f ambient(.85, .9, 1, .2*3.14);
 
     if (ambient.w > 0.f && reduce_max(ambient) > 0.f) {
-      auto ambLight = renderer.newLight("cpp_ambient");
+      auto ambLight = renderer.newLight(g_prefix + "ambient");
       if (ambLight.handle() == nullptr) {
         throw std::runtime_error("Failed to create a 'AmbientLight'!");
       }
@@ -86,8 +92,30 @@ public:
   bool parse(int ac, const char **&av) { return false; }
 };
 
+void parseExtraParametersFromComandLine(int ac, const char **&av)
+{
+  for (int i = 1; i < ac; i++) {
+    const std::string arg = av[i];
+    if (arg == "--simd" || arg == "-simd") {
+      isSimd = true;
+    } else if (arg == "--stream" || arg == "-stream") {
+      isStream = true;
+    }
+  }
+
+  if (isStream && isSimd) {
+    throw std::runtime_error("Both stream and simd modes together "
+                             "not yet supported!");
+  }
+
+  if (isStream) g_postfix += "_stream";
+  if (isSimd)   g_postfix += "_simd";
+}
+
 int main(int ac, const char **av)
 {
+  parseExtraParametersFromComandLine(ac, av);
+
   ospInit(&ac,av);
   ospray::glut3D::initGLUT(&ac,av);
 

@@ -161,5 +161,8 @@ namespace ospray {
 
     OSP_REGISTER_RENDERER(SimdSimpleAORenderer, cpp_ao_simd);
 
+    // NOTE(jda) - Remove this alias once we have a real scivis renderer
+    OSP_REGISTER_RENDERER(SimdSimpleAORenderer, cpp_scivis_simd);
+
   }// namespace cpp_renderer
 }// namespace ospray

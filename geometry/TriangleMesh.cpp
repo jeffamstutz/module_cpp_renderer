@@ -204,5 +204,14 @@ namespace ospray {
     OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_triangles);
     OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_trianglemesh);
 
+    // NOTE(jda) - Give aliases to cpp_triangles name for easier handling in
+    //             sample viewer
+    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_triangles_stream);
+    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_trianglemesh_stream);
+
+    // NOTE(jda) - Remove these when we have a dedicated SIMD triangle mesh
+    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_triangles_simd);
+    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_trianglemesh_simd);
+
   }// namespace cpp_renderer
 }// namespace ospray
