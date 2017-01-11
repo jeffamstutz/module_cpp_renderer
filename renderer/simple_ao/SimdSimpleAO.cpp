@@ -103,11 +103,11 @@ namespace ospray {
 
 #if USE_RANDOMTEA_RNG
       const auto &fbWidth = currentFB->size.x;
-      const auto pixel_x = simd::cast<simd::vuint>(sample.sampleID.x);
-      const auto pixel_y = simd::cast<simd::vuint>(sample.sampleID.y);
-      const auto accumID = simd::cast<simd::vuint>(sample.sampleID.z);
+      const auto pixel_x = sample.sampleID.x;
+      const auto pixel_y = sample.sampleID.y;
+      const auto accumID = sample.sampleID.z;
 
-      simd::RandomTEA rng((pixel_y * fbWidth) + pixel_x, accumID);
+      simd::RandomTEA<simd::vint> rng((pixel_y * fbWidth) + pixel_x, accumID);
 #endif
 
       for (int i = 0; i < samplesPerFrame; i++) {
