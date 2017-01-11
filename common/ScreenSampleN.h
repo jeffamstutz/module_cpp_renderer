@@ -98,8 +98,10 @@ namespace ospray {
       //       similar to the way TASK_T is checked for ospray::parallel_for()
 
       for (int i = 0; i < SIZE; ++i) {
-        auto sample = stream.get(i);
-        fcn(pred(sample), sample);
+        auto sample   = stream.get(i);
+        auto predTrue = pred(sample);
+        if (simd::any(predTrue))
+          fcn(predTrue, sample);
       }
     }
 
@@ -124,24 +126,26 @@ namespace ospray {
       //       similar to the way TASK_T is checked for ospray::parallel_for()
 
       for (int i = 0; i < SIZE; ++i) {
-        auto sample = stream.get(i);
-        fcn(pred(sample), sample, i);
+        auto sample   = stream.get(i);
+        auto predTrue = pred(sample);
+        if (simd::any(predTrue))
+          fcn(predTrue, sample, i);
       }
     }
 
     // Predefined predicates //////////////////////////////////////////////////
 
-    inline simd::vmaski sampleEnabled(const ScreenSampleNRef &sample)
+    inline simd::vmaski sampleEnabledN(const ScreenSampleNRef &sample)
     {
       return sample.tileOffset >= 0;
     }
 
-    inline simd::vmaski rayHit(const ScreenSampleNRef &sample)
+    inline simd::vmaski rayHitN(const ScreenSampleNRef &sample)
     {
       return sample.ray.hitSomething();
     }
 
-    inline simd::vmaski rayMiss(const ScreenSampleNRef &sample)
+    inline simd::vmaski rayMissN(const ScreenSampleNRef &sample)
     {
       return !sample.ray.hitSomething();
     }

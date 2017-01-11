@@ -106,6 +106,7 @@ namespace ospray {
     }
 
     OSP_REGISTER_CAMERA(PerspectiveCameraN, cpp_perspective_simd);
+    OSP_REGISTER_CAMERA(PerspectiveCameraN, cpp_perspective_stream_simd);
 
   }// namespace cpp_renderer
 }// namespace ospray

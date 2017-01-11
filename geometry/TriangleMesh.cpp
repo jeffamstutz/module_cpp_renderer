@@ -212,6 +212,8 @@ namespace ospray {
     // NOTE(jda) - Remove these when we have a dedicated SIMD triangle mesh
     OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_triangles_simd);
     OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_trianglemesh_simd);
+    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_triangles_stream_simd);
+    OSP_REGISTER_GEOMETRY(TriangleMesh, cpp_trianglemesh_stream_simd);
 
   }// namespace cpp_renderer
 }// namespace ospray

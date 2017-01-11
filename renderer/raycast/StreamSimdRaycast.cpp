@@ -58,37 +58,47 @@ namespace ospray {
     }
 
     void
-    StreamSimdRaycastRenderer::renderStream(const mask_stream &active,
+    StreamSimdRaycastRenderer::renderStream(const mask_stream &activeStream,
                                             void */*perFrameData*/,
                                             ScreenSampleNStream &stream) const
     {
-#if 0
       traceRays(stream.rays, RTC_INTERSECT_COHERENT);
 
-      DGStream dgs = postIntersect(stream.rays,
-                                   DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
+      auto dgs = postIntersect(stream.rays, DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
 
       // Shade rays
       for_each_sample_i(
         stream,
-        [&](ScreenSampleRef sample, int i) {
+        [&](ScreenSampleNRef sample, int i) {
           const auto &ray = sample.ray;
-          const float c =
-              0.2f + 0.8f * ospcommon::abs(dot(normalize(ray.Ng), ray.dir));
+          const auto c =
+              0.2f + 0.8f * simd::abs(dot(normalize(ray.Ng), ray.dir));
 
-          auto *mat = dynamic_cast<StreamSimdRaycastMaterial*>(dgs[i].material);
+          simd::vec3f col{c};
 
-          if (!ray.hitSomething()) {
-            sample.rgb = bgColor;
-            return;
-          }
+          auto &active = activeStream[i];
+          auto hit     = ray.hitSomething() && active;
+          auto miss    = !hit && active;
 
-          sample.rgb   = (mat != nullptr) ? c * mat->Kd : vec3f{c};
-          sample.z     = ray.t;
-          sample.alpha = 1.f;
+          auto &dg = dgs[i];
+
+          simd::foreach_active(hit, [&](int j) {
+            auto *mat =
+                dynamic_cast<StreamSimdRaycastMaterial*>(dg.material[j]);
+
+            auto eye_col = c[j];
+            if (mat) {
+              col.x[j] = eye_col * mat->Kd.x;
+              col.y[j] = eye_col * mat->Kd.y;
+              col.z[j] = eye_col * mat->Kd.z;
+            }
+          });
+
+          sample.rgb   = simd::select(hit, col,   simd::vec3f{bgColor});
+          sample.z     = simd::select(hit, ray.t, sample.z);
+          sample.alpha = simd::select(hit, 1.f,   sample.alpha);
         }
       );
-#endif
     }
 
     Material *StreamSimdRaycastRenderer::createMaterial(const char */*type*/)
@@ -97,6 +107,9 @@ namespace ospray {
     }
 
     OSP_REGISTER_RENDERER(StreamSimdRaycastRenderer, cpp_raycast_stream_simd);
+
+    // NOTE(jda) - Remove this alias once there's a real StreamSimdSciVisRenderer
+    OSP_REGISTER_RENDERER(StreamSimdRaycastRenderer, cpp_scivis_stream_simd);
 
   }// namespace cpp_renderer
 }// namespace ospray

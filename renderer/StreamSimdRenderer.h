@@ -62,7 +62,7 @@ namespace ospray {
                      (RTCRayN*)&rays, simd::width, rays.size(), sizeof(RayN));
 #else
       UNUSED(flags);
-      for (int i = 0; i < ScreenSampleStream::size; ++i) {
+      for (int i = 0; i < ScreenSampleNStream::size; ++i) {
         auto &ray = rays[i];
         auto active = simd::mask_cast<int>(rayIsActive(ray));
         if (simd::any(active))
@@ -94,12 +94,11 @@ namespace ospray {
     {
       DGNStream dgs;
 
-#if 0
-      for (int i = 0; i < ScreenSampleStream::size; ++i) {
-        if (rays[i].hitSomething())
-          dgs[i] = cpp_renderer::Renderer::postIntersect(rays[i], flags);
+      for (int i = 0; i < ScreenSampleNStream::size; ++i) {
+        auto hitSomething = rays[i].hitSomething();
+        if (simd::any(hitSomething))
+          dgs[i] = SimdRenderer::postIntersect(hitSomething, rays[i], flags);
       }
-#endif
 
       return dgs;
     }

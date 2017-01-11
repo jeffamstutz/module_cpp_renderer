@@ -117,11 +117,6 @@ void parseExtraParametersFromComandLine(int ac, const char **&av)
     }
   }
 
-  if (isStream && isSimd) {
-    throw std::runtime_error("Both stream and simd modes together "
-                             "not yet supported!");
-  }
-
   if (isStream) g_postfix += "_stream";
   if (isSimd)   g_postfix += "_simd";
 }

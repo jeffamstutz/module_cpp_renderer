@@ -40,14 +40,16 @@ namespace ospray {
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
       constexpr int STREAM_ITERATIONS =
-                      (RENDERTILE_PIXELS_PER_JOB / simd::width) / STREAM_SIZE;
+                      (RENDERTILE_PIXELS_PER_JOB / simd::width) /
+                      SIMD_STREAM_SIZE;
 
       for (auto j = 0; j < STREAM_ITERATIONS; ++j) {
 
         ScreenSampleNStream screenSamples;
         CameraSampleNStream cameraSamples;
-        const auto begin = jobID * RENDERTILE_PIXELS_PER_JOB + j * STREAM_SIZE;
-        const auto end   = begin + STREAM_SIZE;
+        const auto begin = (jobID * RENDERTILE_PIXELS_PER_JOB / simd::width)
+                           + (j * SIMD_STREAM_SIZE);
+        const auto end   = begin + SIMD_STREAM_SIZE;
 
         mask_stream masks;
 
@@ -85,8 +87,10 @@ namespace ospray {
               (simd::cast<simd::vfloat>(sampleID.y) + pixel_dv)
               * rcp(float(fbh));
 
+#if 0
           cameraSample.lens.x = simd::randUniformDist();
           cameraSample.lens.y = simd::randUniformDist();
+#endif
 
           auto &ray = screenSamples.rays[streamID];
           currentCameraN->getRay(cameraSample, ray);
@@ -100,7 +104,7 @@ namespace ospray {
         {
           sample.rgb *= simd::vfloat{spp_inv};
 
-          const auto tileOffset = sample.tileOffset;
+          const auto &tileOffset = sample.tileOffset;
 #if 0 // NOTE(jda) - adding the active mask seems to mask out ALL lanes...
           simd::store(sample.rgb.x, (float*)tile.r, tileOffset, active);
           simd::store(sample.rgb.y, (float*)tile.g, tileOffset, active);
@@ -108,6 +112,7 @@ namespace ospray {
           simd::store(sample.alpha, (float*)tile.a, tileOffset, active);
           simd::store(sample.z    , (float*)tile.z, tileOffset, active);
 #else
+          UNUSED(active);
           simd::store(sample.rgb.x, (float*)tile.r, tileOffset);
           simd::store(sample.rgb.y, (float*)tile.g, tileOffset);
           simd::store(sample.rgb.z, (float*)tile.b, tileOffset);
@@ -116,9 +121,7 @@ namespace ospray {
 #endif
         };
 
-#if 0
-        for_each_sample(screenSamples, writeTile, sampleEnabled);
-#endif
+        for_each_sample(screenSamples, writeTile, sampleEnabledN);
       }
     }
 

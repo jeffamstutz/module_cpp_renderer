@@ -63,8 +63,8 @@ namespace ospray {
     {
       auto &ray = screenSample.ray;
 
-      auto hit  = traceRay(active, ray);
-      auto miss = !hit;
+      auto hit  = traceRay(active, ray) && active;
+      auto miss = !hit && active;
 
       if (simd::any(hit)) {
         const auto c = 0.2f + 0.8f * simd::abs(dot(normalize(ray.Ng), ray.dir));
@@ -85,7 +85,7 @@ namespace ospray {
 
         screenSample.rgb   = simd::select(hit, col, simd::vec3f{bgColor});
         screenSample.z     = simd::select(hit, ray.t, screenSample.z);
-        screenSample.alpha = simd::select(hit, ray.t, screenSample.alpha);
+        screenSample.alpha = simd::select(hit, 1.f, screenSample.alpha);
       } else {
         screenSample.rgb = simd::vec3f{bgColor};
       }

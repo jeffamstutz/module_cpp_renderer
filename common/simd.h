@@ -236,6 +236,7 @@ namespace ospray {
 
     ///////////////////////////////////////////////////////////////////////////
     // TEA - Random numbers based on Tiny Encryption Algorithm
+
     template <typename T>
     inline void tea8(T& v0, T& v1)
     {
