@@ -40,14 +40,13 @@ namespace ospray {
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
       constexpr int STREAM_ITERATIONS =
-                      (RENDERTILE_PIXELS_PER_JOB / simd::width) /
-                      SIMD_STREAM_SIZE;
+                      (RENDERTILE_PIXELS_PER_JOB) / SIMD_STREAM_SIZE;
 
       for (auto j = 0; j < STREAM_ITERATIONS; ++j) {
 
         ScreenSampleNStream screenSamples;
         CameraSampleNStream cameraSamples;
-        const auto begin = (jobID * RENDERTILE_PIXELS_PER_JOB / simd::width)
+        const auto begin = (jobID * RENDERTILE_PIXELS_PER_JOB)
                            + (j * SIMD_STREAM_SIZE);
         const auto end   = begin + SIMD_STREAM_SIZE;
 
