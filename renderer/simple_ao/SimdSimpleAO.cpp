@@ -107,7 +107,7 @@ namespace ospray {
       const auto pixel_y = sample.sampleID.y;
       const auto accumID = sample.sampleID.z;
 
-      simd::RandomTEA<simd::vint> rng((pixel_y * fbWidth) + pixel_x, accumID);
+      simd::RandomTEA<simd::vint,4> rng((pixel_y * fbWidth) + pixel_x, accumID);
 #endif
 
       for (int i = 0; i < samplesPerFrame; i++) {

@@ -87,7 +87,8 @@ namespace ospray {
     }
 
     // NOTE(jda) - RandomTEA variant of getRandomDir()
-    inline simd::vec3f getRandomDir(simd::RandomTEA<simd::vint> &rng,
+    template <typename RANDOM_TEA_T>
+    inline simd::vec3f getRandomDir(RANDOM_TEA_T &rng,
                                     const simd::vec3f &biNorm0,
                                     const simd::vec3f &biNorm1,
                                     const simd::vec3f &gNormal,
@@ -118,9 +119,10 @@ namespace ospray {
     }
 
     // NOTE(jda) - RandomTEA variant of calculateAORay()
+    template <typename RANDOM_TEA_T>
     inline RayN calculateAORay(const DifferentialGeometryN &dg,
                                const ao_contextN &ctx,
-                               simd::RandomTEA<simd::vint> &rng)
+                               RANDOM_TEA_T &rng)
     {
       RayN ao_ray;
       ao_ray.org = dg.P + (simd::vfloat{1e-3f} * dg.Ng);
