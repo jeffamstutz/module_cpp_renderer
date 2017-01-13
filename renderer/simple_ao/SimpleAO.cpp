@@ -62,7 +62,7 @@ namespace ospray {
     {
       ospray::cpp_renderer::Renderer::commit();
       samplesPerFrame = getParam1i("aoSamples", 1);
-      aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
+      aoRayLength     = getParam1f("aoDistance", 1e20f);
     }
 
     inline void SimpleAORenderer::shade_ao(ScreenSample &sample) const
@@ -95,6 +95,7 @@ namespace ospray {
 
       for (int i = 0; i < samplesPerFrame; i++) {
         auto ao_ray = calculateAORay(dg, aoContext);
+        ao_ray.t = aoRayLength;
         if (dot(ao_ray.dir, dg.Ns) < 0.05f || isOccluded(ao_ray))
           hits++;
       }

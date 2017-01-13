@@ -66,7 +66,7 @@ namespace ospray {
     {
       ospray::cpp_renderer::Renderer::commit();
       samplesPerFrame = getParam1i("aoSamples", 1);
-      aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
+      aoRayLength     = getParam1f("aoDistance", 1e20f);
     }
 
     void StreamSimpleAORenderer::renderStream(void */*perFrameData*/,
@@ -153,6 +153,7 @@ namespace ospray {
           [&](ScreenSampleRef sample, int i) {
             UNUSED(sample);
             auto &ao_ray = ao_rays[i];
+            ao_ray.t = aoRayLength;
             if (dot(ao_ray.dir, dgs[i].Ng) < 0.05f || ao_ray.hitSomething())
               hits[i]++;
           },

@@ -64,7 +64,7 @@ namespace ospray {
     {
       ospray::cpp_renderer::SimdRenderer::commit();
       samplesPerFrame = getParam1i("aoSamples", 1);
-      aoRayLength     = getParam1f("aoOcclusionDistance", 1e20f);
+      aoRayLength     = getParam1f("aoDistance", 1e20f);
     }
 
     inline void SimdSimpleAORenderer::shade_ao(simd::vmaski active,
@@ -116,6 +116,7 @@ namespace ospray {
 #else
         auto ao_ray = calculateAORay(dg, aoContext);
 #endif
+        ao_ray.t = aoRayLength;
 
         auto rayOccluded = isOccluded(active, ao_ray) ||
                            dot(ao_ray.dir, dg.Ns) < 0.05f;
