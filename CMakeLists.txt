@@ -61,24 +61,33 @@ if (OSPRAY_MODULE_CPP)
     renderer/Renderer.cpp
     renderer/SimdRenderer.cpp
 
+    # Scalar
     renderer/raycast/Raycast.cpp
     renderer/scivis/SciVis.cpp
     renderer/scivis/SciVisShadingInfo.h
     renderer/simple_ao/ao_util.cpp
     renderer/simple_ao/SimpleAO.cpp
+    renderer/volume/DVR.cpp
 
+    # Stream
     common/Stream.h
     renderer/StreamRenderer.cpp
     renderer/raycast/StreamRaycast.cpp
     renderer/scivis/StreamSciVis.cpp
     renderer/simple_ao/StreamSimpleAO.cpp
 
+    # Simd
     renderer/StreamSimdRenderer.cpp
     renderer/raycast/SimdRaycast.cpp
     renderer/simple_ao/ao_util_simd.h
     renderer/simple_ao/SimdSimpleAO.cpp
 
+    # Simd Stream
     renderer/raycast/StreamSimdRaycast.cpp
+
+    volume/Volume.cpp
+    volume/StructuredVolume.cpp
+    volume/BlockBrickedVolume.cpp
 
     util.cpp
   )
