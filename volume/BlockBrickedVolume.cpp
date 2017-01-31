@@ -64,7 +64,7 @@ namespace ospray {
 
     void BBV::commit()
     {
-      if (!finished) constructVolumeMemory();
+      if (!blockMem) constructVolumeMemory();
       StructuredVolume::commit();
     }
 
