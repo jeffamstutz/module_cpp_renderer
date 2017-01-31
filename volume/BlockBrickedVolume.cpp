@@ -172,7 +172,7 @@ namespace ospray {
         break;
       }
 
-      return 0.f;
+      return inf;
     }
 
     BBV::Address BBV::getVoxelAddress(const vec3i &index) const

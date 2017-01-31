@@ -130,7 +130,20 @@ namespace ospray {
       return gradient / gradientStep;
     }
 
-    void StructuredVolume::intersect(Ray &ray) const
+    bool StructuredVolume::intersect(Ray &ray) const
+    {
+      auto hits = intersectBox(ray, boundingBox);
+
+      if (hits.first < hits.second &&  hits.first < ray.t) {
+        ray.t0 = hits.first;
+        ray.t  = hits.second;
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    void StructuredVolume::stepRay(Ray &ray) const
     {
       // The recommended step size for ray casting based volume renderers.
       const float step = samplingStep / samplingRate;
@@ -143,7 +156,7 @@ namespace ospray {
 #endif
     }
 
-    void StructuredVolume::intersectAdaptive(Ray &ray) const
+    void StructuredVolume::stepRayAdaptive(Ray &ray) const
     {
       NOT_IMPLEMENTED
     }

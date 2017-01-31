@@ -51,8 +51,10 @@ namespace ospray {
 
       vec3f computeGradient(const vec3f &worldCoordinates) const;
 
-      void intersect(Ray &ray) const;
-      void intersectAdaptive(Ray &ray) const;
+      bool intersect(Ray &ray) const;
+
+      void stepRay(Ray &ray) const;
+      void stepRayAdaptive(Ray &ray) const;
 
       void intersectIsosurface(const std::vector<float> &isovalues,
                                Ray &ray) const;
