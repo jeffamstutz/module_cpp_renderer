@@ -98,7 +98,14 @@ namespace ospray {
             currentVolume->intersect(volumeRay);
             auto samplePoint  = volumeRay.org + volumeRay.t0 * volumeRay.dir;
             auto volumeSample = currentVolume->computeSample(samplePoint);
+#if 0
             color += vec3f{0.01f, 0.f, 0.f};
+#else
+            if (volumeSample > 10.f) {
+              color = vec3f{1.f, 0.f, 0.f};
+              break;
+            }
+#endif
           }
 
           sample.rgb = color;

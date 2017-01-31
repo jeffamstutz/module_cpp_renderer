@@ -39,6 +39,10 @@ namespace ospray {
 
       scaleFactor = getParam3f("scaleFactor", vec3f(-1.f));
 
+      localCoordinatesUpperBound = vec3f{nextafter(dimensions.x - 1, 0),
+                                         nextafter(dimensions.y - 1, 0),
+                                         nextafter(dimensions.z - 1, 0)};
+
       if (!finished) {
         voxelRange = getParam2f("voxelRange", voxelRange);
 
@@ -74,9 +78,7 @@ namespace ospray {
 
       // Fractional coordinates within the lower corner voxel used during
       // interpolation. "flc" means "fractionalLocalCoordinates"
-      const vec3f flc = clampedLocalCoordinates - vec3f{vi_0.x,
-                                                        vi_0.y,
-                                                        vi_0.z};
+      const vec3f flc = clampedLocalCoordinates - vec3f{vi_0.x, vi_0.y, vi_0.z};
 
       // Look up the voxel values to be interpolated. "vv" means "voxelValue"
       float vv_000 = getVoxel(vec3i{vi_0.x, vi_0.y, vi_0.z});
