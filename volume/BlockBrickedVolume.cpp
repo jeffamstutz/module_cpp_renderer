@@ -190,9 +190,12 @@ namespace ospray {
           blockIndex.x + blockCount.x * (blockIndex.y + blockCount.y * blockIndex.z);
 
       // Compute the 3D offset of the brick within the block containing the voxel.
-      const vec3i brickOffset {blockIndex.x & BLOCK_BRICK_BITMASK,
-                               blockIndex.y & BLOCK_BRICK_BITMASK,
-                               blockIndex.z & BLOCK_BRICK_BITMASK};
+      const vec3i brickIndex {index.x >> BRICK_VOXEL_WIDTH_BITCOUNT,
+                              index.y >> BRICK_VOXEL_WIDTH_BITCOUNT,
+                              index.z >> BRICK_VOXEL_WIDTH_BITCOUNT};
+      const vec3i brickOffset {brickIndex.x & BLOCK_BRICK_BITMASK,
+                               brickIndex.y & BLOCK_BRICK_BITMASK,
+                               brickIndex.z & BLOCK_BRICK_BITMASK};
 
       // Compute the 1D address of the brick in the block.
       const uint32 brickAddress
