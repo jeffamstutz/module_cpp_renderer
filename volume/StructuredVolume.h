@@ -53,8 +53,8 @@ namespace ospray {
 
       bool intersect(Ray &ray) const;
 
-      void stepRay(Ray &ray) const;
-      void stepRayAdaptive(Ray &ray) const;
+      void advance(Ray &ray) const;
+      void advanceAdaptive(Ray &ray) const;
 
       void intersectIsosurface(const std::vector<float> &isovalues,
                                Ray &ray) const;

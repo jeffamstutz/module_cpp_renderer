@@ -102,7 +102,7 @@ namespace ospray {
             break;
           }
 #endif
-          currentVolume->stepRay(ray);
+          currentVolume->advance(ray);
         }
 
         sample.rgb = color;

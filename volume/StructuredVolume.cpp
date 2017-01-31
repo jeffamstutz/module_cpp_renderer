@@ -145,7 +145,7 @@ namespace ospray {
       }
     }
 
-    void StructuredVolume::stepRay(Ray &ray) const
+    void StructuredVolume::advance(Ray &ray) const
     {
       // The recommended step size for ray casting based volume renderers.
       const float step = samplingStep / samplingRate;
@@ -158,7 +158,7 @@ namespace ospray {
 #endif
     }
 
-    void StructuredVolume::stepRayAdaptive(Ray &ray) const
+    void StructuredVolume::advanceAdaptive(Ray &ray) const
     {
       NOT_IMPLEMENTED
     }
