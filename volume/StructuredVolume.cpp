@@ -49,6 +49,8 @@ namespace ospray {
         boundingBox = box3f{gridOrigin,
                             gridOrigin + vec3f{dimensions - 1} * gridSpacing};
 
+        samplingStep = reduce_min(gridSpacing);
+
         buildAccelerator();
         finished = true;
       }
