@@ -54,7 +54,7 @@ namespace ospray {
 
     BlockBrickedVolume::~BlockBrickedVolume()
     {
-      if (blockMem) delete [] blockMem;
+      freeVolumeMemory();
     }
 
     std::string BBV::toString() const
@@ -64,35 +64,13 @@ namespace ospray {
 
     void BBV::commit()
     {
-      if (!finished) {
-        // Get the voxel type.
-        voxelType = getParamString("voxelType", "unspecified");
-        voxel_t   = getVoxelType();
-        voxelSize = sizeOf(voxel_t);
-
-        // Get the volume dimensions.
-        this->dimensions = getParam3i("dimensions", vec3i(0));
-        exitOnCondition(reduce_min(this->dimensions) <= 0,
-                        "invalid volume dimensions (must be set before "
-                        "calling ospSetRegion())");
-
-        // Volume size in blocks per dimension with padding to the nearest block
-        blockCount = (dimensions + BLOCK_VOXEL_WIDTH - 1) / BLOCK_VOXEL_WIDTH;
-
-        // Volume size in blocks with padding.
-        const size_t numBlocks = blockCount.x * blockCount.y * blockCount.z;
-
-        // allocate the large array of blocks
-        size_t blockSize = BLOCK_VOXEL_COUNT * voxelSize;
-        blockMem = new byte_t[blockSize * numBlocks];
-      }
-
+      if (!finished) constructVolumeMemory();
       StructuredVolume::commit();
     }
 
     int BBV::setRegion(
         // points to the first voxel to be copied. The voxels at 'source' MUST
-        // have dimensions 'regionSize', must be organized in 3D-array order, and
+        // have dimensions 'regionSize', must be organized in 3D-array order,and
         // must have the same voxel type as the volume.
         const void *source,
         // coordinates of the lower, left, front corner of the target region
@@ -109,6 +87,9 @@ namespace ospray {
                                           finalRegionSize, finalRegionCoords);
       // Copy voxel data into the volume.
       const size_t NTASKS = finalRegionSize.y * finalRegionSize.z;
+
+      if (voxel_t == OSP_UNKNOWN)
+        constructVolumeMemory();
 
       switch (voxel_t) {
       case OSP_UCHAR:
@@ -152,6 +133,7 @@ namespace ospray {
         });
         break;
       default:
+        throw std::runtime_error("No voxel_t specificed in cpp bbv!");
         break;
       }
 
@@ -231,6 +213,37 @@ namespace ospray {
         | voxelOffset.x;
 
       return address;
+    }
+
+    void BlockBrickedVolume::constructVolumeMemory()
+    {
+      freeVolumeMemory();
+
+      // Get the voxel type.
+      voxelType = getParamString("voxelType", "unspecified");
+      voxel_t   = getVoxelType();
+      voxelSize = sizeOf(voxel_t);
+
+      // Get the volume dimensions.
+      this->dimensions = getParam3i("dimensions", vec3i(0));
+      exitOnCondition(reduce_min(this->dimensions) <= 0,
+                      "invalid volume dimensions (must be set before "
+                      "calling ospSetRegion())");
+
+      // Volume size in blocks per dimension with padding to the nearest block
+      blockCount = (dimensions + BLOCK_VOXEL_WIDTH - 1) / BLOCK_VOXEL_WIDTH;
+
+      // Volume size in blocks with padding.
+      const size_t numBlocks = blockCount.x * blockCount.y * blockCount.z;
+
+      // allocate the large array of blocks
+      size_t blockSize = BLOCK_VOXEL_COUNT * voxelSize;
+      blockMem = new byte_t[blockSize * numBlocks];
+    }
+
+    void BlockBrickedVolume::freeVolumeMemory()
+    {
+      if (blockMem) delete [] blockMem;
     }
 
 #if 0//def EXP_NEW_BB_VOLUME_KERNELS

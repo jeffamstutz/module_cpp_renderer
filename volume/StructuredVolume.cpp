@@ -137,7 +137,7 @@ namespace ospray {
       // Compute the next hit point using a spatial acceleration structure.
       GridAccelerator_intersect(volume->accelerator, step, ray);
 #else
-      ray.t += step;
+      ray.t0 += step;
 #endif
     }
 
@@ -211,6 +211,8 @@ namespace ospray {
         regionCoords = scaledRegionCoords;
       }
       return upsampling;
+#else
+      return false;
 #endif
     }
 

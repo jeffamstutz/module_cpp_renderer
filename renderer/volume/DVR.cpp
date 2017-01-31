@@ -70,7 +70,6 @@ namespace ospray {
 
       if (!volumes.empty()) {
         currentVolume = dynamic_cast<cpp_renderer::Volume*>(volumes[0].ptr);
-        //PRINT(currentVolume);
       }
 
       return cpp_renderer::Renderer::beginFrame(fb);
@@ -88,13 +87,21 @@ namespace ospray {
       if (currentVolume != nullptr) {
         auto hits = intersectBox(ray, currentVolume->boundingBox);
 
-        if (hits.first < hits.second && hits.first < ray.t) {
-#if 0
-          volumeRay.t0 = t0;
-          volumeRay.t = t1;
-#else
-          sample.rgb = vec3f{0.25f};
-#endif
+        if (hits.first < hits.second &&  hits.first < ray.t) {
+          auto volumeRay = ray;
+          volumeRay.t0 = hits.first;
+          volumeRay.t  = hits.second;
+
+          vec3f color{0.f};
+
+          while (volumeRay.t0 < volumeRay.t) {
+            currentVolume->intersect(volumeRay);
+            auto samplePoint  = volumeRay.org + volumeRay.t0 * volumeRay.dir;
+            auto volumeSample = currentVolume->computeSample(samplePoint);
+            color += vec3f{0.01f, 0.f, 0.f};
+          }
+
+          sample.rgb = color;
         }
       }
     }

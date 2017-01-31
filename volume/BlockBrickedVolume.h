@@ -65,6 +65,9 @@ namespace ospray {
 
       Address getVoxelAddress(const vec3i &index) const;
 
+      void constructVolumeMemory();
+      void freeVolumeMemory();
+
       // Data //
 
       //! Volume size in blocks per dimension with padding to the nearest block.
@@ -74,7 +77,7 @@ namespace ospray {
       byte_t *blockMem {nullptr};
 
       //! Voxel type.
-      OSPDataType voxel_t;
+      OSPDataType voxel_t {OSP_UNKNOWN};
 
       //! Voxel size in bytes.
       size_t voxelSize;
