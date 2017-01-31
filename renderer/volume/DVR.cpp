@@ -82,31 +82,30 @@ namespace ospray {
 
       sample.rgb = bgColor;
 
-      auto &ray = sample.ray;
+      if (currentVolume == nullptr)
+        return;
 
-      if (currentVolume != nullptr) {
-        auto volumeRay = ray;
-        auto hitVolume = currentVolume->intersect(volumeRay);
+      auto &ray      = sample.ray;
+      auto hitVolume = currentVolume->intersect(ray);
 
-        if (hitVolume) {
-          vec3f color{0.f};
+      if (hitVolume) {
+        vec3f color{0.f};
 
-          while (volumeRay.t0 < volumeRay.t) {
-            auto samplePoint  = volumeRay.org + volumeRay.t0 * volumeRay.dir;
-            auto volumeSample = currentVolume->computeSample(samplePoint);
+        while (ray.t0 < ray.t) {
+          auto samplePoint  = ray.org + ray.t0 * ray.dir;
+          auto volumeSample = currentVolume->computeSample(samplePoint);
 #if 0
-            color += vec3f{0.01f, 0.f, 0.f};
+          color += vec3f{0.01f, 0.f, 0.f};
 #else
-            if (volumeSample > 10.f) {
-              color = vec3f{1.f, 0.f, 0.f};
-              break;
-            }
-#endif
-            currentVolume->stepRay(volumeRay);
+          if (volumeSample > 10.f) {
+            color = vec3f{1.f, 0.f, 0.f};
+            break;
           }
-
-          sample.rgb = color;
+#endif
+          currentVolume->stepRay(ray);
         }
+
+        sample.rgb = color;
       }
     }
 
