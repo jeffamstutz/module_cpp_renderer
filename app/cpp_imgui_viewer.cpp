@@ -57,7 +57,7 @@ public:
 
   bool parse(int ac, const char **&av)
   {
-    auto triangles_name = g_prefix + "perspective" + g_postfix;
+    auto triangles_name = g_prefix + "triangles" + g_postfix;
     TriangleMeshSceneParser triangleMeshParser(renderer, triangles_name);
 
     VolumeSceneParser volumeParser(renderer);
