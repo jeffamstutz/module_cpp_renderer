@@ -39,9 +39,8 @@ namespace ospray {
 
       scaleFactor = getParam3f("scaleFactor", vec3f(-1.f));
 
-      localCoordinatesUpperBound = vec3f{nextafter(dimensions.x - 1, 0),
-                                         nextafter(dimensions.y - 1, 0),
-                                         nextafter(dimensions.z - 1, 0)};
+#warning "localCoordinatesUpperBound should be checked! Subtract 1 or 2?"
+      localCoordinatesUpperBound = vec3f{dimensions - 2};
 
       if (!finished) {
         voxelRange = getParam2f("voxelRange", voxelRange);
