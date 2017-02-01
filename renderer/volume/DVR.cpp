@@ -94,14 +94,12 @@ namespace ospray {
         while (ray.t0 < ray.t) {
           auto samplePoint  = ray.org + ray.t0 * ray.dir;
           auto volumeSample = currentVolume->computeSample(samplePoint);
-#if 0
-          color += vec3f{0.01f, 0.f, 0.f};
-#else
-          if (volumeSample > 10.f) {
+
+          if (volumeSample > 1.f) {
             color = vec3f{1.f, 0.f, 0.f};
             break;
           }
-#endif
+
           currentVolume->advance(ray);
         }
 
