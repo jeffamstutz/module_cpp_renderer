@@ -93,25 +93,27 @@ namespace ospray {
       if (hitVolume) {
         vec3f color {0.f};
         float opacity {0.f};
-        const auto &tFcn = *currentVolume->transferFunction;
+        const auto &volume = *currentVolume;
+        const auto &tFcn   = *volume.transferFunction;
 
         static std::uniform_real_distribution<float> distribution {0.f, 1.f};
-        ray.t0 += distribution(rng) * currentVolume->samplingStep;
+        const auto offsetStepSize = (volume.samplingStep / volume.samplingRate);
+        ray.t0 += distribution(rng) * offsetStepSize;
 
         ///////////////////////////////////////////////////////////////////////
-        // NOTE(jda) - this section needs to be a function!
+        // NOTE(jda) - this section needs to be a function/object!
         while (ray.t0 < ray.t) {
           auto samplePoint  = ray.org + ray.t0 * ray.dir;
-          auto volumeSample = currentVolume->computeSample(samplePoint);
+          auto volumeSample = volume.computeSample(samplePoint);
 
           auto sampleColor   = tFcn.color(volumeSample);
           auto sampleOpacity = tFcn.opacity(volumeSample);
 
-          sampleOpacity *= clamp(sampleOpacity / currentVolume->samplingRate);
-          sampleColor   *= sampleOpacity;
+          auto clampedOpacity = clamp(sampleOpacity / volume.samplingRate);
+          sampleColor *= clampedOpacity;
 
-          color   += (1.f - sampleOpacity) * sampleColor;
-          opacity += (1.f - sampleOpacity) * sampleOpacity;
+          color   += (1.f - opacity) * sampleColor;
+          opacity += (1.f - opacity) * clampedOpacity;
 
           if (opacity >= 0.99f)
             break;
