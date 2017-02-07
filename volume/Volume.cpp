@@ -16,9 +16,6 @@
 
 // ospray
 #include "Volume.h"
-#if 0
-#include "transferFunction/TransferFunction.h"
-#endif
 
 namespace ospray {
   namespace cpp_renderer {
@@ -48,13 +45,13 @@ namespace ospray {
       volumeClippingBox =
           box3f(getParam3f("volumeClippingBoxLower", vec3f(0.f)),
                 getParam3f("volumeClippingBoxUpper", vec3f(0.f)));
-#if 0
       // Set the transfer function.
-      TransferFunction *transferFunction =
-          (TransferFunction *) getParamObject("transferFunction", NULL);
-      exitOnCondition(transferFunction == NULL, "no transfer function specified");
-      ispc::Volume_setTransferFunction(ispcEquivalent, transferFunction->getIE());
-#endif
+      auto *tf =
+          dynamic_cast<TransferFunction *>(getParamObject("transferFunction",
+                                                          nullptr));
+      exitOnCondition(tf == nullptr, "no C++ transfer function specified!");
+
+      transferFunction = tf;
     }
 
   } // ::ospray::cpp_renderer

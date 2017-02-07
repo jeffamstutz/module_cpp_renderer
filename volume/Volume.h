@@ -18,7 +18,9 @@
 
 // ospray
 #include "volume/Volume.h"
+// cpp_renderer
 #include "../common/Ray.h"
+#include "../transferFunction/TransferFunction.h"
 
 namespace ospray {
   namespace cpp_renderer {
@@ -58,7 +60,7 @@ namespace ospray {
 
       // Data //
 
-      // TODO: ptr|ref to TransferFunction
+      Ref<TransferFunction> transferFunction;
 
       bool gradientShadingEnabled  {false};
       bool preIntegrationEnabled   {false};

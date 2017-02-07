@@ -89,21 +89,34 @@ namespace ospray {
       auto hitVolume = currentVolume->intersect(ray);
 
       if (hitVolume) {
-        vec3f color{0.f};
+        vec3f color {0.f};
+        float opacity {0.f};
+        const auto &tFcn = *currentVolume->transferFunction;
 
+        ///////////////////////////////////////////////////////////////////////
+        // NOTE(jda) - this section needs to be a function!
         while (ray.t0 < ray.t) {
           auto samplePoint  = ray.org + ray.t0 * ray.dir;
           auto volumeSample = currentVolume->computeSample(samplePoint);
 
-          if (volumeSample > 1.f) {
-            color = vec3f{1.f, 0.f, 0.f};
+          auto sampleColor   = tFcn.color(volumeSample);
+          auto sampleOpacity = tFcn.opacity(volumeSample);
+
+          sampleOpacity *= clamp(sampleOpacity / currentVolume->samplingRate);
+          sampleColor   *= sampleOpacity;
+
+          color   += (1.f - sampleOpacity) * sampleColor;
+          opacity += (1.f - sampleOpacity) * sampleOpacity;
+
+          if (opacity >= 0.99f)
             break;
-          }
 
           currentVolume->advance(ray);
         }
+        ///////////////////////////////////////////////////////////////////////
 
-        sample.rgb = color;
+        sample.rgb *= (1.f - opacity);
+        sample.rgb += opacity * color;
       }
     }
 
