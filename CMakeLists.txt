@@ -85,6 +85,9 @@ if (OSPRAY_MODULE_CPP)
     # Simd Stream
     renderer/raycast/StreamSimdRaycast.cpp
 
+    transferFunction/TransferFunction.cpp
+    transferFunction/LinearTransferFunction.cpp
+
     volume/Volume.cpp
     volume/StructuredVolume.cpp
     volume/BlockBrickedVolume.cpp
