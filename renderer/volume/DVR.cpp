@@ -19,6 +19,8 @@
 namespace ospray {
   namespace cpp_renderer {
 
+    thread_local std::minstd_rand rng;
+
     // Material definition ////////////////////////////////////////////////////
 
     struct DVMaterial : public ospray::Material
@@ -92,6 +94,9 @@ namespace ospray {
         vec3f color {0.f};
         float opacity {0.f};
         const auto &tFcn = *currentVolume->transferFunction;
+
+        static std::uniform_real_distribution<float> distribution {0.f, 1.f};
+        ray.t0 += distribution(rng) * currentVolume->samplingStep;
 
         ///////////////////////////////////////////////////////////////////////
         // NOTE(jda) - this section needs to be a function!
