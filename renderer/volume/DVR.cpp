@@ -19,7 +19,7 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    thread_local std::minstd_rand rng;
+    static thread_local std::mt19937 rng;
 
     // Material definition ////////////////////////////////////////////////////
 
