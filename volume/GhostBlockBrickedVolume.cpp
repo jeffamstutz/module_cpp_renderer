@@ -60,25 +60,68 @@
 #define BRICK_BIT_SCALE_Z_HI ((1<<BRICK_BIT_Z_HI))
 /* @} */
 
-/*! @{ number of bits we have to SHIFT addresses for given type */
-#define shift_per_uint8 0
-#define shift_per_int16 1
-#define shift_per_uint16 1
-#define shift_per_float 2
-#define shift_per_double 3
-/*! @} */
-
-/*! @{ number of bits we have to MULTIPLY offsets with for given
-type */
-#define scale_per_uint8 1
-#define scale_per_int16 2
-#define scale_per_uint16 2
-#define scale_per_float 4
-#define scale_per_double 8
-/*! @} */
-
 namespace ospray {
   namespace cpp_renderer {
+
+    template <typename VOXEL_T>
+    struct shift_per
+    {
+      constexpr static int value = 0;
+    };
+
+    template <>
+    struct shift_per<int16>
+    {
+      constexpr static int value = 1;
+    };
+
+    template <>
+    struct shift_per<uint16>
+    {
+      constexpr static int value = 1;
+    };
+
+    template <>
+    struct shift_per<float>
+    {
+      constexpr static int value = 2;
+    };
+
+    template <>
+    struct shift_per<double>
+    {
+      constexpr static int value = 3;
+    };
+
+    template <typename VOXEL_T>
+    struct scale_per
+    {
+      constexpr static int value = 1;
+    };
+
+    template <>
+    struct scale_per<int16>
+    {
+      constexpr static int value = 2;
+    };
+
+    template <>
+    struct scale_per<uint16>
+    {
+      constexpr static int value = 2;
+    };
+
+    template <>
+    struct scale_per<float>
+    {
+      constexpr static int value = 4;
+    };
+
+    template <>
+    struct scale_per<double>
+    {
+      constexpr static int value = 8;
+    };
 
     using GBBV = GhostBlockBrickedVolume;
 
@@ -98,7 +141,7 @@ namespace ospray {
     }
 
     /*! compute address8 for a given voxel index, including bricking */
-    template<typename VOXEL_T, int SCALE_PER, int SHIFT_PER>
+    template<typename VOXEL_T>
     inline Address8 brickTranslation(const vec3i &voxelIdxInBlock)
     {
       Address8 addr;
@@ -112,31 +155,37 @@ namespace ospray {
 
       addr.voxelOfs_dx = (voxelIdxInBrick.x == (BRICK_WIDTH-1))
         ?
-        + (BRICK_BIT_SCALE_X_HI*SCALE_PER)
-        - ((BRICK_WIDTH-1)*BRICK_BIT_SCALE_X_LO*SCALE_PER)
-        : (BRICK_BIT_SCALE_X_LO*SCALE_PER);
+        + (BRICK_BIT_SCALE_X_HI*scale_per<VOXEL_T>::value)
+        - ((BRICK_WIDTH-1)*BRICK_BIT_SCALE_X_LO*scale_per<VOXEL_T>::value)
+        : (BRICK_BIT_SCALE_X_LO*scale_per<VOXEL_T>::value);
 
       addr.voxelOfs_dy = (voxelIdxInBrick.y == (BRICK_WIDTH-1))
         ?
-        + (BRICK_BIT_SCALE_Y_HI*SCALE_PER)
-        - ((BRICK_WIDTH-1)*BRICK_BIT_SCALE_Y_LO*SCALE_PER)
-        : (BRICK_BIT_SCALE_Y_LO*SCALE_PER);
+        + (BRICK_BIT_SCALE_Y_HI*scale_per<VOXEL_T>::value)
+        - ((BRICK_WIDTH-1)*BRICK_BIT_SCALE_Y_LO*scale_per<VOXEL_T>::value)
+        : (BRICK_BIT_SCALE_Y_LO*scale_per<VOXEL_T>::value);
 
       addr.voxelOfs_dz = (voxelIdxInBrick.z == (BRICK_WIDTH-1))
         ?
-        + (BRICK_BIT_SCALE_Z_HI*SCALE_PER)
-        - ((BRICK_WIDTH-1)*BRICK_BIT_SCALE_Z_LO*SCALE_PER)
-        : (BRICK_BIT_SCALE_Z_LO*SCALE_PER);
+        + (BRICK_BIT_SCALE_Z_HI*scale_per<VOXEL_T>::value)
+        - ((BRICK_WIDTH-1)*BRICK_BIT_SCALE_Z_LO*scale_per<VOXEL_T>::value)
+        : (BRICK_BIT_SCALE_Z_LO*scale_per<VOXEL_T>::value);
 
       addr.voxelOfs =
-        (voxelIdxInBrick.x << (BRICK_BIT_X_LO+SHIFT_PER)) |
-        (voxelIdxInBrick.y << (BRICK_BIT_Y_LO+SHIFT_PER)) |
-        (voxelIdxInBrick.z << (BRICK_BIT_Z_LO+SHIFT_PER)) |
-        (brickIdxInBlock.x << (BRICK_BIT_X_HI+SHIFT_PER)) |
-        (brickIdxInBlock.y << (BRICK_BIT_Y_HI+SHIFT_PER)) |
-        (brickIdxInBlock.z << (BRICK_BIT_Z_HI+SHIFT_PER));
+        (voxelIdxInBrick.x << (BRICK_BIT_X_LO+shift_per<VOXEL_T>::value)) |
+        (voxelIdxInBrick.y << (BRICK_BIT_Y_LO+shift_per<VOXEL_T>::value)) |
+        (voxelIdxInBrick.z << (BRICK_BIT_Z_LO+shift_per<VOXEL_T>::value)) |
+        (brickIdxInBlock.x << (BRICK_BIT_X_HI+shift_per<VOXEL_T>::value)) |
+        (brickIdxInBlock.y << (BRICK_BIT_Y_HI+shift_per<VOXEL_T>::value)) |
+        (brickIdxInBlock.z << (BRICK_BIT_Z_HI+shift_per<VOXEL_T>::value));
 
       return addr;
+    }
+
+    template<typename T>
+    inline float accessArrayWithOffset(const T *basePtr, uint32 offset)
+    {
+      return *((T*)((uint8 *)basePtr+offset));
     }
 
     // BlockBrickedVolume definitions /////////////////////////////////////////
@@ -181,48 +230,46 @@ namespace ospray {
         constructVolumeMemory();
 
       switch (voxel_t) {
-#if 0
       case OSP_UCHAR:
         parallel_for(NTASKS, [&](size_t taskIndex) {
-          setVoxelValues<uint8, BLOCK_VOXEL_COUNT>(finalSource,
-                                                   finalRegionCoords,
-                                                   finalRegionSize,
-                                                   taskIndex);
+          setVoxelValues<uint8, VOXELS_PER_BLOCK>(finalSource,
+                                                  finalRegionCoords,
+                                                  finalRegionSize,
+                                                  taskIndex);
         });
         break;
       case OSP_SHORT:
         parallel_for(NTASKS, [&](size_t taskIndex) {
-          setVoxelValues<int16, BLOCK_VOXEL_COUNT>(finalSource,
-                                                   finalRegionCoords,
-                                                   finalRegionSize,
-                                                   taskIndex);
+          setVoxelValues<int16, VOXELS_PER_BLOCK>(finalSource,
+                                                  finalRegionCoords,
+                                                  finalRegionSize,
+                                                  taskIndex);
         });
         break;
       case OSP_USHORT:
         parallel_for(NTASKS, [&](size_t taskIndex) {
-          setVoxelValues<uint16, BLOCK_VOXEL_COUNT>(finalSource,
-                                                    finalRegionCoords,
-                                                    finalRegionSize,
-                                                    taskIndex);
-        });
-        break;
-      case OSP_FLOAT:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
-          setVoxelValues<float, BLOCK_VOXEL_COUNT>(finalSource,
+          setVoxelValues<uint16, VOXELS_PER_BLOCK>(finalSource,
                                                    finalRegionCoords,
                                                    finalRegionSize,
                                                    taskIndex);
         });
         break;
-      case OSP_DOUBLE:
+      case OSP_FLOAT:
         parallel_for(NTASKS, [&](size_t taskIndex) {
-          setVoxelValues<double, BLOCK_VOXEL_COUNT>(finalSource,
-                                                    finalRegionCoords,
-                                                    finalRegionSize,
-                                                    taskIndex);
+          setVoxelValues<float, VOXELS_PER_BLOCK>(finalSource,
+                                                  finalRegionCoords,
+                                                  finalRegionSize,
+                                                  taskIndex);
         });
         break;
-#endif
+      case OSP_DOUBLE:
+        parallel_for(NTASKS, [&](size_t taskIndex) {
+          setVoxelValues<double, VOXELS_PER_BLOCK>(finalSource,
+                                                   finalRegionCoords,
+                                                   finalRegionSize,
+                                                   taskIndex);
+        });
+        break;
       default:
         throw std::runtime_error("No voxel_t specificed in cpp bbv!");
         break;
@@ -245,10 +292,95 @@ namespace ospray {
     float
     GhostBlockBrickedVolume::computeSample(const vec3f &worldCoordinates) const
     {
-      NOT_IMPLEMENTED
+      switch (voxel_t) {
+      case OSP_UCHAR:
+        return computeSample_T<uint8>(worldCoordinates);
+        break;
+      case OSP_SHORT:
+        return computeSample_T<int16>(worldCoordinates);
+        break;
+      case OSP_USHORT:
+        return computeSample_T<uint16>(worldCoordinates);
+        break;
+      case OSP_FLOAT:
+        return computeSample_T<float>(worldCoordinates);
+        break;
+      case OSP_DOUBLE:
+        return computeSample_T<double>(worldCoordinates);
+        break;
+      default:
+        break;
+      }
+
+      return inf;
     }
 
-    Address GhostBlockBrickedVolume::getIndices(const vec3i &voxelIdxInVolume)
+    template<typename T>
+    float
+    GhostBlockBrickedVolume::computeSample_T(const vec3f &worldCoordinates) const
+    {
+      /* Transform the sample location into the local coordinate system. */
+      vec3f localCoordinates = transformWorldToLocal(worldCoordinates);
+
+      /* Coordinates outside the volume are clamped to the volume bounds. */
+      const vec3f clampedLocalCoordinates = clamp(localCoordinates,
+                                                  vec3f{0.0f},
+                                                  localCoordinatesUpperBound);
+
+      // "vi" means "voxelIndex"
+      const vec3i vi_0 {clampedLocalCoordinates.x,
+                        clampedLocalCoordinates.y,
+                        clampedLocalCoordinates.z};
+
+      const vec3f flc = clampedLocalCoordinates - vec3f{vi_0.x, vi_0.y, vi_0.z};
+
+      /* Compute the 1D address of the block in the volume and the voxel in the block. */
+      Address8 address8 = getVoxelAddress(clampedLocalCoordinates, vi_0);
+
+      /* split block into 24+8 bits; we'll have to do a foreach_unique */
+      /* over the upper 24 bits to satify 64-bit addressing, but at */
+      /* least the lower bits we can merge into a single loop */
+      const uint32 block_lo = address8.block & 255;
+      const uint32 block_hi = address8.block ^ block_lo;
+
+      const T *blockPtrHi = (const T*)blockMem
+                            + ((uint64)block_hi) * (VOXELS_PER_BLOCK);
+      /* TODO: interleave loads with the address computations ... or at */
+      /* least, prefetch upon the first address being known. */
+      const uint32 ofs000 = address8.voxelOfs
+        + block_lo*(VOXELS_PER_BLOCK*scale_per<T>::value);
+      const uint32 ofs001 = ofs000+address8.voxelOfs_dx;
+      const float val000  = accessArrayWithOffset(blockPtrHi,ofs000);
+      const float val001  = accessArrayWithOffset(blockPtrHi,ofs001);
+      const float val00   = val000 + flc.x * (val001 - val000);
+
+      const uint32 ofs010 = ofs000+address8.voxelOfs_dy;
+      const uint32 ofs011 = ofs001+address8.voxelOfs_dy;
+      const float val010  = accessArrayWithOffset(blockPtrHi,ofs010);
+      const float val011  = accessArrayWithOffset(blockPtrHi,ofs011);
+      const float val01   = val010 + flc.x * (val011 - val010);
+
+      const uint32 ofs100 = ofs000+address8.voxelOfs_dz;
+      const uint32 ofs101 = ofs001+address8.voxelOfs_dz;
+      const float val100  = accessArrayWithOffset(blockPtrHi,ofs100);
+      const float val101  = accessArrayWithOffset(blockPtrHi,ofs101);
+      const float val10   = val100 + flc.x * (val101 - val100);
+
+      const uint32 ofs110 = ofs010+address8.voxelOfs_dz;
+      const uint32 ofs111 = ofs011+address8.voxelOfs_dz;
+      const float val110  = accessArrayWithOffset(blockPtrHi,ofs110);
+      const float val111  = accessArrayWithOffset(blockPtrHi,ofs111);
+      const float val11   = val110 + flc.x * (val111 - val110);
+
+      /* Interpolate the voxel values. */
+      const float val0    = val00  + flc.y * (val01  - val00 );
+      const float val1    = val10  + flc.y * (val11  - val10 );
+      const float val     = val0   + flc.z * (val1   - val0  );
+
+      return val;
+    }
+
+    Address GhostBlockBrickedVolume::getIndices(const vec3i &voxelIdxInVolume) const
     {
       Address address;
 
@@ -284,6 +416,68 @@ namespace ospray {
       return address;
     }
 
+    bool GhostBlockBrickedVolume::getGhostIndices(const vec3i &voxelIdxInVolume,
+                                                  const vec3i &delta,
+                                                  Address     &address) const
+    {
+      // do not set offset value for original sample
+      if ((delta.x == 0) && (delta.y == 0) && (delta.z == 0))
+        return false;
+
+      // Compute the 3D index of the block containing the brick containing the voxel.
+      // vec3i blockIndex = voxelIdxInVolume / make_vec3i(BLOCK_WIDTH-1);
+      vec3i blockIndex = vec3i{intDiv(voxelIdxInVolume.x),
+                               intDiv(voxelIdxInVolume.y),
+                               intDiv(voxelIdxInVolume.z)};
+
+      // Compute the 3D offset of the brick within the block containing the voxel.
+      vec3i voxelIdxInBlock =
+                      voxelIdxInVolume - blockIndex * vec3i{BLOCK_WIDTH-1};
+
+      bool valid = false;
+      if ((voxelIdxInBlock.x == 0) && (delta.x == 1)) {
+        voxelIdxInBlock.x = BLOCK_WIDTH-1;
+        --blockIndex.x;
+        valid = true;
+      }
+      if ((voxelIdxInBlock.y == 0) && (delta.y == 1)) {
+        voxelIdxInBlock.y = BLOCK_WIDTH-1;
+        --blockIndex.y;
+        valid = true;
+      }
+      if ((voxelIdxInBlock.z == 0) && (delta.z == 1)) {
+        voxelIdxInBlock.z = BLOCK_WIDTH-1;
+        --blockIndex.z;
+        valid = true;
+      }
+
+      // Compute the 1D address of the block in the volume.
+      address.block = blockIndex.x
+                      + blockCount.x * (blockIndex.y
+                                        + blockCount.y * blockIndex.z);
+
+      const vec3i brickIdxInBlock {voxelIdxInBlock.x >> BRICK_BITS,
+                                   voxelIdxInBlock.y >> BRICK_BITS,
+                                   voxelIdxInBlock.z >> BRICK_BITS};
+      const vec3i voxelIdxInBrick {voxelIdxInBlock.x & BRICK_MASK,
+                                   voxelIdxInBlock.y & BRICK_MASK,
+                                   voxelIdxInBlock.z & BRICK_MASK};
+
+      // Compute the 1D address of the voxel in the block.
+      address.voxel =
+        (voxelIdxInBrick.x << (BRICK_BIT_X_LO)) |
+        (voxelIdxInBrick.y << (BRICK_BIT_Y_LO)) |
+        (voxelIdxInBrick.z << (BRICK_BIT_Z_LO)) |
+        (brickIdxInBlock.x << (BRICK_BIT_X_HI)) |
+        (brickIdxInBlock.y << (BRICK_BIT_Y_HI)) |
+        (brickIdxInBlock.z << (BRICK_BIT_Z_HI));
+
+      return valid
+             && (blockIndex.x >= 0)
+             && (blockIndex.y >= 0)
+             && (blockIndex.z >= 0);
+    }
+
     Address8 GBBV::getVoxelAddress(const vec3f &indexf,
                                    const vec3i &indexi) const
     {
@@ -304,29 +498,19 @@ namespace ospray {
 
       switch (voxel_t) {
       case OSP_UCHAR:
-        address = brickTranslation<uint8,
-                                   scale_per_uint8,
-                                   shift_per_uint8>(voxelIdxInBlock);
+        address = brickTranslation<uint8>(voxelIdxInBlock);
         break;
       case OSP_SHORT:
-        address = brickTranslation<int16,
-                                   scale_per_int16,
-                                   shift_per_int16>(voxelIdxInBlock);
+        address = brickTranslation<int16>(voxelIdxInBlock);
         break;
       case OSP_USHORT:
-        address = brickTranslation<uint16,
-                                   scale_per_uint16,
-                                   shift_per_uint16>(voxelIdxInBlock);
+        address = brickTranslation<uint16>(voxelIdxInBlock);
         break;
       case OSP_FLOAT:
-        address = brickTranslation<float,
-                                   scale_per_float,
-                                   shift_per_float>(voxelIdxInBlock);
+        address = brickTranslation<float>(voxelIdxInBlock);
         break;
       case OSP_DOUBLE:
-        address = brickTranslation<double,
-                                   scale_per_double,
-                                   shift_per_double>(voxelIdxInBlock);
+        address = brickTranslation<double>(voxelIdxInBlock);
         break;
       default:
         break;
@@ -339,7 +523,28 @@ namespace ospray {
 
     void GhostBlockBrickedVolume::constructVolumeMemory()
     {
-      NOT_IMPLEMENTED
+      freeVolumeMemory();
+
+      // Get the voxel type.
+      voxelType = getParamString("voxelType", "unspecified");
+      voxel_t   = getVoxelType();
+      voxelSize = sizeOf(voxel_t);
+
+      // Get the volume dimensions.
+      this->dimensions = getParam3i("dimensions", vec3i(0));
+      exitOnCondition(reduce_min(this->dimensions) <= 0,
+                      "invalid volume dimensions (must be set before "
+                      "calling ospSetRegion())");
+
+      // Volume size in blocks per dimension with padding to the nearest block
+      blockCount = (dimensions + (BLOCK_WIDTH-1) - 1) / (BLOCK_WIDTH-1);
+
+      // Volume size in blocks with padding.
+      const size_t numBlocks = blockCount.x * blockCount.y * blockCount.z;
+
+      // allocate the large array of blocks
+      size_t blockSize = VOXELS_PER_BLOCK * voxelSize;
+      blockMem = new byte_t[blockSize * numBlocks];
     }
 
     void GhostBlockBrickedVolume::freeVolumeMemory()
