@@ -91,6 +91,7 @@ if (OSPRAY_MODULE_CPP)
     volume/Volume.cpp
     volume/StructuredVolume.cpp
     volume/BlockBrickedVolume.cpp
+    volume/GhostBlockBrickedVolume.cpp
 
     util.cpp
   )
