@@ -97,5 +97,15 @@ namespace ospray {
       resetRay(rays[i]);
     }
 
+    inline std::pair<float, float> intersectBox(const Ray &ray,
+                                                const box3f &box)
+    {
+      const vec3f mins = (box.lower - ray.org) * rcp(ray.dir);
+      const vec3f maxs = (box.upper - ray.org) * rcp(ray.dir);
+
+      return {reduce_max(vec4f{ospcommon::min(mins, maxs), ray.t0}),
+              reduce_min(vec4f{ospcommon::max(mins, maxs), ray.t})};
+    }
+
   }// ::ospray::cpp_renderer
 } // ::ospray

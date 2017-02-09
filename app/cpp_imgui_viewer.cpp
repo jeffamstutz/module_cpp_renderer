@@ -18,6 +18,7 @@
 #include "commandline/Utility.h"
 #include "commandline/CameraParser.h"
 #include "commandline/SceneParser/trianglemesh/TriangleMeshSceneParser.h"
+#include "commandline/SceneParser/volume/VolumeSceneParser.h"
 #include "commandline/LightsParser.h"
 #include "commandline/RendererParser.h"
 
@@ -45,12 +46,49 @@ public:
   CppCameraParser() { cameraType = g_prefix + "perspective" + g_postfix; }
 };
 
-class CppSceneParser : public TriangleMeshSceneParser
+class CppSceneParser : public SceneParser
 {
 public:
-  CppSceneParser(ospray::cpp::Renderer renderer,
-                 std::string geometryType = g_prefix + "triangles" + g_postfix)
-    : TriangleMeshSceneParser(renderer, geometryType) {}
+  CppSceneParser(ospray::cpp::Renderer _renderer)
+    : renderer(_renderer) {}
+
+  std::deque<ospray::cpp::Model> model() const override { return sceneModels; }
+  std::deque<ospcommon::box3f>   bbox()  const override { return sceneBboxes; }
+
+  bool parse(int ac, const char **&av)
+  {
+    auto triangles_name = g_prefix + "triangles" + g_postfix;
+    TriangleMeshSceneParser triangleMeshParser(renderer, triangles_name);
+
+    VolumeSceneParser volumeParser(renderer);
+
+    bool gotTriangleMeshScene = triangleMeshParser.parse(ac, av);
+    bool gotVolumeScene       = volumeParser.parse(ac, av);
+
+    SceneParser *parser = nullptr;
+
+    if (gotTriangleMeshScene)
+      parser = &triangleMeshParser;
+    else if (gotVolumeScene)
+      parser = &volumeParser;
+
+    if (parser) {
+      sceneModels = parser->model();
+      sceneBboxes = parser->bbox();
+    } else {
+      auto model = ospray::cpp::Model();
+      model.commit();
+      sceneModels.push_back(model);
+    }
+
+    return parser != nullptr;
+  }
+
+private:
+
+  ospray::cpp::Renderer renderer;
+  std::deque<ospray::cpp::Model> sceneModels;
+  std::deque<ospcommon::box3f>   sceneBboxes;
 };
 
 class CppLightsParser : public LightsParser
