@@ -130,7 +130,7 @@ if (OSPRAY_MODULE_CPP)
       ospray
       ospray_commandline
       ospray_common
-      ospray_imgui3d
+      ospray_imgui3d_module
       ospray_minisg
       ospray_importer
     )
