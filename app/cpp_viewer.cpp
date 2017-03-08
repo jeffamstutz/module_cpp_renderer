@@ -23,6 +23,8 @@
 
 #include <ospray/ospray_cpp/Data.h>
 
+using namespace commandline;
+
 static std::string g_prefix  = "cpp_";
 static std::string g_postfix = "";
 
