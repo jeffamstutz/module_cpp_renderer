@@ -27,7 +27,7 @@ namespace ospray {
       std::string toString() const override;
       void commit() override;
 
-      void *beginFrame(FrameBuffer *fb);
+      void *beginFrame(FrameBuffer *fb) override;
 
       void renderSample(void *perFrameData,
                         ScreenSample &sample) const override;

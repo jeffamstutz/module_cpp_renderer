@@ -47,17 +47,17 @@ namespace ospray {
 
       // cpp_renderer::Volume interface //
 
-      float computeSample(const vec3f &worldCoordinates) const;
+      float computeSample(const vec3f &worldCoordinates) const override;
 
-      vec3f computeGradient(const vec3f &worldCoordinates) const;
+      vec3f computeGradient(const vec3f &worldCoordinates) const override;
 
-      bool intersect(Ray &ray) const;
+      bool intersect(Ray &ray) const override;
 
-      void advance(Ray &ray) const;
-      void advanceAdaptive(Ray &ray) const;
+      void advance(Ray &ray) const override;
+      void advanceAdaptive(Ray &ray) const override;
 
       void intersectIsosurface(const std::vector<float> &isovalues,
-                               Ray &ray) const;
+                               Ray &ray) const override;
 
     protected:
 

@@ -31,20 +31,20 @@ namespace ospray {
 
       virtual ~Volume() = default;
 
-      virtual std::string toString() const;
+      virtual std::string toString() const override;
 
-      virtual void commit();
+      virtual void commit() override;
 
       //! Copy voxels into the volume at the given index (non-zero return value
       //!  indicates success).
       virtual int setRegion(const void *source,
                             const vec3i &index,
-                            const vec3i &count) = 0;
+                            const vec3i &count) override = 0;
 
       //! Compute samples at the given world coordinates.
       virtual void computeSamples(float **results,
                                   const vec3f *worldCoordinates,
-                                  const size_t &count) = 0;
+                                  const size_t &count) override= 0;
 
       virtual float computeSample(const vec3f &worldCoordinates) const = 0;
 
