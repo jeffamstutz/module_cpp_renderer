@@ -112,28 +112,11 @@ if (OSPRAY_MODULE_CPP)
     ospray
     ospray_commandline
     ospray_common
-    ospray_glut3d
+    ospray_imgui3d
     ospray_minisg
     ospray_importer
     ${OPENGL_LIBRARIES}
     ${GLUT_LIBRARIES}
   )
-
-  if (OSPRAY_MODULE_OSPIMGUI)
-    ospray_create_application(ospCppImGuiViewer
-      app/cpp_imgui_viewer.cpp
-    LINK
-      glfw
-      gl3w
-      imgui
-      ${OPENGL_LIBRARIES}
-      ospray
-      ospray_commandline
-      ospray_common
-      ospray_imgui3d_module
-      ospray_minisg
-      ospray_importer
-    )
-  endif()
 
 endif()
