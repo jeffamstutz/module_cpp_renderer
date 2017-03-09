@@ -91,7 +91,7 @@ public:
     renderer.set("lights", lightArray);
   }
 
-  bool parse(int ac, const char **&av) { return false; }
+  bool parse(int ac, const char **&av) override { return false; }
 };
 
 void parseExtraParametersFromComandLine(int ac, const char **&av)
