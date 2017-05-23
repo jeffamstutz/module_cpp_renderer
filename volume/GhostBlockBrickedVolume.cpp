@@ -231,7 +231,7 @@ namespace ospray {
 
       switch (voxel_t) {
       case OSP_UCHAR:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<uint8, VOXELS_PER_BLOCK>(finalSource,
                                                   finalRegionCoords,
                                                   finalRegionSize,
@@ -239,7 +239,7 @@ namespace ospray {
         });
         break;
       case OSP_SHORT:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<int16, VOXELS_PER_BLOCK>(finalSource,
                                                   finalRegionCoords,
                                                   finalRegionSize,
@@ -247,7 +247,7 @@ namespace ospray {
         });
         break;
       case OSP_USHORT:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<uint16, VOXELS_PER_BLOCK>(finalSource,
                                                    finalRegionCoords,
                                                    finalRegionSize,
@@ -255,7 +255,7 @@ namespace ospray {
         });
         break;
       case OSP_FLOAT:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<float, VOXELS_PER_BLOCK>(finalSource,
                                                   finalRegionCoords,
                                                   finalRegionSize,
@@ -263,7 +263,7 @@ namespace ospray {
         });
         break;
       case OSP_DOUBLE:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<double, VOXELS_PER_BLOCK>(finalSource,
                                                    finalRegionCoords,
                                                    finalRegionSize,

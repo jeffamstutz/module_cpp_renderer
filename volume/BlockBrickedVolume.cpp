@@ -93,7 +93,7 @@ namespace ospray {
 
       switch (voxel_t) {
       case OSP_UCHAR:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<uint8, BLOCK_VOXEL_COUNT>(finalSource,
                                                    finalRegionCoords,
                                                    finalRegionSize,
@@ -101,7 +101,7 @@ namespace ospray {
         });
         break;
       case OSP_SHORT:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<int16, BLOCK_VOXEL_COUNT>(finalSource,
                                                    finalRegionCoords,
                                                    finalRegionSize,
@@ -109,7 +109,7 @@ namespace ospray {
         });
         break;
       case OSP_USHORT:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<uint16, BLOCK_VOXEL_COUNT>(finalSource,
                                                     finalRegionCoords,
                                                     finalRegionSize,
@@ -117,7 +117,7 @@ namespace ospray {
         });
         break;
       case OSP_FLOAT:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<float, BLOCK_VOXEL_COUNT>(finalSource,
                                                    finalRegionCoords,
                                                    finalRegionSize,
@@ -125,7 +125,7 @@ namespace ospray {
         });
         break;
       case OSP_DOUBLE:
-        parallel_for(NTASKS, [&](size_t taskIndex) {
+        tasking::parallel_for(NTASKS, [&](size_t taskIndex) {
           setVoxelValues<double, BLOCK_VOXEL_COUNT>(finalSource,
                                                     finalRegionCoords,
                                                     finalRegionSize,
