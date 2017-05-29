@@ -18,6 +18,9 @@
 #include "Renderer.h"
 #include "../util.h"
 
+#include "ospcommon/tasking/parallel_for.h"
+#include "ospray/render/LoadBalancer.h"
+
 #include <random>
 
 static thread_local std::minstd_rand generator;
@@ -49,6 +52,37 @@ namespace ospray {
       }
 
       return nullptr;
+    }
+
+    float Renderer::renderFrame(FrameBuffer *fb,
+                                const uint32 channelFlags)
+    {
+      void *perFrameData = beginFrame(fb);
+
+      tasking::parallel_for(fb->getTotalTiles(), [&](int taskIndex) {
+        const size_t numTiles_x = fb->getNumTiles().x;
+        const size_t tile_y = taskIndex / numTiles_x;
+        const size_t tile_x = taskIndex - tile_y*numTiles_x;
+        const vec2i tileID(tile_x, tile_y);
+        const int32 accumID = fb->accumID(tileID);
+
+        if (fb->tileError(tileID) <= errorThreshold)
+          return;
+
+        Tile __aligned(64) tile(tileID, fb->size, accumID);
+
+        auto numJobs = TiledLoadBalancer::numJobs(spp, accumID);
+
+        tasking::parallel_for(numJobs, [&](int tIdx) {
+          renderTile(perFrameData, tile, tIdx);
+        });
+
+        fb->setTile(tile);
+      });
+
+      endFrame(perFrameData,channelFlags);
+
+      return fb->endFrame(errorThreshold);
     }
 
     void Renderer::renderTile(void *perFrameData,Tile &tile,size_t jobID) const

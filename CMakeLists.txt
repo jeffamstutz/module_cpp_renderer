@@ -21,9 +21,12 @@ if (OSPRAY_MODULE_CPP)
   set(OSPRAY_MODULE_CPP_STREAM_SIZE ${OSPRAY_TILE_SIZE} CACHE INT "Stream size")
   add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
 
+  find_package(Boost REQUIRED COMPONENTS fiber)
+
   include_directories(
     ${CMAKE_CURRENT_LIST_DIR}/..
     ${CMAKE_CURRENT_LIST_DIR}/include
+    ${Boost_INCLUDE_DIRS}
   )
 
   if (OSPRAY_BUILD_ISA STREQUAL "AVX")
@@ -98,12 +101,17 @@ if (OSPRAY_MODULE_CPP)
 
   if (OSPRAY_USE_EMBREE_STREAMS)
     add_definitions(-DUSE_EMBREE_STREAMS)
+  else()
+    #NOTE(jda) - this restriction can be removed...
+    message(FATAL_ERROR
+            "This branch of module_cpp_renderer needs OSPRAY_USE_EMBREE_STREAMS=ON!")
   endif()
 
   ospray_create_library(ospray_module_cpp
     ${LIBRARY_SRCS}
     LINK
     ospray
+    ${Boost_LIBRARIES}
   )
 
   ospray_create_application(ospCppViewer
