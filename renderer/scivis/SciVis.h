@@ -16,14 +16,25 @@
 
 #pragma once
 
-#include "../Renderer.h"
+#define USE_FIBERED_RENDERER 1
+
+#if USE_FIBERED_RENDERER
+#  include "../FiberedRenderer.h"
+#else
+#  include "../Renderer.h"
+#endif
+
 #include "../../lights/Light.h"
 #include "SciVisShadingInfo.h"
 
 namespace ospray {
   namespace cpp_renderer {
 
+#if USE_FIBERED_RENDERER
+    struct SciVisRenderer : public ospray::cpp_renderer::FiberedRenderer
+#else
     struct SciVisRenderer : public ospray::cpp_renderer::Renderer
+#endif
     {
       std::string toString() const override;
       void commit() override;
@@ -41,12 +52,14 @@ namespace ospray {
 
       vec3f shade_ao(const DifferentialGeometry &dg,
                      const SciVisShadingInfo &info,
-                     const Ray &ray) const;
+                     const Ray &ray,
+                     void *perFrameData) const;
 
       vec3f shade_lights(const DifferentialGeometry &dg,
                          const SciVisShadingInfo &info,
                          const Ray &ray,
-                         int path_depth) const;
+                         int path_depth,
+                         void *perFrameData) const;
 
       // Data //
 

@@ -71,7 +71,11 @@ namespace ospray {
 
     void SciVisRenderer::commit()
     {
+#if USE_FIBERED_RENDERER
+      cpp_renderer::FiberedRenderer::commit();
+#else
       cpp_renderer::Renderer::commit();
+#endif
 
       auto *lightData = (Data*)getParamData("lights");
 
@@ -145,14 +149,20 @@ namespace ospray {
 
     inline vec3f SciVisRenderer::shade_ao(const DifferentialGeometry &dg,
                                           const SciVisShadingInfo &info,
-                                          const Ray &ray) const
+                                          const Ray &ray,
+                                          void *perFrameData) const
     {
       int hits = 0;
       auto aoContext = getAOContext(dg, aoDistance, epsilon);
 
       for (int i = 0; i < samplesPerFrame; i++) {
         auto ao_ray = calculateAORay(dg, aoContext);
+#if USE_FIBERED_RENDERER
+        if (dot(ao_ray.dir, dg.Ng) < 0.05f || isOccluded(ao_ray, perFrameData))
+#else
+        UNUSED(perFrameData);
         if (dot(ao_ray.dir, dg.Ng) < 0.05f || isOccluded(ao_ray))
+#endif
           hits++;
       }
 
@@ -164,7 +174,8 @@ namespace ospray {
     vec3f SciVisRenderer::shade_lights(const DifferentialGeometry &dg,
                                        const SciVisShadingInfo &info,
                                        const Ray &ray,
-                                       int path_depth) const
+                                       int path_depth,
+                                       void *perFrameData) const
     {
       const vec3f R = ray.dir - ((2.f * dot(ray.dir, dg.Ng)) * dg.Ng);
 
@@ -207,8 +218,14 @@ namespace ospray {
                                                    maxDepth - path_depth,
                                                    epsilon);
 #else
+              UNUSED(path_depth);
               float light_alpha = 1.0f;
+#  if USE_FIBERED_RENDERER
+              if (isOccluded(shadowRay, perFrameData)) {
+#  else
+              UNUSED(perFrameData);
               if (isOccluded(shadowRay)) {
+#  endif
                 light_alpha = 0.f;
               }
 #endif
@@ -226,18 +243,27 @@ namespace ospray {
     void SciVisRenderer::renderSample(void *perFrameData,
                                       ScreenSample &sample) const
     {
-      UNUSED(perFrameData);
       auto &ray = sample.ray;
 
+#if USE_FIBERED_RENDERER
+      if (traceRay(ray, perFrameData)) {
+#else
+      UNUSED(perFrameData);
       if (traceRay(ray)) {
+#endif
         auto dg = postIntersect(ray, DG_NG|DG_NS|DG_NORMALIZE|DG_FACEFORWARD|
                                      DG_MATERIALID|DG_COLOR|DG_TEXCOORD);
         auto info = computeShadingInfo(dg);
 
         sample.rgb = vec3f{0.f};
 
+#if USE_FIBERED_RENDERER
+        auto aoColor     = shade_ao(dg, info, sample.ray, perFrameData);
+        auto lightsColor = shade_lights(dg, info, sample.ray, 0, perFrameData);
+#else
         auto aoColor     = shade_ao(dg, info, sample.ray);
         auto lightsColor = shade_lights(dg, info, sample.ray, 0);
+#endif
 
         sample.rgb = aoColor + lightsColor;
 
@@ -252,8 +278,9 @@ namespace ospray {
       return new SciVisMaterial;
     }
 
-    OSP_REGISTER_RENDERER(SciVisRenderer, cpp_scivis);
-    OSP_REGISTER_RENDERER(SciVisRenderer, cpp_sv);
+  } // ::ospray::cpp_renderer
 
-  }// namespace cpp_renderer
-}// namespace ospray
+  OSP_REGISTER_RENDERER(cpp_renderer::SciVisRenderer, cpp_scivis);
+  OSP_REGISTER_RENDERER(cpp_renderer::SciVisRenderer, cpp_sv);
+
+} // ::ospray

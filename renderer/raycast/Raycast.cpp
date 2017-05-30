@@ -57,12 +57,17 @@ namespace ospray {
       return "ospray::cpp_renderer::RaycastRenderer";
     }
 
-    void RaycastRenderer::renderSample(void */*perFrameData*/,
+    void RaycastRenderer::renderSample(void *perFrameData,
                                        ScreenSample &screenSample) const
     {
       auto &ray = screenSample.ray;
 
+#if USE_FIBERED_RENDERER
+      if (traceRay(ray, perFrameData)) {
+#else
+      UNUSED(perFrameData);
       if (traceRay(ray)) {
+#endif
 #if 1
         const float c =
             0.2f + 0.8f * ospcommon::abs(dot(normalize(ray.Ng), ray.dir));
@@ -88,12 +93,13 @@ namespace ospray {
       return new RaycastMaterial;
     }
 
-    OSP_REGISTER_RENDERER(RaycastRenderer, cpp_raycast);
-
     extern "C" void ospray_init_module_cpp()
     {
       printf("Loaded plugin 'cpp' ...\n");
     }
 
-  }// namespace cpp_renderer
-}// namespace ospray
+  } // ::ospray::cpp_renderer
+
+  OSP_REGISTER_RENDERER(cpp_renderer::RaycastRenderer, cpp_raycast);
+
+} // ::ospray

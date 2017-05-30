@@ -16,16 +16,22 @@
 
 #pragma once
 
-// embree
-#include "embree2/rtcore.h"
+#define USE_FIBERED_RENDERER 1
 
-#include "../camera/Camera.h"
-#include "../Renderer.h"
+#if USE_FIBERED_RENDERER
+#  include "../FiberedRenderer.h"
+#else
+#  include "../Renderer.h"
+#endif
 
 namespace ospray {
   namespace cpp_renderer {
 
+#if USE_FIBERED_RENDERER
+    struct RaycastRenderer : public ospray::cpp_renderer::FiberedRenderer
+#else
     struct RaycastRenderer : public ospray::cpp_renderer::Renderer
+#endif
     {
       std::string toString() const override;
 
