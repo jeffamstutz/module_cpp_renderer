@@ -104,10 +104,6 @@ if (OSPRAY_MODULE_CPP)
 
   if (OSPRAY_USE_EMBREE_STREAMS)
     add_definitions(-DUSE_EMBREE_STREAMS)
-  else()
-    #NOTE(jda) - this restriction can be removed...
-    message(FATAL_ERROR
-            "This branch of module_cpp_renderer needs OSPRAY_USE_EMBREE_STREAMS=ON!")
   endif()
 
   ospray_create_library(ospray_module_cpp

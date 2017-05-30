@@ -63,7 +63,6 @@ namespace ospray {
       const float spp_inv = 1.f / spp;
 
       const auto begin = jobID * RENDERTILE_PIXELS_PER_JOB;
-      const auto end   = begin + RENDERTILE_PIXELS_PER_JOB;
       const auto startSampleID = ospcommon::max(tile.accumID, 0)*spp;
 
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
@@ -78,12 +77,17 @@ namespace ospray {
           if (ray_bundle.empty())
             return;
 
+#if USE_EMBREE_STREAMS
           RTCIntersectContext ctx{RTC_INTERSECT_INCOHERENT, nullptr};
-#if 0
           rtcIntersect1Mp(model->embreeSceneHandle, &ctx,
                           (RTCRay**)ray_bundle.data(), ray_bundle.size());
 #else
-          return;
+          for (auto ray : ray_bundle) {
+            if (rayIsActive(*ray)) {
+              rtcIntersect(model->embreeSceneHandle,
+                           reinterpret_cast<RTCRay&>(*ray));
+            }
+          }
 #endif
         }
       });
