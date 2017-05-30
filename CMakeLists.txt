@@ -40,6 +40,7 @@ if (OSPRAY_MODULE_CPP)
 
   set(LIBRARY_SRCS
 
+    common/concurrent_for.h
     common/simd.h
 
     camera/Camera.h
@@ -61,6 +62,7 @@ if (OSPRAY_MODULE_CPP)
     lights/AmbientLight.cpp
     lights/DirectionalLight.cpp
 
+    renderer/FiberedRenderer.cpp
     renderer/Renderer.cpp
     renderer/SimdRenderer.cpp
 

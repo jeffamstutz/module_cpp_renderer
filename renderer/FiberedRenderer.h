@@ -29,7 +29,7 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    struct Renderer : public ospray::Renderer
+    struct FiberedRenderer : public ospray::Renderer
     {
       virtual std::string toString() const override;
       virtual void commit() override;
@@ -60,20 +60,20 @@ namespace ospray {
 
     // Inlined member functions ///////////////////////////////////////////////
 
-    inline bool Renderer::traceRay(Ray &ray) const
+    inline bool FiberedRenderer::traceRay(Ray &ray) const
     {
       rtcIntersect(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
       return ray.hitSomething();
     }
 
-    inline bool Renderer::isOccluded(Ray &ray) const
+    inline bool FiberedRenderer::isOccluded(Ray &ray) const
     {
       rtcOccluded(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
       return ray.hitSomething();
     }
 
-    inline DifferentialGeometry Renderer::postIntersect(const Ray &ray,
-                                                        int flags) const
+    inline DifferentialGeometry FiberedRenderer::postIntersect(const Ray &ray,
+                                                               int flags) const
     {
       DifferentialGeometry dg;
 

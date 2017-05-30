@@ -60,7 +60,11 @@ namespace ospray {
 
     void SimpleAORenderer::commit()
     {
+#if USE_FIBERED_RENDERER
+      ospray::cpp_renderer::FiberedRenderer::commit();
+#else
       ospray::cpp_renderer::Renderer::commit();
+#endif
       samplesPerFrame = getParam1i("aoSamples", 1);
       aoRayLength     = getParam1f("aoDistance", 1e20f);
     }
@@ -123,7 +127,8 @@ namespace ospray {
       return new SimpleAOMaterial;
     }
 
-    OSP_REGISTER_RENDERER(SimpleAORenderer, cpp_ao);
+  } // ::ospray::cpp_renderer
 
-  }// namespace cpp_renderer
-}// namespace ospray
+  OSP_REGISTER_RENDERER(cpp_renderer::SimpleAORenderer, cpp_ao);
+
+} // ::ospray

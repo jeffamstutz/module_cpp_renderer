@@ -15,8 +15,9 @@
 // ======================================================================== //
 
 // ospray
-#include "Renderer.h"
+#include "FiberedRenderer.h"
 #include "../util.h"
+#include "../common/concurrent_for.h"
 
 #include "ospcommon/tasking/parallel_for.h"
 #include "ospray/render/LoadBalancer.h"
@@ -28,12 +29,12 @@ static thread_local std::minstd_rand generator;
 namespace ospray {
   namespace cpp_renderer {
 
-    std::string Renderer::toString() const
+    std::string FiberedRenderer::toString() const
     {
       return "ospray::cpp_renderer::Renderer";
     }
 
-    void Renderer::commit()
+    void FiberedRenderer::commit()
     {
       ospray::Renderer::commit();
       currentCamera = dynamic_cast<Camera*>(getParamObject("camera"));
@@ -41,7 +42,7 @@ namespace ospray {
       precomputeZOrder();
     }
 
-    void *Renderer::beginFrame(FrameBuffer *fb)
+    void *FiberedRenderer::beginFrame(FrameBuffer *fb)
     {
       currentFB = fb;
       fb->beginFrame();
@@ -54,7 +55,9 @@ namespace ospray {
       return nullptr;
     }
 
-    void Renderer::renderTile(void *perFrameData,Tile &tile,size_t jobID) const
+    void FiberedRenderer::renderTile(void *perFrameData,
+                                     Tile &tile,
+                                     size_t jobID) const
     {
       const float spp_inv = 1.f / spp;
 
@@ -64,7 +67,9 @@ namespace ospray {
 
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
 
-      for (auto i = begin; i < end; ++i) {
+      concurrent_for(RENDERTILE_PIXELS_PER_JOB, [&](int fiberID) {
+        const int i = fiberID + begin;
+
         ScreenSample screenSample;
         screenSample.sampleID.x = tile.region.lower.x + z_order.xs[i];
         screenSample.sampleID.y = tile.region.lower.y + z_order.ys[i];
@@ -74,7 +79,7 @@ namespace ospray {
 
         if ((sampleID.x >= currentFB->size.x) ||
             (sampleID.y >= currentFB->size.y))
-          continue;
+          return;
 
         float tMax = inf;
 #if 0
@@ -123,10 +128,11 @@ namespace ospray {
           tile.a[pixel] = alpha;
           tile.z[pixel] = z;
         }
-      }
+      });
     }
 
-    void Renderer::endFrame(void *perFrameData, const int32 fbChannelFlags)
+    void FiberedRenderer::endFrame(void *perFrameData,
+                                   const int32 fbChannelFlags)
     {
       UNUSED(perFrameData, fbChannelFlags);
       // NOTE(jda) - override to *not* run default behavior

@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2015 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,38 +16,31 @@
 
 #pragma once
 
-#define USE_FIBERED_RENDERER 1
+#include "ospcommon/TypeTraits.h"
 
-#if USE_FIBERED_RENDERER
-#  include "../FiberedRenderer.h"
-#else
-#  include "../Renderer.h"
-#endif
+#include <boost/fiber/all.hpp>
 
 namespace ospray {
   namespace cpp_renderer {
 
-#if USE_FIBERED_RENDERER
-    struct SimpleAORenderer : public ospray::cpp_renderer::FiberedRenderer
-#else
-    struct SimpleAORenderer : public ospray::cpp_renderer::Renderer
-#endif
+    // NOTE(jda) - This abstraction wraps "fork-join" parallelism, with an
+    //             implied synchronizsation after all of the tasks have run.
+    template<typename FCN_T>
+    inline void concurrent_for(int nFibers, FCN_T&& fcn)
     {
-      std::string toString() const override;
-      void commit() override;
+      using namespace ospcommon::traits;
+      static_assert(has_operator_method_with_integral_param<FCN_T>::value,
+                    "ospray::cpp_renderer::concurrent_for() requires FCN_T"
+                    " to implement operator() with a single 'int' parameter.");
 
-      void renderSample(void *perFrameData,
-                        ScreenSample &sample) const override;
+      std::vector<boost::fibers::fiber> fibers;
 
-      ospray::Material *createMaterial(const char *type) override;
+      for (int i = 0; i < nFibers; ++i)
+        fibers.emplace_back(fcn, i);
 
-    private:
+      for (auto &f : fibers)
+        f.join();
+    }
 
-      void shade_ao(ScreenSample &sample) const;
-
-      int   samplesPerFrame{1};
-      float aoRayLength{1e20f};
-    };
-
-  }// namespace cpp_renderer
-}// namespace ospray
+  } // ::ospray::cpp_renderer
+} //::ospray
