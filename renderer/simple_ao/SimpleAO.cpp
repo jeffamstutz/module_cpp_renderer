@@ -112,9 +112,13 @@ namespace ospray {
     void SimpleAORenderer::renderSample(void *perFrameData,
                                         ScreenSample &sample) const
     {
+#if USE_FIBERED_RENDERER
+      if (traceRay(sample.ray, perFrameData)) {
+#else
       UNUSED(perFrameData);
 
       if (traceRay(sample.ray)) {
+#endif
         shade_ao(sample);
       } else {
         sample.rgb = bgColor;

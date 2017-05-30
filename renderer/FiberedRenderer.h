@@ -26,6 +26,8 @@
 #include "../common/ScreenSample.h"
 #include "../geometry/Geometry.h"
 
+#include <boost/fiber/all.hpp>
+
 namespace ospray {
   namespace cpp_renderer {
 
@@ -48,7 +50,7 @@ namespace ospray {
 
     protected:
 
-      bool traceRay(Ray &ray) const;
+      bool traceRay(Ray &ray, void* _ray_bundle) const;
       bool isOccluded(Ray &ray) const;
 
       DifferentialGeometry postIntersect(const Ray &ray, int flags) const;
@@ -60,9 +62,11 @@ namespace ospray {
 
     // Inlined member functions ///////////////////////////////////////////////
 
-    inline bool FiberedRenderer::traceRay(Ray &ray) const
+    inline bool FiberedRenderer::traceRay(Ray &ray, void* _ray_bundle) const
     {
-      rtcIntersect(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
+      auto &ray_bundle = *(std::vector<Ray*>*)_ray_bundle;
+      ray_bundle.push_back(&ray);
+      boost::this_fiber::yield();
       return ray.hitSomething();
     }
 

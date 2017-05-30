@@ -17,6 +17,7 @@
 // ospray
 #include "FiberedRenderer.h"
 #include "../util.h"
+#include "../common/concurrent_async.h"
 #include "../common/concurrent_for.h"
 
 #include "ospcommon/tasking/parallel_for.h"
@@ -66,6 +67,31 @@ namespace ospray {
       const auto startSampleID = ospcommon::max(tile.accumID, 0)*spp;
 
       static std::uniform_real_distribution<float> distribution {0.f, 1.f};
+
+      std::vector<Ray*> ray_bundle;
+      ray_bundle.reserve(RENDERTILE_PIXELS_PER_JOB);
+
+      auto fiber = concurrent_async([&]() {
+        while (true) {
+          boost::this_fiber::yield();
+
+          if (ray_bundle.empty())
+            return;
+
+          RTCIntersectContext ctx{RTC_INTERSECT_INCOHERENT, nullptr};
+#if 0
+          rtcIntersect1Mp(model->embreeSceneHandle, &ctx,
+                          (RTCRay**)ray_bundle.data(), ray_bundle.size());
+#else
+          return;
+#endif
+        }
+      });
+
+      //////////////////////////////////
+      //TODO: don't hijack perFrameData!
+      //////////////////////////////////
+      perFrameData = &ray_bundle;
 
       concurrent_for(RENDERTILE_PIXELS_PER_JOB, [&](int fiberID) {
         const int i = fiberID + begin;
@@ -129,6 +155,8 @@ namespace ospray {
           tile.z[pixel] = z;
         }
       });
+
+      fiber.join();
     }
 
     void FiberedRenderer::endFrame(void *perFrameData,

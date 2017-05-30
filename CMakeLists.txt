@@ -40,6 +40,7 @@ if (OSPRAY_MODULE_CPP)
 
   set(LIBRARY_SRCS
 
+    common/concurrent_async.h
     common/concurrent_for.h
     common/simd.h
 
