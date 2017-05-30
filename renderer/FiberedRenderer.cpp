@@ -89,6 +89,8 @@ namespace ospray {
             }
           }
 #endif
+
+          ray_bundle.clear();
         }
       });
 
