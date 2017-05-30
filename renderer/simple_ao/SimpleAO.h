@@ -43,7 +43,11 @@ namespace ospray {
 
     private:
 
+#if USE_FIBERED_RENDERER
+      void shade_ao(ScreenSample &sample, void* pfd) const;
+#else
       void shade_ao(ScreenSample &sample) const;
+#endif
 
       int   samplesPerFrame{1};
       float aoRayLength{1e20f};

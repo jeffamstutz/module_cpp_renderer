@@ -77,10 +77,12 @@ namespace ospray {
           if (ray_bundle.empty())
             return;
 
-#if USE_EMBREE_STREAMS
-          RTCIntersectContext ctx{RTC_INTERSECT_INCOHERENT, nullptr};
-          rtcIntersect1Mp(model->embreeSceneHandle, &ctx,
-                          (RTCRay**)ray_bundle.data(), ray_bundle.size());
+#ifdef USE_EMBREE_STREAMS
+          if (!ray_bundle.empty()) {
+            RTCIntersectContext ctx{RTC_INTERSECT_INCOHERENT, nullptr};
+            rtcIntersect1Mp(model->embreeSceneHandle, &ctx,
+                            (RTCRay**)ray_bundle.data(), ray_bundle.size());
+          }
 #else
           for (auto ray : ray_bundle) {
             if (rayIsActive(*ray)) {

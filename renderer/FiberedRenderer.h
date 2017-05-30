@@ -51,7 +51,7 @@ namespace ospray {
     protected:
 
       bool traceRay(Ray &ray, void* _ray_bundle) const;
-      bool isOccluded(Ray &ray) const;
+      bool isOccluded(Ray &ray, void *_ray_bundle) const;
 
       DifferentialGeometry postIntersect(const Ray &ray, int flags) const;
 
@@ -70,9 +70,11 @@ namespace ospray {
       return ray.hitSomething();
     }
 
-    inline bool FiberedRenderer::isOccluded(Ray &ray) const
+    inline bool FiberedRenderer::isOccluded(Ray &ray, void* _ray_bundle) const
     {
-      rtcOccluded(model->embreeSceneHandle, reinterpret_cast<RTCRay&>(ray));
+      auto &ray_bundle = *(std::vector<Ray*>*)_ray_bundle;
+      ray_bundle.push_back(&ray);
+      boost::this_fiber::yield();
       return ray.hitSomething();
     }
 

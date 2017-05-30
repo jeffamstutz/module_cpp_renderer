@@ -69,7 +69,12 @@ namespace ospray {
       aoRayLength     = getParam1f("aoDistance", 1e20f);
     }
 
+#if USE_FIBERED_RENDERER
+    inline void SimpleAORenderer::shade_ao(ScreenSample &sample,
+                                           void* pfd) const
+#else
     inline void SimpleAORenderer::shade_ao(ScreenSample &sample) const
+#endif
     {
       vec3f superColor{1.f};
       auto &color = sample.rgb;
@@ -100,7 +105,11 @@ namespace ospray {
       for (int i = 0; i < samplesPerFrame; i++) {
         auto ao_ray = calculateAORay(dg, aoContext);
         ao_ray.t = aoRayLength;
+#if USE_FIBERED_RENDERER
+        if (dot(ao_ray.dir, dg.Ns) < 0.05f || isOccluded(ao_ray, pfd))
+#else
         if (dot(ao_ray.dir, dg.Ns) < 0.05f || isOccluded(ao_ray))
+#endif
           hits++;
       }
 
@@ -119,7 +128,12 @@ namespace ospray {
 
       if (traceRay(sample.ray)) {
 #endif
+
+#if USE_FIBERED_RENDERER
+        shade_ao(sample, perFrameData);
+#else
         shade_ao(sample);
+#endif
       } else {
         sample.rgb = bgColor;
       }
