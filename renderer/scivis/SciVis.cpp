@@ -257,13 +257,8 @@ namespace ospray {
 
         sample.rgb = vec3f{0.f};
 
-#if USE_FIBERED_RENDERER
         auto aoColor     = shade_ao(dg, info, sample.ray, perFrameData);
         auto lightsColor = shade_lights(dg, info, sample.ray, 0, perFrameData);
-#else
-        auto aoColor     = shade_ao(dg, info, sample.ray);
-        auto lightsColor = shade_lights(dg, info, sample.ray, 0);
-#endif
 
         sample.rgb = aoColor + lightsColor;
 
