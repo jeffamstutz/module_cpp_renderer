@@ -33,7 +33,7 @@ namespace ospray {
                     "ospray::cpp_renderer::concurrent_async() requires FCN_T"
                     " to implement operator() with no arguments.");
 
-      return {fcn};
+      return {boost::fibers::launch::post, fcn};
     }
 
   } // ::ospray::cpp_renderer
