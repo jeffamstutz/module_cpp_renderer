@@ -27,7 +27,11 @@ namespace ospray {
     {
       const auto &N = ray.Ng;
       auto f = ospcommon::rcp(simd::sqrt(dot(N,N)));
+#if USE_PSIMD
+      f = psimd::select(dot(N,ray.dir) >= 0.f, -f, f);
+#else
       f = simd::select(dot(N,ray.dir) >= 0.f, -f, f);
+#endif
       return f*N;
     }
 
@@ -63,7 +67,11 @@ namespace ospray {
     inline simd::vfloat rotate(simd::vfloat x, simd::vfloat dx)
     {
       x += dx;
+#if USE_PSIMD
+      return psimd::select(x >= 1.f, x - 1.f, x);
+#else
       return simd::select(x >= 1.f, x - 1.f, x);
+#endif
     }
 
     inline simd::vec3f getRandomDir(const simd::vec3f &biNorm0,

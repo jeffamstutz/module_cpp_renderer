@@ -121,7 +121,11 @@ namespace ospray {
         auto rayOccluded = isOccluded(active, ao_ray) ||
                            dot(ao_ray.dir, dg.Ns) < 0.05f;
 
+#if USE_PSIMD
+        hits = psimd::select(rayOccluded, hits+1, hits);
+#else
         hits = simd::select(rayOccluded, hits+1, hits);
+#endif
       }
 
       auto diffuse = simd::abs(dot(dg.Ns, ray.dir));
@@ -136,7 +140,11 @@ namespace ospray {
         color = simd::select(active, superColor*diffuse, simd::vec3f{bgColor});
       }
 
+#if USE_PSIMD
+      sample.alpha = psimd::select(active, simd::vfloat{1.f}, sample.alpha);
+#else
       sample.alpha = simd::select(active, simd::vfloat{1.f}, sample.alpha);
+#endif
     }
 
     void SimdSimpleAORenderer::renderSample(simd::vmaski active,

@@ -95,8 +95,13 @@ namespace ospray {
           });
 
           sample.rgb   = simd::select(hit, col,   simd::vec3f{bgColor});
+#if USE_PSIMD
+          sample.z     = psimd::select(hit, ray.t, sample.z);
+          sample.alpha = psimd::select(hit, vfloat(1.f),   sample.alpha);
+#else
           sample.z     = simd::select(hit, ray.t, sample.z);
           sample.alpha = simd::select(hit, 1.f,   sample.alpha);
+#endif
         }
       );
     }

@@ -37,7 +37,10 @@ if (OSPRAY_MODULE_CPP)
 
   set(LIBRARY_SRCS
 
+    common/bsimd_impl.h
     common/simd.h
+    common/psimd.h
+    common/psimd_impl.h
 
     camera/Camera.h
     camera/CameraN.h
