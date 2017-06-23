@@ -77,13 +77,9 @@ if (OSPRAY_MODULE_CPP)
     renderer/simple_ao/StreamSimpleAO.cpp
 
     # Simd
-    renderer/StreamSimdRenderer.cpp
     renderer/raycast/SimdRaycast.cpp
     renderer/simple_ao/ao_util_simd.h
     renderer/simple_ao/SimdSimpleAO.cpp
-
-    # Simd Stream
-    renderer/raycast/StreamSimdRaycast.cpp
 
     transferFunction/TransferFunction.cpp
     transferFunction/LinearTransferFunction.cpp
