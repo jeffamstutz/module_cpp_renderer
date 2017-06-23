@@ -39,7 +39,6 @@ if (OSPRAY_MODULE_CPP)
 
     common/bsimd_impl.h
     common/simd.h
-    common/psimd.h
     common/psimd_impl.h
 
     camera/Camera.h

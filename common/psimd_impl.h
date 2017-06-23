@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "psimd.h"
+#include "psimd/psimd.h"
 
 #include <cstdint>
 
