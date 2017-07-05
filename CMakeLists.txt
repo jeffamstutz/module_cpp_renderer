@@ -23,7 +23,6 @@ find_package(ospray REQUIRED)
 include(${OSPRAY_USE_FILE})
 
 ###STUFF MISSING FROM OSPRAY_USE_FILE###
-#include(GNUInstallDirs)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-narrowing")
 #########################################
 

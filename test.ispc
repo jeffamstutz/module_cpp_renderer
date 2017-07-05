@@ -14,6 +14,8 @@
 // limitations under the License.                                           //
 // ======================================================================== //
 
+#include "SDK/camera/Camera.ih"// <-- check ispc include directories
+
 export void hello_world()
 {
   print("Hello World!\n");

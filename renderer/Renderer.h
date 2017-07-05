@@ -17,7 +17,7 @@
 #pragma once
 
 // ospray
-#include "render/Renderer.h"
+#include "SDK/render/Renderer.h"
 // embree
 #include "embree2/rtcore.h"
 
