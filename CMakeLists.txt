@@ -14,105 +14,118 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-option(OSPRAY_MODULE_CPP "Build 'C++' module (renderers in all C++ code)" ON)
+cmake_minimum_required(VERSION 2.8)
 
-if (OSPRAY_MODULE_CPP)
+project(module_cpp_renderer)
 
-  set(OSPRAY_MODULE_CPP_STREAM_SIZE ${OSPRAY_TILE_SIZE} CACHE INT "Stream size")
-  add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
+find_package(ospray REQUIRED)
 
-  include_directories(
-    ${CMAKE_CURRENT_LIST_DIR}/..
-    ${CMAKE_CURRENT_LIST_DIR}/include
-  )
+include(${OSPRAY_USE_FILE})
 
-  if (OSPRAY_BUILD_ISA STREQUAL "AVX")
-    set(CMAKE_CXX_FLAGS "-mavx ${CMAKE_CXX_FLAGS}")
-  elseif (OSPRAY_BUILD_ISA STREQUAL "AVX2" OR OSPRAY_BUILD_ISA STREQUAL "AVX512")
-    set(CMAKE_CXX_FLAGS "-mavx2 ${CMAKE_CXX_FLAGS}")
-  elseif (OSPRAY_BUILD_ISA STREQUAL "ALL")
-    message(FATAL_ERROR
-            "Please choose only one build ISA when building the C++ module")
-  endif()
+###STUFF MISSING FROM OSPRAY_USE_FILE###
 
-  set(LIBRARY_SRCS
+include(../ospray/cmake/configure_embree.cmake)
 
-    common/simd.h
+########################################
 
-    camera/Camera.h
-    camera/CameraN.h
-    camera/Perspective.cpp
-    camera/PerspectiveN.cpp
+set(OSPRAY_MODULE_CPP_STREAM_SIZE ${OSPRAY_TILE_SIZE} CACHE INT "Stream size")
+add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
 
-    common/DifferentialGeometry.h
-    common/DifferentialGeometryN.h
-    common/Ray.h
-    common/RayN.h
-    common/ScreenSample.h
-    common/ScreenSampleN.h
+include_directories(
+  ${CMAKE_CURRENT_LIST_DIR}/..
+  ${CMAKE_CURRENT_LIST_DIR}/include
+)
 
-    geometry/Geometry.h
-    geometry/TriangleMesh.cpp
-
-    lights/Light.cpp
-    lights/AmbientLight.cpp
-    lights/DirectionalLight.cpp
-
-    renderer/Renderer.cpp
-    renderer/SimdRenderer.cpp
-
-    # Scalar
-    renderer/raycast/Raycast.cpp
-    renderer/scivis/SciVis.cpp
-    renderer/scivis/SciVisShadingInfo.h
-    renderer/simple_ao/ao_util.cpp
-    renderer/simple_ao/SimpleAO.cpp
-    renderer/volume/DVR.cpp
-
-    # Stream
-    common/Stream.h
-    renderer/StreamRenderer.cpp
-    renderer/raycast/StreamRaycast.cpp
-    renderer/scivis/StreamSciVis.cpp
-    renderer/simple_ao/StreamSimpleAO.cpp
-
-    # Simd
-    renderer/raycast/SimdRaycast.cpp
-    renderer/simple_ao/ao_util_simd.h
-    renderer/simple_ao/SimdSimpleAO.cpp
-
-    transferFunction/TransferFunction.cpp
-    transferFunction/LinearTransferFunction.cpp
-
-    volume/Volume.cpp
-    volume/StructuredVolume.cpp
-    volume/BlockBrickedVolume.cpp
-    volume/GhostBlockBrickedVolume.cpp
-
-    util.cpp
-  )
-
-  if (OSPRAY_USE_EMBREE_STREAMS)
-    add_definitions(-DUSE_EMBREE_STREAMS)
-  endif()
-
-  ospray_create_library(ospray_module_cpp
-    ${LIBRARY_SRCS}
-    LINK
-    ospray
-  )
-
-  ospray_create_application(ospCppViewer
-    app/cpp_viewer.cpp
-  LINK
-    ospray
-    ospray_commandline
-    ospray_common
-    ospray_imgui3d
-    ospray_minisg
-    ospray_importer
-    ${OPENGL_LIBRARIES}
-    ${GLUT_LIBRARIES}
-  )
-
+if (OSPRAY_BUILD_ISA STREQUAL "AVX")
+  set(CMAKE_CXX_FLAGS "-mavx ${CMAKE_CXX_FLAGS}")
+elseif (OSPRAY_BUILD_ISA STREQUAL "AVX2" OR OSPRAY_BUILD_ISA STREQUAL "AVX512")
+  set(CMAKE_CXX_FLAGS "-mavx2 ${CMAKE_CXX_FLAGS}")
+elseif (OSPRAY_BUILD_ISA STREQUAL "ALL")
+  set(CMAKE_CXX_FLAGS "-mavx2 ${CMAKE_CXX_FLAGS}")
+  #message(FATAL_ERROR
+  #        "Please choose only one build ISA when building the C++ module")
 endif()
+
+set(LIBRARY_SRCS
+
+  common/simd.h
+
+  camera/Camera.h
+  camera/CameraN.h
+  camera/Perspective.cpp
+  camera/PerspectiveN.cpp
+
+  common/DifferentialGeometry.h
+  common/DifferentialGeometryN.h
+  common/Ray.h
+  common/RayN.h
+  common/ScreenSample.h
+  common/ScreenSampleN.h
+
+  geometry/Geometry.h
+  geometry/TriangleMesh.cpp
+
+  lights/Light.cpp
+  lights/AmbientLight.cpp
+  lights/DirectionalLight.cpp
+
+  renderer/Renderer.cpp
+  renderer/SimdRenderer.cpp
+
+  # Scalar
+  renderer/raycast/Raycast.cpp
+  renderer/scivis/SciVis.cpp
+  renderer/scivis/SciVisShadingInfo.h
+  renderer/simple_ao/ao_util.cpp
+  renderer/simple_ao/SimpleAO.cpp
+  renderer/volume/DVR.cpp
+
+  # Stream
+  common/Stream.h
+  renderer/StreamRenderer.cpp
+  renderer/raycast/StreamRaycast.cpp
+  renderer/scivis/StreamSciVis.cpp
+  renderer/simple_ao/StreamSimpleAO.cpp
+
+  # Simd
+  renderer/raycast/SimdRaycast.cpp
+  renderer/simple_ao/ao_util_simd.h
+  renderer/simple_ao/SimdSimpleAO.cpp
+
+  transferFunction/TransferFunction.cpp
+  transferFunction/LinearTransferFunction.cpp
+
+  volume/Volume.cpp
+  volume/StructuredVolume.cpp
+  volume/BlockBrickedVolume.cpp
+  volume/GhostBlockBrickedVolume.cpp
+
+  util.cpp
+)
+
+if (OSPRAY_USE_EMBREE_STREAMS)
+  add_definitions(-DUSE_EMBREE_STREAMS)
+endif()
+
+ospray_create_library(ispc_test_compile
+  test.ispc
+)
+
+ospray_create_library(ospray_module_cpp
+  ${LIBRARY_SRCS}
+  LINK
+  ospray
+)
+
+#ospray_create_application(ospCppViewer
+#  app/cpp_viewer.cpp
+#LINK
+#  ospray
+#  ospray_commandline
+#  ospray_common
+#  ospray_imgui3d
+#  ospray_minisg
+#  ospray_importer
+#  ${OPENGL_LIBRARIES}
+#  ${GLUT_LIBRARIES}
+#)
