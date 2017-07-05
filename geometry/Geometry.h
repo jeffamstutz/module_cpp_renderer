@@ -18,7 +18,7 @@
 
 #include "../common/DifferentialGeometry.h"
 #include "../common/Ray.h"
-#include "geometry/Geometry.h"
+#include "SDK/geometry/Geometry.h"
 
 namespace ospray {
   namespace cpp_renderer {

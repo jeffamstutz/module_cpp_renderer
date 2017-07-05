@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "transferFunction/TransferFunction.h"
+#include "SDK/transferFunction/TransferFunction.h"
 
 namespace ospray {
   namespace cpp_renderer {

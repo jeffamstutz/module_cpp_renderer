@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "lights/Light.h"
+#include "SDK/lights/Light.h"
 #include "../common/DifferentialGeometry.h"
 
 namespace ospray {

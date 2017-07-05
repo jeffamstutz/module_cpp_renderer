@@ -19,7 +19,7 @@
 // ospray_cpp
 #include "simd.h"
 // ospray
-#include "ospray/common/OSPCommon.h"
+#include "SDK/common/OSPCommon.h"
 // embree
 #include "embree2/rtcore.h"
 

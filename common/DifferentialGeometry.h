@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "common/Material.h"
+#include "SDK/common/Material.h"
 #include "geometry/Geometry.h"
 
 #include "Stream.h"

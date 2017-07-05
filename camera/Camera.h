@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "camera/Camera.h"
+#include "SDK/camera/Camera.h"
 #include "../common/Ray.h"
 
 namespace ospray {

@@ -23,8 +23,9 @@ find_package(ospray REQUIRED)
 include(${OSPRAY_USE_FILE})
 
 ###STUFF MISSING FROM OSPRAY_USE_FILE###
-
-include(../ospray/cmake/configure_embree.cmake)
+#include(GNUInstallDirs)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-narrowing")
+#########################################
 
 set(OSPRAY_MODULE_CPP_STREAM_SIZE ${OSPRAY_TILE_SIZE} CACHE INT "Stream size")
 add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
@@ -32,6 +33,7 @@ add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
 include_directories(
   ${CMAKE_CURRENT_LIST_DIR}/..
   ${CMAKE_CURRENT_LIST_DIR}/include
+  ${OSPRAY_INCLUDE_DIRS}
 )
 
 if (OSPRAY_BUILD_ISA STREQUAL "AVX")
@@ -105,14 +107,11 @@ if (OSPRAY_USE_EMBREE_STREAMS)
   add_definitions(-DUSE_EMBREE_STREAMS)
 endif()
 
-ospray_create_library(ispc_test_compile
-  test.ispc
-)
-
 ospray_create_library(ospray_module_cpp
   ${LIBRARY_SRCS}
+  test.ispc
   LINK
-  ospray
+  ${OSPRAY_LIBRARIES}
 )
 
 #ospray_create_application(ospCppViewer

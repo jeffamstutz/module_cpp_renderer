@@ -17,7 +17,7 @@
 #pragma once
 
 // ospray
-#include "volume/Volume.h"
+#include "SDK/volume/Volume.h"
 // cpp_renderer
 #include "../common/Ray.h"
 #include "../transferFunction/TransferFunction.h"

@@ -19,7 +19,7 @@
 // cpp_renderer
 #include "../common/RayN.h"
 // ospray
-#include "camera/Camera.h"
+#include "SDK/camera/Camera.h"
 
 namespace ospray {
   namespace cpp_renderer {

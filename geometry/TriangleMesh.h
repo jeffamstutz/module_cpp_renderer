@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "../geometry/Geometry.h"
+#include "Geometry.h"
 
 namespace ospray {
   namespace cpp_renderer {
