@@ -26,8 +26,6 @@ include(${OSPRAY_USE_FILE})
 
 include(../ospray/cmake/configure_embree.cmake)
 
-########################################
-
 set(OSPRAY_MODULE_CPP_STREAM_SIZE ${OSPRAY_TILE_SIZE} CACHE INT "Stream size")
 add_definitions(-DSTREAM_SIZE=${OSPRAY_MODULE_CPP_STREAM_SIZE})
 

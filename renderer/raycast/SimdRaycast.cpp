@@ -83,8 +83,13 @@ namespace ospray {
         });
 
         screenSample.rgb   = simd::select(hit, col, simd::vec3f{bgColor});
+#if USE_PSIMD
+        screenSample.z     = psimd::select(hit, ray.t, screenSample.z);
+        screenSample.alpha = psimd::select(hit, vfloat(1.f), screenSample.alpha);
+#else
         screenSample.z     = simd::select(hit, ray.t, screenSample.z);
         screenSample.alpha = simd::select(hit, 1.f, screenSample.alpha);
+#endif
       } else {
         screenSample.rgb = simd::vec3f{bgColor};
       }
