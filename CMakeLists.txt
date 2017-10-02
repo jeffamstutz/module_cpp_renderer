@@ -104,15 +104,13 @@ if (OSPRAY_MODULE_CPP)
 
   ospray_create_application(ospCppViewer
     app/cpp_viewer.cpp
+    app/cpp_nodes.cpp
+    app/importOBJ_cpp.cpp
   LINK
     ospray
-    ospray_commandline
     ospray_common
-    ospray_imgui3d
-    ospray_minisg
-    ospray_importer
-    ${OPENGL_LIBRARIES}
-    ${GLUT_LIBRARIES}
+    ospray_imgui3d_sg
+    ospray_sg
   )
 
 endif()
