@@ -63,7 +63,7 @@ namespace ospray {
     {
       auto &ray = screenSample.ray;
 
-      auto hit  = traceRay(active, ray) && active;
+      auto hit  = traceRay(active, ray) & active;
 
       if (simd::any(hit)) {
         const auto c = 0.2f + 0.8f * simd::abs(dot(normalize(ray.Ng), ray.dir));

@@ -170,8 +170,8 @@ namespace ospray {
       // ... will eventually have to fix this properly by implementing
       // instances directly in ospray, but for now let's try this hack
       // here:
-      auto regularGeometry = ray.instID < 0 && active;
-      auto instGeometry    = !regularGeometry && active;
+      auto regularGeometry = ray.instID < 0 & active;
+      auto instGeometry    = !regularGeometry & active;
       if (simd::any(regularGeometry)) {
         simd::foreach_active(regularGeometry, [&](int i) {
           auto geomID = ray.geomID[i];

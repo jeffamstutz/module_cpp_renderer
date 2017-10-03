@@ -35,6 +35,8 @@ if (OSPRAY_MODULE_CPP)
             "Please choose only one build ISA when building the C++ module")
   endif()
 
+  add_subdirectory(embc)
+
   set(LIBRARY_SRCS
 
     common/simd.h
@@ -99,6 +101,7 @@ if (OSPRAY_MODULE_CPP)
   ospray_create_library(ospray_module_cpp
     ${LIBRARY_SRCS}
     LINK
+    embc_simd
     ospray
   )
 
