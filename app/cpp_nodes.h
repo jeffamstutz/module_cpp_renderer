@@ -1,5 +1,5 @@
 // ======================================================================== //
-// Copyright 2009-2015 Intel Corporation                                    //
+// Copyright 2009-2017 Intel Corporation                                    //
 //                                                                          //
 // Licensed under the Apache License, Version 2.0 (the "License");          //
 // you may not use this file except in compliance with the License.         //
@@ -16,22 +16,24 @@
 
 #pragma once
 
-#include "../StreamSimdRenderer.h"
+#include "sg/camera/PerspectiveCamera.h"
+#include "sg/geometry/TriangleMesh.h"
 
 namespace ospray {
-  namespace cpp_renderer {
+  namespace sg {
 
-    struct StreamSimdRaycastRenderer :
-        public ospray::cpp_renderer::StreamSimdRenderer
+    struct CppTriangleMesh : public sg::TriangleMesh
     {
-      std::string toString() const override;
-
-      void renderStream(const mask_stream &active,
-                        void *perFrameData,
-                        ScreenSampleNStream &stream) const override;
-
-      ospray::Material *createMaterial(const char *type) override;
+      CppTriangleMesh();
     };
 
-  }// namespace cpp_renderer
-}// namespace ospray
+    struct CppPerspectiveCamera : public sg::Camera
+    {
+      CppPerspectiveCamera();
+    };
+
+    void importOBJ_cpp(const std::shared_ptr<Node> &world,
+                       const FileName &fileName);
+
+  } // ::ospray::sg
+} // ::ospray

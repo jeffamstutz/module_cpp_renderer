@@ -83,13 +83,9 @@ if (OSPRAY_MODULE_CPP)
     renderer/simple_ao/StreamSimpleAO.cpp
 
     # Simd
-    renderer/StreamSimdRenderer.cpp
     renderer/raycast/SimdRaycast.cpp
     renderer/simple_ao/ao_util_simd.h
     renderer/simple_ao/SimdSimpleAO.cpp
-
-    # Simd Stream
-    renderer/raycast/StreamSimdRaycast.cpp
 
     transferFunction/TransferFunction.cpp
     transferFunction/LinearTransferFunction.cpp
@@ -115,15 +111,13 @@ if (OSPRAY_MODULE_CPP)
 
   ospray_create_application(ospCppViewer
     app/cpp_viewer.cpp
+    app/cpp_nodes.cpp
+    app/importOBJ_cpp.cpp
   LINK
     ospray
-    ospray_commandline
     ospray_common
-    ospray_imgui3d
-    ospray_minisg
-    ospray_importer
-    ${OPENGL_LIBRARIES}
-    ${GLUT_LIBRARIES}
+    ospray_imgui3d_sg
+    ospray_sg
   )
 
 endif()
