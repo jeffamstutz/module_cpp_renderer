@@ -28,12 +28,6 @@ namespace ospray {
 
     using namespace sg;
 
-static std::string g_prefix  = "cpp_";
-static std::string g_postfix = "";
-
-static bool isSimd   = false;
-static bool isStream = false;
-
 static std::vector<ospcommon::FileName> files;
 
 //parse command line arguments containing the format:
@@ -134,6 +128,9 @@ static inline void parseCommandLineSG(int ac, const char **&av, sg::Node &root)
 
 void parseExtraParametersFromComandLine(int ac, const char **&av)
 {
+  bool isStream = false;
+  bool isSimd   = false;
+
   for (int i = 1; i < ac; i++) {
     const std::string arg = av[i];
     if (arg == "--simd" || arg == "-simd") {
@@ -213,7 +210,7 @@ extern "C" int main(int ac, const char **av)
   renderer["frameBuffer"]["size"] = win_size;
   renderer["rendererType"].setFlags(sg::NodeFlags::required |
                                     sg::NodeFlags::gui_combo);
-  renderer["rendererType"] = std::string("cpp_ao_stream");
+  renderer["rendererType"] = std::string(g_prefix + "ao" + g_postfix);
 
   auto &world = renderer["world"];
 
