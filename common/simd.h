@@ -90,14 +90,18 @@ namespace ospray {
     // Cast operatons /////////////////////////////////////////////////////////
 
     template <typename NewType, typename OriginalType>
-    NewType cast(const OriginalType &t)
+    inline NewType cast(const OriginalType &t)
     {
+#if 1
+      return NewType(t);
+#else
       NewType nt;
 
       for (int i = 0; i < OriginalType::size; ++i)
         nt[i] = t[i];
 
       return nt;
+#endif
     }
 
     // Algorithms /////////////////////////////////////////////////////////////
