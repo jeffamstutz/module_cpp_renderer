@@ -33,6 +33,12 @@ namespace ospcommon {
 
 } // ::ospcommon
 
+#ifdef _WIN32
+#  define OSPRAY_ALIGN(...) __declspec(align(__VA_ARGS__))
+#else
+#  define OSPRAY_ALIGN(...) __attribute__((aligned(__VA_ARGS__)))
+#endif
+
 #include "ospcommon/vec.h"
 // std
 #include <random>
@@ -224,7 +230,7 @@ namespace ospray {
     }
 
     template <typename T, int NUM_TEA_ROUNDS = 8>
-    struct RandomTEA
+    struct OSPRAY_ALIGN(64) RandomTEA
     {
       RandomTEA(const T &idx, const T &seed) : v0(idx), v1(seed) {}
       simd::vec2f getFloats()
@@ -250,6 +256,13 @@ namespace ospray {
     inline void store(const SIMD_T &from, void *to, const OFFS_T &ofs)
     {
       SIMD_T::scatter(to, ofs, from);
+    }
+
+    template <typename SIMD_T, typename OFFS_T, typename MASK_T>
+    inline void store(const SIMD_T &from, void *to,
+                      const OFFS_T &ofs, const MASK_T &mask)
+    {
+      SIMD_T::scatter(mask, to, ofs, from);
     }
 
     inline vfloat sin(const vfloat &in)

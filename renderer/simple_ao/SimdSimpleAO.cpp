@@ -19,7 +19,7 @@
 #include "ao_util_simd.h"
 #include "../../util.h"
 
-#define USE_RANDOMTEA_RNG 1
+#define USE_RANDOMTEA_RNG 0
 
 namespace ospray {
   namespace cpp_renderer {

@@ -42,7 +42,7 @@ namespace ospray {
       biNorm0 = normalize(cross(biNorm1,gNormal));
     }
 
-    struct ao_contextN
+    struct OSPRAY_ALIGN(64) ao_contextN
     {
       simd::vec3f biNormU, biNormV;
       float rayLength;

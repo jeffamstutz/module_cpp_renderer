@@ -24,7 +24,7 @@ namespace ospray {
 
     /*! differential geometry information that gives more detailed
         information on the actual geometry that a ray has hit */
-    struct DifferentialGeometryN {
+    struct OSPRAY_ALIGN(64) DifferentialGeometryN {
       simd::vec3f P;  //!< location of the hit-point
       simd::vec3f Ng; /*!< geometry normal if DG_NG was set, possibly not
                            normalized/facefordwarded if DG_NORMALIZE and/or

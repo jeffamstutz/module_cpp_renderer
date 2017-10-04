@@ -23,7 +23,7 @@ namespace ospray {
 
     struct ScreenSampleRef;
 
-    struct ScreenSampleN
+    struct OSPRAY_ALIGN(32) ScreenSampleN
     {
       // input values to 'renderSample'
       simd::vec3i sampleID; /*!< x/y=pixelID,z=accumID/sampleID */

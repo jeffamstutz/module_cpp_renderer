@@ -18,7 +18,7 @@
 #include "SimdRenderer.h"
 #include "../util.h"
 
-#define USE_RANDOMTEA_RNG 1
+#define USE_RANDOMTEA_RNG 0
 
 namespace ospray {
   namespace cpp_renderer {
@@ -134,19 +134,11 @@ namespace ospray {
           rgb *= simd::vfloat{spp_inv};
 
           const auto pixel = tile_x + (tile_y * TILE_SIZE);
-#if 0 // NOTE(jda) - adding the active mask seems to mask out ALL lanes...
           simd::store(rgb.x, (float*)tile.r, pixel, active);
           simd::store(rgb.y, (float*)tile.g, pixel, active);
           simd::store(rgb.z, (float*)tile.b, pixel, active);
           simd::store(alpha, (float*)tile.a, pixel, active);
           simd::store(z    , (float*)tile.z, pixel, active);
-#else
-          simd::store(rgb.x, (float*)tile.r, pixel);
-          simd::store(rgb.y, (float*)tile.g, pixel);
-          simd::store(rgb.z, (float*)tile.b, pixel);
-          simd::store(alpha, (float*)tile.a, pixel);
-          simd::store(z    , (float*)tile.z, pixel);
-#endif
         }
       }
     }

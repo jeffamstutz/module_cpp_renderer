@@ -41,9 +41,9 @@ namespace ospray {
           with upper 16 bits for the y coordinate, and lower 16 for the x
           coordinate. Compared to using two uint32-arrays, this saves on
           gather-loop */
-      uint xyIdx[TILE_SIZE*TILE_SIZE];
-      uint xs[TILE_SIZE*TILE_SIZE];
-      uint ys[TILE_SIZE*TILE_SIZE];
+      __aligned(32) uint xyIdx[TILE_SIZE*TILE_SIZE];
+      __aligned(32) uint xs[TILE_SIZE*TILE_SIZE];
+      __aligned(32) uint ys[TILE_SIZE*TILE_SIZE];
     };
 
     inline uint getZOrderX(const uint &xs16_ys16)

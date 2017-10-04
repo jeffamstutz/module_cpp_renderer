@@ -28,7 +28,7 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    struct RTCORE_ALIGN(simd::width * 4) RayN {
+    struct RTCORE_ALIGN(simd::width * 8) RayN {
       /* ray input data */
       simd::vec3f org;
       simd::vec3f dir;
@@ -58,7 +58,7 @@ namespace ospray {
 
     inline simd::vmaski RayN::hitSomething() const
     {
-      return geomID != static_cast<int>(RTC_INVALID_GEOMETRY_ID);
+      return geomID != vint(RTC_INVALID_GEOMETRY_ID);
     }
 
     // Inlined helper functions ///////////////////////////////////////////////
