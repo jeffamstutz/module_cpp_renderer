@@ -105,7 +105,7 @@
 #define __dllimport __declspec(dllimport)
 #else
 #define __dllexport __attribute__ ((visibility ("default")))
-#define __dllimport 
+#define __dllimport
 #endif
 
 #ifdef __WIN32__
@@ -165,6 +165,7 @@
 /// Error handling and debugging
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 /* debug printing macros */
 #define STRING(x) #x
 #define TOSTRING(x) STRING(x)
@@ -186,6 +187,7 @@
 #define WARNING(x) { std::cerr << "Warning: " << x << std::endl << std::flush; }
 
 #define NOT_IMPLEMENTED FATAL(std::string(__FUNCTION__) + " not implemented")
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Basic types
@@ -309,7 +311,7 @@ __forceinline std::string toString(long long value) {
 /// Some macros for static profiling
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined (__GNUC__) 
+#if defined (__GNUC__)
 #define IACA_SSC_MARK( MARK_ID )						\
 __asm__ __volatile__ (									\
 					  "\n\t  movl $"#MARK_ID", %%ebx"	\
@@ -348,7 +350,7 @@ namespace embree
     bool active;
     const Closure f;
   };
-  
+
   template <typename Closure>
     OnScopeExitHelper<Closure> OnScopeExit(const Closure f) {
     return OnScopeExitHelper<Closure>(f);

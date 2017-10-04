@@ -28,7 +28,7 @@ if (OSPRAY_MODULE_CPP)
   if (OSPRAY_BUILD_ISA STREQUAL "AVX")
     set(CMAKE_CXX_FLAGS "-mavx ${CMAKE_CXX_FLAGS}")
   elseif (OSPRAY_BUILD_ISA STREQUAL "AVX2" OR OSPRAY_BUILD_ISA STREQUAL "AVX512")
-    set(CMAKE_CXX_FLAGS "-mavx2 ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-mavx2 -mfma ${CMAKE_CXX_FLAGS}")
   elseif (OSPRAY_BUILD_ISA STREQUAL "ALL")
     message(FATAL_ERROR
             "Please choose only one build ISA when building the C++ module")
