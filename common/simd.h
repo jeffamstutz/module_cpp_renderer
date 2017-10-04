@@ -16,10 +16,6 @@
 
 #pragma once
 
-#define USE_EMBC 1
-
-#if USE_EMBC
-
 #include "../embc/simd/simd.h"
 
 namespace ospcommon {
@@ -34,43 +30,8 @@ namespace ospcommon {
   {
     return 1.f / val;
   }
-}
 
-#else
-
-// boost.simd
-#include "boost/simd.hpp"
-#include "boost/simd/arithmetic.hpp"
-#include "boost/simd/trigonometric.hpp"
-#include "boost/simd/function/all.hpp"
-#include "boost/simd/function/enumerate.hpp"
-#include "boost/simd/function/store.hpp"
-
-// ospcommon
-namespace ospcommon {
-  using namespace boost::simd;
-
-  // Pack types //
-
-  template <typename T>
-  using pack = boost::simd::pack<T>;
-
-  using vfloat = pack<float>;
-  using vint   = pack<int>;
-  using vuint  = pack<uint32_t>;
-
-  inline vfloat rsqrt(const vfloat &val)
-  {
-    return boost::simd::rsqrt(val);
-  }
-
-  inline vfloat rcp(const vfloat &val)
-  {
-    return 1.f / val;
-  }
-}
-
-#endif
+} // ::ospcommon
 
 #include "ospcommon/vec.h"
 // std
@@ -79,61 +40,29 @@ namespace ospcommon {
 namespace ospray {
   namespace simd {
 
-#if USE_EMBC
     using namespace embree;
-#else
-    using namespace boost::simd;
-#endif
 
     // Constants //////////////////////////////////////////////////////////////
 
-#if USE_EMBC
     constexpr auto width = embree::VSIZEX;
     //const auto programIndex =
-#else
-    constexpr auto width    = boost::simd::pack<float>::size;
-    const auto programIndex =
-        boost::simd::enumerate<boost::simd::pack<int>>(0, 1);
-#endif
 
     // Aliases for vector types based on boost::simd types ////////////////////
 
     // Pack types //
-#if USE_EMBC
     using vfloat = embree::vfloatx;
     using vint   = embree::vintx;
     using vuint  = embree::vuint<embree::VSIZEX>;
-#else
-    template <typename T>
-    using pack = boost::simd::pack<T>;
-
-    using vfloat = pack<float>;
-    using vint   = pack<int>;
-    using vuint  = pack<uint32_t>;
-#endif
 
     template <typename T>
     using vptr = std::array<T*, width>;
 
     // Mask types //
 
-#if USE_EMBC
     using vmask  = embree::vboolx;
     using vmaskf = embree::vboolfx;
     using vmaski = embree::vboolx;
     using vmasku = embree::vboolx;
-#else
-    template <typename T>
-    using mask_t = boost::simd::logical<T>;
-
-    using maskf = mask_t<float>;
-    using maski = mask_t<int>;
-    using masku = mask_t<uint32_t>;
-
-    using vmaskf = pack<maskf>;
-    using vmaski = pack<maski>;
-    using vmasku = pack<masku>;
-#endif
 
     // Vector math types //
 
@@ -165,20 +94,6 @@ namespace ospray {
       return nt;
     }
 
-#if !USE_EMBC
-    template <typename NewUnderlyingType, typename OriginalUnderlyingType>
-    simd::pack<simd::mask_t<NewUnderlyingType>>
-    mask_cast(const simd::pack<simd::mask_t<OriginalUnderlyingType>> &t)
-    {
-      simd::pack<simd::mask_t<NewUnderlyingType>> nt;
-
-      for (int i = 0; i < vfloat::size; ++i)
-        nt[i] = simd::mask_t<NewUnderlyingType>(t[i]);
-
-      return nt;
-    }
-#endif
-
     // Algorithms /////////////////////////////////////////////////////////////
 
     // foreach //
@@ -202,11 +117,7 @@ namespace ospray {
     {
       // NOTE(jda) - need to static_assert() FCN_T's signature
       for (int i = 0; i < MASK_T::size; ++i)
-#if USE_EMBC
         if (l[i]) fcn(i);
-#else
-        if (mask_t<typename MASK_T::value_type>{l[i]}) fcn(i);
-#endif
     }
 
     template <typename MASK_T, typename SIMD_T, typename FCN_T>
@@ -220,11 +131,7 @@ namespace ospray {
                     "mask type and simd type. (ex: can't do vmaskf with vint)");
 
       for (int i = 0; i < SIMD_T::size; ++i) {
-#if USE_EMBC
         if (l[i]) {
-#else
-        if (mask_t<typename MASK_T::value_type>{l[i]}) {
-#endif
           typename SIMD_T::value_type tmp = v[i];
           fcn(tmp, i);
           v[i] = tmp;
@@ -234,14 +141,23 @@ namespace ospray {
 
     // select //
 
-#if !USE_EMBC
-    template <typename MASK_T, typename T1, typename T2>
-    inline auto select(const MASK_T &m, const T1 &t, const T2& f)
-      -> decltype(boost::simd::if_else(m, t, f))
+    template <typename SIMD_T, typename MASK_T>
+    inline SIMD_T select(const MASK_T &mask, const SIMD_T &t, const SIMD_T &f)
     {
-      return boost::simd::if_else(m, t, f);
+      return embree::select(mask, t, f);
     }
-#endif
+
+    template <typename SIMD_T, typename MASK_T>
+    inline SIMD_T select(const MASK_T &mask, const float &t, const SIMD_T &f)
+    {
+      return embree::select(mask, SIMD_T(t), f);
+    }
+
+    template <typename SIMD_T, typename MASK_T>
+    inline SIMD_T select(const MASK_T &mask, const SIMD_T &t, const float &f)
+    {
+      return embree::select(mask, t, SIMD_T(f));
+    }
 
     // NOTE(jda) - Add variants which allow scalar values for either t or f
     //             types.
@@ -322,8 +238,6 @@ namespace ospray {
       T v0, v1;
     };
 
-#if USE_EMBC
-
     // Missing stuff from EMBC ////////////////////////////////////////////////
 
     template <typename SIMD_T>
@@ -336,24 +250,6 @@ namespace ospray {
     inline void store(const SIMD_T &from, void *to, const OFFS_T &ofs)
     {
       SIMD_T::scatter(to, ofs, from);
-    }
-
-    template <typename SIMD_T, typename MASK_T>
-    inline SIMD_T select(const MASK_T &mask, const SIMD_T &t, const SIMD_T &f)
-    {
-      return select(mask, t, f);
-    }
-
-    template <typename SIMD_T, typename MASK_T>
-    inline SIMD_T select(const MASK_T &mask, const float &t, const SIMD_T &f)
-    {
-      return select(mask, SIMD_T(t), f);
-    }
-
-    template <typename SIMD_T, typename MASK_T>
-    inline SIMD_T select(const MASK_T &mask, const SIMD_T &t, const float &f)
-    {
-      return select(mask, t, SIMD_T(f));
     }
 
     inline vfloat sin(const vfloat &in)
@@ -369,8 +265,6 @@ namespace ospray {
       foreach_v(result, [](float &v, int i) { v = std::cos(v); });
       return result;
     }
-
-#endif
 
   }// namespace simd
 }// namespace ospray
