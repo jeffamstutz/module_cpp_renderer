@@ -25,18 +25,12 @@ if (OSPRAY_MODULE_CPP)
 
   include_directories(
     ${CMAKE_CURRENT_LIST_DIR}/..
-    ${CMAKE_CURRENT_LIST_DIR}/include
     ${Boost_INCLUDE_DIRS}
   )
 
-  if (OSPRAY_BUILD_ISA STREQUAL "AVX")
-    set(CMAKE_CXX_FLAGS "-mavx ${CMAKE_CXX_FLAGS}")
-  elseif (OSPRAY_BUILD_ISA STREQUAL "AVX2" OR OSPRAY_BUILD_ISA STREQUAL "AVX512")
-    set(CMAKE_CXX_FLAGS "-mavx2 ${CMAKE_CXX_FLAGS}")
-  elseif (OSPRAY_BUILD_ISA STREQUAL "ALL")
-    message(FATAL_ERROR
-            "Please choose only one build ISA when building the C++ module")
-  endif()
+  set(CMAKE_CXX_FLAGS "-march=native ${CMAKE_CXX_FLAGS}")
+
+  add_subdirectory(embc)
 
   set(LIBRARY_SRCS
 
@@ -105,6 +99,7 @@ if (OSPRAY_MODULE_CPP)
   ospray_create_library(ospray_module_cpp
     ${LIBRARY_SRCS}
     LINK
+    embc_simd
     ospray
     ${Boost_LIBRARIES}
   )

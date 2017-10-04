@@ -26,7 +26,7 @@ namespace ospray {
 
     /*! \brief Specifies the input parameters (time, screen, and lens
         samples) required for 'initRay' to generate a primary ray */
-    struct CameraSampleN
+    struct OSPRAY_ALIGN(64) CameraSampleN
     {
       simd::vec2f screen; /*!< normalized screen sample, from [0..1] */
       simd::vec2f lens;

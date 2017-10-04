@@ -28,7 +28,7 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    struct RTCORE_ALIGN(simd::width * 4) RayN {
+    struct RTCORE_ALIGN(simd::width * 8) RayN {
       /* ray input data */
       simd::vec3f org;
       simd::vec3f dir;
@@ -58,7 +58,7 @@ namespace ospray {
 
     inline simd::vmaski RayN::hitSomething() const
     {
-      return geomID != static_cast<int>(RTC_INVALID_GEOMETRY_ID);
+      return geomID != vint(RTC_INVALID_GEOMETRY_ID);
     }
 
     // Inlined helper functions ///////////////////////////////////////////////
@@ -81,8 +81,13 @@ namespace ospray {
       auto t0 = ray.t0;
       auto t  = ray.t;
       auto active = rayIsActive(ray);
+#if USE_EMBC
+      t0 = embree::select(active, t0, t);
+      t  = embree::select(active, t, t0);
+#else
       t0 = simd::select(active, t0, t);
       t  = simd::select(active, t, t0);
+#endif
     }
 
     /*! \brief helper function for disabling individual rays in a stream */

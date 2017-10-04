@@ -102,7 +102,7 @@ namespace ospray {
       ray.org = org;
       ray.dir = normalize(dir);
       ray.t0  = nearClip;
-      ray.t   = inf;
+      ray.t   = vfloat{inf};
     }
 
     OSP_REGISTER_CAMERA(PerspectiveCameraN, cpp_perspective_simd);

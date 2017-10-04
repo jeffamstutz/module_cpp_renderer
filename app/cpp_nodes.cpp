@@ -21,11 +21,11 @@ namespace ospray {
 
     CppTriangleMesh::CppTriangleMesh()
     {
-      child("type") = std::string("cpp_triangles");
+      child("type") = std::string(g_prefix + "triangles");
     }
 
     CppPerspectiveCamera::CppPerspectiveCamera()
-      : Camera("cpp_perspective_stream")
+      : Camera(g_prefix + "perspective" + g_postfix)
     {
       createChild("pos", "vec3f", vec3f(0, -1, 0));
       // XXX SG is too restrictive: OSPRay cameras accept non-normalized directions
@@ -47,6 +47,9 @@ namespace ospray {
 
     OSP_REGISTER_SG_NODE(CppTriangleMesh);
     OSP_REGISTER_SG_NODE(CppPerspectiveCamera);
+
+    std::string g_prefix  = "cpp_";
+    std::string g_postfix = "";
 
   } // ::ospray::sg
 } // ::ospray

@@ -35,5 +35,8 @@ namespace ospray {
     void importOBJ_cpp(const std::shared_ptr<Node> &world,
                        const FileName &fileName);
 
+    extern std::string g_prefix;
+    extern std::string g_postfix;
+
   } // ::ospray::sg
 } // ::ospray

@@ -19,7 +19,7 @@
 #include "ao_util_simd.h"
 #include "../../util.h"
 
-#define USE_RANDOMTEA_RNG 1
+#define USE_RANDOMTEA_RNG 0
 
 namespace ospray {
   namespace cpp_renderer {
@@ -118,7 +118,7 @@ namespace ospray {
 #endif
         ao_ray.t = aoRayLength;
 
-        auto rayOccluded = isOccluded(active, ao_ray) ||
+        auto rayOccluded = isOccluded(active, ao_ray) |
                            dot(ao_ray.dir, dg.Ns) < 0.05f;
 
         hits = simd::select(rayOccluded, hits+1, hits);
