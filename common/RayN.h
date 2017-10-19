@@ -81,13 +81,8 @@ namespace ospray {
       auto t0 = ray.t0;
       auto t  = ray.t;
       auto active = rayIsActive(ray);
-#if USE_EMBC
-      t0 = embree::select(active, t0, t);
-      t  = embree::select(active, t, t0);
-#else
       t0 = simd::select(active, t0, t);
       t  = simd::select(active, t, t0);
-#endif
     }
 
     /*! \brief helper function for disabling individual rays in a stream */
