@@ -134,11 +134,11 @@ namespace ospray {
           rgb *= simd::vfloat{spp_inv};
 
           const auto pixel = tile_x + (tile_y * TILE_SIZE);
-          simd::scatter(rgb.x, (float*)tile.r, pixel, active);
-          simd::scatter(rgb.y, (float*)tile.g, pixel, active);
-          simd::scatter(rgb.z, (float*)tile.b, pixel, active);
-          simd::scatter(alpha, (float*)tile.a, pixel, active);
-          simd::scatter(z    , (float*)tile.z, pixel, active);
+          simd::scatter(rgb.x, (float*)tile.r, pixel);
+          simd::scatter(rgb.y, (float*)tile.g, pixel);
+          simd::scatter(rgb.z, (float*)tile.b, pixel);
+          simd::scatter(alpha, (float*)tile.a, pixel);
+          simd::scatter(z    , (float*)tile.z, pixel);
         }
       }
     }
