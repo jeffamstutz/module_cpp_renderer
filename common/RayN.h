@@ -99,7 +99,7 @@ namespace ospray {
     inline void resetRay(RayN &ray)
     {
       disableRay(ray);
-      ray.geomID = RTC_INVALID_GEOMETRY_ID;
+      ray.geomID = vint(RTC_INVALID_GEOMETRY_ID);
     }
 
     inline void resetRay(RayNStream &rays, int i)

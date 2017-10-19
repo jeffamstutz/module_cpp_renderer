@@ -101,7 +101,7 @@ namespace ospray {
 
       ray.org = org;
       ray.dir = normalize(dir);
-      ray.t0  = nearClip;
+      ray.t0  = vfloat(nearClip);
       ray.t   = vfloat{inf};
     }
 

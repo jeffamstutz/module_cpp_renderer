@@ -118,7 +118,7 @@ namespace ospray {
 #endif
         ao_ray.t = aoRayLength;
 
-        auto rayOccluded = isOccluded(active, ao_ray) |
+        auto rayOccluded = isOccluded(active, ao_ray) ||
                            dot(ao_ray.dir, dg.Ns) < 0.05f;
 
         hits = simd::select(rayOccluded, hits+1, hits);
