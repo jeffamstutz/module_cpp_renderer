@@ -71,7 +71,7 @@ namespace ospray {
 
     // Mask types //
 
-    using vmask  = tsimd::vmask;
+    using vmask  = tsimd::vboolf;
     using vmaskf = vmask;
     using vmaski = vmask;
     using vmasku = vmask;
@@ -218,7 +218,7 @@ namespace ospray {
     static inline simd::vfloat randUniformDist()
     {
       simd::vfloat retval;
-      simd::foreach_v(retval, [&](float &v, int i) {
+      simd::foreach(retval, [&](float &v, int i) {
         v = distribution(generator);
       });
       return retval;
