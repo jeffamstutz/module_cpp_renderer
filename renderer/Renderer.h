@@ -121,9 +121,9 @@ namespace ospray {
 #define  DG_NS_NORMALIZE   (DG_NS | DG_NORMALIZE)
 
       if ((flags & DG_NG_NORMALIZE) == DG_NG_NORMALIZE)
-        dg.Ng = safe_normalize(dg.Ng);
+        dg.Ng = normalize(dg.Ng);
       if ((flags & DG_NS_NORMALIZE) == DG_NS_NORMALIZE)
-        dg.Ns = safe_normalize(dg.Ns);
+        dg.Ns = normalize(dg.Ns);
 
       if ((flags & DG_NG_FACEFORWARD) == DG_NG_FACEFORWARD &&
           (dot(ray.dir,dg.Ng) >= 0.f))
