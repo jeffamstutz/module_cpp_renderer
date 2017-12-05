@@ -63,11 +63,11 @@ namespace ospray {
                                     const simd::vec3f &gNormal,
                                     float epsilon)
     {
-      const auto rot_x = 1.f - simd::randUniformDist();
-      const auto rot_y = 1.f - simd::randUniformDist();
+      const auto rot_x = 1.f - simd::randUniformDist3();
+      const auto rot_y = 1.f - simd::randUniformDist5();
 
-      const auto rn = simd::vec2f{simd::randUniformDist(),
-                                  simd::randUniformDist()};
+      const auto rn = simd::vec2f{simd::randUniformDist2(),
+                                  simd::randUniformDist2()};
       const auto r0 = rotate(rn.x, rot_x);
       const auto r1 = rotate(rn.y, rot_y);
 
@@ -125,7 +125,6 @@ namespace ospray {
       ao_ray.t   = ctx.rayLength - ctx.epsilon;
       return ao_ray;
     }
-
 
   }// namespace cpp_renderer
 }// namespace ospray

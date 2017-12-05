@@ -262,7 +262,7 @@ namespace ospray {
     }
 
     template <typename T, int NUM_TEA_ROUNDS = 8>
-    struct OSPRAY_ALIGN(64) RandomTEA
+    struct RandomTEA
     {
       RandomTEA(const T &idx, const T &seed) : v0(idx), v1(seed) {}
       simd::vec2f getFloats()
