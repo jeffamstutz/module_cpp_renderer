@@ -23,14 +23,6 @@ namespace ospray {
 
     // AO helper functions ////////////////////////////////////////////////////
 
-    inline simd::vec3f getShadingNormal(const RayN &ray)
-    {
-      const auto &N = ray.Ng;
-      auto f = ospcommon::rcp(simd::sqrt(dot(N,N)));
-      f = simd::select(dot(N,ray.dir) >= 0.f, -f, f);
-      return f*N;
-    }
-
     inline void getBinormals(simd::vec3f &biNorm0,
                              simd::vec3f &biNorm1,
                              const simd::vec3f &gNormal)
@@ -112,8 +104,8 @@ namespace ospray {
                                const ao_contextN &ctx)
     {
       RayN ao_ray;
-      ao_ray.org = dg.P + (simd::vfloat{1e-3f} * dg.Ng);
-      ao_ray.dir = getRandomDir(ctx.biNormU, ctx.biNormV, dg.Ng, ctx.epsilon);
+      ao_ray.org = dg.P + (simd::vfloat{1e-3f} * dg.Ns);
+      ao_ray.dir = getRandomDir(ctx.biNormU, ctx.biNormV, dg.Ns, ctx.epsilon);
       ao_ray.t0  = ctx.epsilon;
       ao_ray.t   = ctx.rayLength - ctx.epsilon;
       return ao_ray;
@@ -126,9 +118,9 @@ namespace ospray {
                                RANDOM_TEA_T &rng)
     {
       RayN ao_ray;
-      ao_ray.org = dg.P + (simd::vfloat{1e-3f} * dg.Ng);
+      ao_ray.org = dg.P + (simd::vfloat{1e-3f} * dg.Ns);
       ao_ray.dir = getRandomDir(rng, ctx.biNormU, ctx.biNormV,
-                                dg.Ng, ctx.epsilon);
+                                dg.Ns, ctx.epsilon);
       ao_ray.t0  = ctx.epsilon;
       ao_ray.t   = ctx.rayLength - ctx.epsilon;
       return ao_ray;
