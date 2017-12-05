@@ -19,7 +19,7 @@
 #include "../../util.h"
 
 #include "common/Data.h"
-#include "cpp_renderer/lights/AmbientLight.h"
+#include "../../lights/AmbientLight.h"
 
 namespace ospray {
   namespace cpp_renderer {

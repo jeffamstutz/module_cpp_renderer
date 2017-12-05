@@ -27,7 +27,7 @@ namespace ospray {
                              simd::vec3f &biNorm1,
                              const simd::vec3f &gNormal)
     {
-      biNorm0 = simd::select(simd::abs(dot(biNorm0,gNormal)) > .95f,
+      biNorm0 = simd::select(simd::abs(gNormal.x) > .95f,
                              simd::make_vec3f(0.f, 1.f, 0.f),
                              simd::make_vec3f(1.f, 0.f, 0.f));
       biNorm1 = normalize(cross(biNorm0,gNormal));
