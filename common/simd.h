@@ -18,12 +18,14 @@
 
 #include "../tsimd/tsimd/tsimd.h"
 
+#define DEFAULT_WIDTH TSIMD_DEFAULT_WIDTH
+
 namespace ospcommon {
 
   // Pack types //
 
-  using vfloat = tsimd::vfloat;
-  using vint   = tsimd::vint;
+  using vfloat = tsimd::vfloatn<DEFAULT_WIDTH>;
+  using vint   = tsimd::vintn<DEFAULT_WIDTH>;
   using vuint  = vint;
 
   inline vfloat rsqrt(const vfloat &val)
@@ -57,13 +59,13 @@ namespace ospray {
 
     // Constants //////////////////////////////////////////////////////////////
 
-    constexpr auto width = TSIMD_DEFAULT_WIDTH;
+    constexpr auto width = DEFAULT_WIDTH;
 
     // Aliases for vector types based on boost::simd types ////////////////////
 
     // Pack types //
-    using vfloat = tsimd::vfloat;
-    using vint   = tsimd::vint;
+    using vfloat = tsimd::vfloatn<width>;
+    using vint   = tsimd::vintn<width>;
     using vuint  = vint;
 
     template <typename T>
@@ -71,7 +73,7 @@ namespace ospray {
 
     // Mask types //
 
-    using vmask  = tsimd::vboolf;
+    using vmask  = tsimd::vboolfn<width>;
     using vmaskf = vmask;
     using vmaski = vmask;
     using vmasku = vmask;
