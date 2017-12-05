@@ -129,7 +129,7 @@ namespace ospray {
         hits = simd::select(rayOccluded, hits+1, hits);
       }
 
-      auto diffuse = simd::abs(dot(dg.Ns, ray.dir));
+      auto diffuse = simd::abs(dot(dg.Ng, ray.dir));
 
       auto &color = sample.rgb;
 
