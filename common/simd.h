@@ -224,6 +224,26 @@ namespace ospray {
       return retval;
     }
 
+    static thread_local tsimd::default_halton_engine2<width> generator2;
+    static thread_local tsimd::default_halton_engine3<width> generator3;
+    static thread_local tsimd::default_halton_engine5<width> generator5;
+    static tsimd::uniform_real_distribution<vfloat> vdistribution {0.f, 1.f};
+
+    static inline simd::vfloat randUniformDist2()
+    {
+      return vdistribution(generator2);
+    }
+
+    static inline simd::vfloat randUniformDist3()
+    {
+      return vdistribution(generator3);
+    }
+
+    static inline simd::vfloat randUniformDist5()
+    {
+      return vdistribution(generator5);
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // TEA - Random numbers based on Tiny Encryption Algorithm
 

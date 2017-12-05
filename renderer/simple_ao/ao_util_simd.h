@@ -94,11 +94,12 @@ namespace ospray {
                                     const simd::vec3f &gNormal,
                                     float epsilon)
     {
-      const auto rot = simd::vfloat{1.f} - rng.getFloats();
+      const auto rot_x = 1.f - simd::randUniformDist3();
+      const auto rot_y = 1.f - simd::randUniformDist5();
       const auto rn = rng.getFloats();
 
-      const auto r0 = rotate(rn.x, rot.x);
-      const auto r1 = rotate(rn.y, rot.y);
+      const auto r0 = rotate(rn.x, rot_x);
+      const auto r1 = rotate(rn.y, rot_y);
 
       const auto w = simd::sqrt(1.f-r1);
       const auto x = simd::cos((2.f*simd::vfloat{M_PI}*r0))*w;
