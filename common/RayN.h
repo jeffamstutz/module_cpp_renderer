@@ -28,7 +28,7 @@
 namespace ospray {
   namespace cpp_renderer {
 
-    struct RTCORE_ALIGN(simd::width * 8) RayN {
+    struct RTCORE_ALIGN(simd::width * 4) RayN {
       /* ray input data */
       simd::vec3f org;
       simd::vec3f dir;

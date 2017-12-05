@@ -118,8 +118,13 @@ namespace ospray {
 #endif
         ao_ray.t = aoRayLength;
 
-        auto rayOccluded = isOccluded(active, ao_ray) ||
-                           dot(ao_ray.dir, dg.Ns) < 0.05f;
+        // First check if the ray is occluded without needing to trace it
+        auto rayOccluded = dot(ao_ray.dir, dg.Ns) < 0.05f;
+
+        if (simd::any(!rayOccluded)) {
+          rayOccluded =
+              rayOccluded || isOccluded(active && !rayOccluded, ao_ray);
+        }
 
         hits = simd::select(rayOccluded, hits+1, hits);
       }
@@ -128,15 +133,11 @@ namespace ospray {
 
       auto &color = sample.rgb;
 
-      if (samplesPerFrame > 0) {
-        color = simd::select(active,
-                             superColor*(diffuse * (1.f-hits/samplesPerFrame)),
-                             simd::vec3f{bgColor});
-      } else {
-        color = simd::select(active, superColor*diffuse, simd::vec3f{bgColor});
-      }
+      color = simd::select(active,
+                           superColor*(diffuse * (1.f-hits/samplesPerFrame)),
+                           simd::vec3f{bgColor});
 
-      sample.alpha = simd::select(active, simd::vfloat{1.f}, sample.alpha);
+      simd::set_if(sample.alpha, simd::vfloat{1.f}, active);
     }
 
     void SimdSimpleAORenderer::renderSample(simd::vmaski active,
