@@ -27,8 +27,6 @@ if (OSPRAY_MODULE_CPP)
 
   set(CMAKE_CXX_FLAGS "-march=native ${CMAKE_CXX_FLAGS}")
 
-  add_subdirectory(embc)
-
   set(LIBRARY_SRCS
 
     common/simd.h
@@ -93,7 +91,6 @@ if (OSPRAY_MODULE_CPP)
   ospray_create_library(ospray_module_cpp
     ${LIBRARY_SRCS}
     LINK
-    embc_simd
     ospray
   )
 

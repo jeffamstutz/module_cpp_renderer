@@ -104,8 +104,8 @@ namespace ospray {
           auto &dv = randDuDv.y;
 #else
         for (int s = 0; s < spp; s++) {
-          auto du = simd::randUniformDist();
-          auto dv = simd::randUniformDist();
+          auto du = simd::randUniformDist<2>();
+          auto dv = simd::randUniformDist<3>();
 #endif
           screenSample.sampleID.z = startSampleID + s;
 
@@ -134,11 +134,11 @@ namespace ospray {
           rgb *= simd::vfloat{spp_inv};
 
           const auto pixel = tile_x + (tile_y * TILE_SIZE);
-          simd::store(rgb.x, (float*)tile.r, pixel, active);
-          simd::store(rgb.y, (float*)tile.g, pixel, active);
-          simd::store(rgb.z, (float*)tile.b, pixel, active);
-          simd::store(alpha, (float*)tile.a, pixel, active);
-          simd::store(z    , (float*)tile.z, pixel, active);
+          simd::scatter(rgb.x, (float*)tile.r, pixel, active);
+          simd::scatter(rgb.y, (float*)tile.g, pixel, active);
+          simd::scatter(rgb.z, (float*)tile.b, pixel, active);
+          simd::scatter(alpha, (float*)tile.a, pixel, active);
+          simd::scatter(z    , (float*)tile.z, pixel, active);
         }
       }
     }
