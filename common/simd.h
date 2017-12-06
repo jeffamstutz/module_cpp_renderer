@@ -114,49 +114,6 @@ namespace ospray {
 
     // Algorithms /////////////////////////////////////////////////////////////
 
-    // foreach //
-
-    template <typename SIMD_T, typename FCN_T>
-    inline void foreach_v(SIMD_T &v, FCN_T &&fcn)
-    {
-      // NOTE(jda) - need to static_assert() FCN_T's signature
-
-      for (int i = 0; i < SIMD_T::static_size; ++i) {
-        typename SIMD_T::value_t tmp = v[i];
-        fcn(tmp, i);
-        v[i] = tmp;
-      }
-    }
-
-    // foreach_active //
-
-    template <typename MASK_T, typename FCN_T>
-    inline void foreach_active(const MASK_T &l, FCN_T &&fcn)
-    {
-      // NOTE(jda) - need to static_assert() FCN_T's signature
-      for (int i = 0; i < MASK_T::static_size; ++i)
-        if (l[i]) fcn(i);
-    }
-
-    template <typename MASK_T, typename SIMD_T, typename FCN_T>
-    inline void foreach_active(const MASK_T &l, SIMD_T &v, FCN_T &&fcn)
-    {
-      // NOTE(jda) - need to static_assert() FCN_T's signature
-      static_assert(std::is_same<typename MASK_T::value_t,
-                                 typename SIMD_T::value_t>::value,
-                    "The LOGICAL_T and SIMD_T types provided must be of the "
-                    "same value type. In other words, you can't mismatch the "
-                    "mask type and simd type. (ex: can't do vmaskf with vint)");
-
-      for (int i = 0; i < SIMD_T::static_size; ++i) {
-        if (l[i]) {
-          typename SIMD_T::value_t tmp = v[i];
-          fcn(tmp, i);
-          v[i] = tmp;
-        }
-      }
-    }
-
     // select //
 
     template <typename SIMD_T, typename MASK_T>
