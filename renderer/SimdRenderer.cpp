@@ -104,8 +104,8 @@ namespace ospray {
           auto &dv = randDuDv.y;
 #else
         for (int s = 0; s < spp; s++) {
-          auto du = simd::randUniformDist2();
-          auto dv = simd::randUniformDist3();
+          auto du = simd::randUniformDist<2>();
+          auto dv = simd::randUniformDist<3>();
 #endif
           screenSample.sampleID.z = startSampleID + s;
 
