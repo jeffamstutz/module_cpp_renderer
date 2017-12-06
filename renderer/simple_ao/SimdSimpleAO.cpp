@@ -123,7 +123,7 @@ namespace ospray {
 
         if (simd::any(!rayOccluded)) {
           rayOccluded =
-              rayOccluded || isOccluded(active && !rayOccluded, ao_ray);
+              rayOccluded | isOccluded(active & !rayOccluded, ao_ray);
         }
 
         hits = simd::select(rayOccluded, hits+1, hits);

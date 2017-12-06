@@ -71,7 +71,7 @@ namespace ospray {
 
         const auto &sampleID = screenSample.sampleID;
 
-        auto active = (sampleID.x < simd::vint{currentFB->size.x}) &&
+        auto active = (sampleID.x < simd::vint{currentFB->size.x}) &
                       (sampleID.y < simd::vint{currentFB->size.y});
 
         if (simd::none(active))
