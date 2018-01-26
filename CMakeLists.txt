@@ -14,7 +14,7 @@
 ## limitations under the License.                                           ##
 ## ======================================================================== ##
 
-option(OSPRAY_MODULE_CPP "Build 'C++' module (renderers in all C++ code)" ON)
+option(OSPRAY_MODULE_CPP "Build 'C++' module (renderers in all C++ code)" OFF)
 
 if (OSPRAY_MODULE_CPP)
 
