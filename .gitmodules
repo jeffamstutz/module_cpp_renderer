@@ -1,0 +1,3 @@
+[submodule "tsimd"]
+	path = tsimd
+	url = https://github.com/ospray/tsimd
