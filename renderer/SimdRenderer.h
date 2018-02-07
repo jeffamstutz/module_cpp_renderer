@@ -178,7 +178,9 @@ namespace ospray {
           auto *geom = dynamic_cast<Geometry*>(model->geometry[geomID].ptr);
           if (geom) {
             dg.geometry[i] = geom;
+#if 0
             dg.material[i] = geom->material.ptr;
+#endif
             // TODO: implement load/store scalar dg (and other structures, too)
 #if 0
             geom->postIntersect(dg, ray, flags);
@@ -194,7 +196,9 @@ namespace ospray {
           auto *instGeom = dynamic_cast<Geometry*>(model->geometry[instID].ptr);
           if (instGeom) {
             dg.geometry[i] = instGeom;
+#if 0
             dg.material[i] = instGeom->material.ptr;
+#endif
             // TODO: implement load/store scalar dg (and other structures, too)
 #if 0
             auto newRay = ray;

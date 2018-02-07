@@ -153,7 +153,7 @@ namespace ospray {
       std::vector<tinyobj::material_t> materials;
 
       std::string err;
-      auto containingPath = fileName.path().str() + '/';
+      auto containingPath = fileName.path() + '/';
       bool ret            = tinyobj::LoadObj(&attrib,
                                   &shapes,
                                   &materials,

@@ -97,7 +97,9 @@ namespace ospray {
             dynamic_cast<Geometry*>(model->geometry[ray.geomID].ptr);
         if (geom) {
           dg.geometry = geom;
+#if 0
           dg.material = geom->material.ptr;
+#endif
           geom->postIntersect(dg, ray, flags);
         }
       } else {
@@ -109,7 +111,9 @@ namespace ospray {
             dynamic_cast<Geometry*>(model->geometry[ray.instID].ptr);
         if (instGeom) {
           dg.geometry = instGeom;
+#if 0
           dg.material = instGeom->material.ptr;
+#endif
           newRay.instID = RTC_INVALID_GEOMETRY_ID;
           instGeom->postIntersect(dg, newRay, flags);
         }

@@ -153,9 +153,9 @@ namespace ospray {
 
     static inline void addLightsToScene(sg::Node& renderer)
     {
+    #if 0
       auto &lights = renderer["lights"];
 
-    #if 0
       auto &sun = lights.createChild("sun", "DirectionalLight");
       sun["color"] = vec3f(1.f,232.f/255.f,166.f/255.f);
       sun["direction"] = vec3f(0.462f,-1.f,-.1f);
@@ -198,8 +198,6 @@ namespace ospray {
 
       parseExtraParametersFromComandLine(ac, av);
 
-      ospray::imgui3D::init(&ac,av);
-
       // import the patches from the sample files (creates a default
       // patch if no files were specified)
       box3f worldBounds;
@@ -207,8 +205,6 @@ namespace ospray {
       auto renderer_ptr = sg::createNode("renderer", "Renderer");
       auto &renderer = *renderer_ptr;
 
-      auto &win_size = ospray::imgui3D::ImGui3DWidget::defaultInitSize;
-      renderer["frameBuffer"]["size"] = win_size;
       renderer["rendererType"].setFlags(sg::NodeFlags::required |
                                         sg::NodeFlags::gui_combo);
       renderer["rendererType"] = std::string(g_prefix + "ao" + g_postfix);
@@ -223,20 +219,12 @@ namespace ospray {
       // last, to be able to modify all created SG nodes
       parseCommandLineSG(ac, av, renderer);
 
-      ImGuiViewer window(renderer_ptr);
-
-      auto &viewPort = window.viewPort;
-      auto dir = normalize(viewPort.at - viewPort.from);
       auto camera_ptr = sg::createNode("camera", "CppPerspectiveCamera");
       renderer.add(camera_ptr);
       auto &camera = *camera_ptr;
-      camera["dir"] = dir;
-      camera["pos"] = viewPort.from;
-      camera["up"]  = viewPort.up;
-      camera["fovy"] = viewPort.openingAngle;
-      camera["apertureRadius"] = viewPort.apertureRadius;
-      if (camera.hasChild("focusdistance"))
-        camera["focusdistance"] = length(viewPort.at - viewPort.from);
+      camera.createChild("gaze", "vec3f", vec3f{});
+
+      ImGuiViewer window(renderer_ptr);
 
       window.create("ospCppViewer: OSPRay C++-rendering Viewer");
 
